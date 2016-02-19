@@ -100,8 +100,6 @@ import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.xdaqctl.XDAQMessage;
-import rcms.utilities.elogPublisher.ElogPublisher;
-import rcms.utilities.elogPublisher.ElogPublisherException;
 import rcms.utilities.runinfo.RunInfo;
 import rcms.utilities.runinfo.RunInfoConnectorIF;
 import rcms.utilities.runinfo.RunInfoException;
@@ -180,10 +178,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // Connector to log session db, used to create session identifiers
   public LogSessionConnector logSessionConnector;
-
-  // Handle ELOG publishing // TODO this is deprecated
-  public boolean ElogPublish = false;
-  public ElogPublisher ElogPublisher = null;
 
   // Start and stopping time of a run // TODO these are broken
   public Date StartTime = null;
@@ -2859,77 +2853,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     xdaqMsg.setDOM(document);
 
     return xdaqMsg;
-  }
-
-  // make entry into the HCAL elog
-  protected void publishElogSummary() {
-    if (ElogPublish) {
-      try {
-        String subject = "Start of Run:" + functionManager.RunNumber +", sequence number: " + RunSeqNumber;
-        String type = "automatic HCAL run summary";
-        String category = "USC55 local runs";
-
-        String text = "Summary of run: "+ functionManager.RunNumber + "\n\n";
-        text += "The run was started at: " + StartTime + " and ended at " + StopTime + ".\n";
-        text += "The Run sequence number is: " + RunSeqNumber + "\n";
-        text += TriggersToTake + " events were successfully taken.\n\n";
-
-        text += "Setup used: " + functionManager.RunSetupDetails + "\n\n";
-
-        {
-          if (!FullCfgScript.equals("not set")) {
-            text += "HCAL CfgScript: \n" + FullCfgScript + "\n\n";
-          }
-        }
-
-        {
-          if (!FullTTCciControlSequence.equals("not set")) {
-            text += "TTCciControlSequence: \n" + FullTTCciControlSequence + "\n\n";
-          }
-        }
-
-        {
-          if (!FullLTCControlSequence.equals("not set")) {
-            text += "LTCControlSequence: \n" + FullLTCControlSequence + "\n\n";
-          }
-        }
-
-        {
-          if (!FullTCDSControlSequence.equals("not set")) {
-            text += "TCDSControlSequence: \n" + FullTCDSControlSequence + "\n\n";
-          }
-        }
-
-        {
-          if (!FullLPMControlSequence.equals("not set")) {
-            text += "LPMControlSequence: \n" + FullLPMControlSequence + "\n\n";
-          }
-        }
-
-        {
-          if (!FullPIControlSequence.equals("not set")) {
-            text += "PIControlSequence: \n" + FullPIControlSequence + "\n\n";
-          }
-        }
-
-        logger.info("[HCAL " + functionManager.FMname + "] sending to the Elog: "+ text);
-
-        boolean ok = ElogPublisher.publishText(text,subject,type,category);
-
-        if (!ok)
-        {
-          String reply = ElogPublisher.getReply();
-          logger.warn("[HCAL " + functionManager.FMname + "] could not publish run summary to Elog: " + reply);
-        }
-
-      }
-      catch (ElogPublisherException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! ElogPublisherException: something seriously went wrong when publishing the run summary ...";
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-      }
-
-    }
   }
 
   // get and set a session ID (called only when in local run mode)

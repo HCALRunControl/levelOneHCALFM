@@ -271,16 +271,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                   </div>
                                 </td>
                               </tr>
-                              <tr>
-                                <!--eLog info for quick copy/pasting-->
-                                <td class="label_center_black" colspan="3">
-                                  <div>
-                                    <strong>Quick Info</strong>
-                                    <br>
-                                    <div id="elogInfo"></div>
-                                  </div>
-                                </td>
-                              </tr>
                             </table>
                           <br>
                           <br>

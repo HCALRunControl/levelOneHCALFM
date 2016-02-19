@@ -1091,12 +1091,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      if (TestMode.equals("ElogInfoPublish")) {
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! Publishing Elog summary ...");
-        publishElogSummary();
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! ... Elog summary should be published.");
-      }
-
       // offical run number handling
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
@@ -2341,7 +2335,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      logger.info("[JohnLog] about to call publishRunInfoSummary");
+      //logger.info("[JohnLog] about to call publishRunInfoSummary");
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
