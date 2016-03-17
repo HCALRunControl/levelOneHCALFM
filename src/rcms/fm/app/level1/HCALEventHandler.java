@@ -2276,8 +2276,11 @@ public class HCALEventHandler extends UserEventHandler {
                     logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
                    
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
-                      otherLevel2FM.getResource().setRole("HCAL");
-                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+                       otherLevel2FM.getResource().setRole("HCAL");
+                       logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+		       itsThisLvl2=true;
+                       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+                       logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
                   }
                 }
@@ -2304,11 +2307,17 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
+	      else if(somebodysHandlingTA && itsThisLvl2){
+		EvmTrigsApps += level2resource.getName()+";";
+              }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
+              }
+	      else if(somebodysHandlingTA && itsThisLvl2){
+		EvmTrigsApps += level2resource.getName()+";";
               }
               else {
                 ruInstance=level2resource.getName();
