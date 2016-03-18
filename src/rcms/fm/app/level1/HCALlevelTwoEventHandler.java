@@ -800,6 +800,44 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
       }
+      // configure PeerTransportUTCPs
+      if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+        String peerTransportUTCPstateName = "";
+        for (QualifiedResource qr : functionManager.containerPeerTransportUTCP.getApplications() ) {
+          try {
+            XDAQParameter pam = null;
+            pam = ((XdaqApplication)qr).getXDAQParameter();
+            pam.select(new String[] {"stateName"});
+            pam.get();
+            peerTransportUTCPstateName =  pam.getValue("stateName");
+            logger.info("[HCAL " + functionManager.FMname + "] Got the PeerTransportUTCP's stateName--it is: " + peerTransportUTCPstateName);
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+        }
+        try {
+          if (peerTransportUTCPstateName.equals("Halted")) {
+            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring PeerTransportUTCPs ...");
+            functionManager.containerPeerTransportUTCP.execute(HCALInputs.CONFIGURE);
+          }
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring PeerTransportUTCPs failed ...";
+          logger.error(errMessage,e);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        }
+      }
 
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
@@ -1197,7 +1235,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // start the PeerTransportATCPs
+        // start the PeerTransportATCPs and PeerTransportUTCPs
         if (!functionManager.ATCPsWereStartedOnce) {
 
           // make sure that the ATCP transports were only started only once
@@ -1210,6 +1248,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportATCP failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] starting PeerTransportUTCP ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HCALSTART);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportUTCP failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
@@ -1925,6 +1978,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
+        //FIXME: why is this commented out?
         // stop the PeerTransportATCPs
         /*
            if (!functionManager.containerPeerTransportATCP.isEmpty()) {
@@ -2294,7 +2348,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // stop the PeerTransportATCPs
+        // stop the PeerTransportATCPs and PeerTransportUTCPs
         if (functionManager.StopATCP) {
           if (!functionManager.containerPeerTransportATCP.isEmpty()) {
             try {
@@ -2303,6 +2357,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportATCPs failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping PeerTransportUTCPs ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HALT);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportUTCPs failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));

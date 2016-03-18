@@ -80,6 +80,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerStorageManager      = null;
   public XdaqApplicationContainer containerFEDStreamer         = null;
   public XdaqApplicationContainer containerPeerTransportATCP   = null;
+  public XdaqApplicationContainer containerPeerTransportUTCP   = null;
   public XdaqApplicationContainer containerhcalRunInfoServer   = null;
 
   // string containing details on the setup from where this FM was started
