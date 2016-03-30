@@ -7,6 +7,9 @@ import java.util.Scanner;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,7 +20,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -276,4 +278,47 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
     }
   }
+
+  public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
+    String tmpCtrlSequence ="";
+    try{
+        // Get ControlSequences from mastersnippet
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+        masterSnippet.getDocumentElement().normalize();
+        DOMSource domSource = new DOMSource(masterSnippet);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+
+        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+        NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
+        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + CtrlSequence.getLength()+ " "+ CtrlSequenceTagName+ " nodes ");
+        if (CtrlSequence.getLength()>1){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
+        }
+        Element el = (Element) CtrlSequence.item(0);
+        NodeList childlist = el.getElementsByTagName("include"); 
+        for(int iFile=0; iFile< childlist.getLength() ; iFile++){
+           Element iElement = (Element) childlist.item(iFile);
+           String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
+		       logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+           tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
+        }
+    }
+    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
+    }
+    String FullCtrlSequence = tmpCtrlSequence;
+    return FullCtrlSequence;
+  }
+  static String readFile(String path, Charset encoding) throws IOException {
+      byte[] encoded = Files.readAllBytes(Paths.get(path));
+      return new String(encoded, encoding);
+   }  
 }

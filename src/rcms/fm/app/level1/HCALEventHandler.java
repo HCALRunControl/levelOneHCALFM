@@ -171,9 +171,6 @@ public class HCALEventHandler extends UserEventHandler {
   // Switch to select primary or secondary TCDS system--should be true until we get a secondary TCDS system
   public boolean UsePrimaryTCDS = true;
 
-  // MonLogger application control switch
-  Boolean HandleMonLoggers = false;
-
   // Switch for whether a TriggerAdapter is used in the configuration. Default is false, as in global runs
   //public Boolean HandleTriggerAdapter = false;
 
@@ -239,6 +236,9 @@ public class HCALEventHandler extends UserEventHandler {
   protected String ZeroSuppressionSnippetName="/HTR/ZeroSuppression.cfg/pro";
   protected String SpecialZeroSuppressionSnippetName="/HTR/SpecialZeroSuppression.cfg/pro";
   protected String VdMSnippetName="/LUMI/VdM.cfg/pro";
+
+  // CfgCVSBasePath = Base path to read CVS Cfgs
+  public String CfgCVSBasePath ="";
 
   // XMAS related stuff
   protected String WSE_FILTER = "empty";
@@ -501,6 +501,24 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
+    // Get the CfgCVSBasePath in the userXML
+    {
+      //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+      String theCfgCVSBasePath = "";
+      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theCfgCVSBasePath.equals("")) {
+        CfgCVSBasePath = theCfgCVSBasePath;
+      } else{
+        CfgCVSBasePath = DefaultCfgCVSBasePath;
+      }
+      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+     
+      
+    }
+
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
       String theZeroSuppressionSnippetName = "";
@@ -673,7 +691,7 @@ public class HCALEventHandler extends UserEventHandler {
           }
         } 
         //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -727,204 +745,9 @@ public class HCALEventHandler extends UserEventHandler {
     catch (DOMException | ParserConfigurationException | SAXException | IOException  | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
-    String TmpCfgScript = "";
-
-    // Check for a definition of the CfgScript for the LV1
-    if (!FullCfgScript.equals("not set")) {
-      TmpCfgScript += FullCfgScript;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1CfgScript:\n" + FullCfgScript);
-    }
-
-    // Getting the base directory of the files containing the configuration snippets
-    //String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-
-    String CfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the CfgScript or have a CVSCfgScript section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // Add the local CfgScript if found
-    String LocalCfgScript = GetUserXMLElement("CfgScript");
-    if (!LocalCfgScript.equals("")) {
-
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local CfgScript defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // Parse the lines found in the CVSCfgScript area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based CfgScript section in userXML found.\nHere is it:\n" + LocalCfgScript);
-
-      Boolean foundZSSnippet = false;
-      Boolean foundSpecialZSSnippet = false;
-      Boolean foundVdMSnippet = false;
-
-      {
-        String CVSCfgScriptLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCfgScript));
-
-        try {
-          while ((CVSCfgScriptLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSCfgScriptLineToParse.length() > 0) && (!CVSCfgScriptLineToParse.startsWith("#")) ) {
-              Scanner s = new Scanner(CVSCfgScriptLineToParse);
-
-              // The syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use the exact whitespaces as in this example!! (courtesy of arno)
-
-              // TODO startstop-here
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // Check whether the lines could be parsed correctly, "in principle though ..." (ibid.)
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSCfgScript line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getCfgScript()! Parsing of CfgScript failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSCfgScript is: " + LocalCfgScript;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // Make a proper file name for the CfgScript being loaded
-                String CVSCfgScriptFileName = CfgCVSBasePath;
-                CVSCfgScriptFileName += result.group(2);
-                CVSCfgScriptFileName += "/";
-                CVSCfgScriptFileName += result.group(4);
-
-                String LocalCfgScriptFromFile = "";
-                {
-                  // Detect the zero supression snippet tag
-                  String smallCVSCfgScriptFileName = result.group(2);
-                  smallCVSCfgScriptFileName += "/";
-                  smallCVSCfgScriptFileName += result.group(4);
-
-                  // Get the CfgScript snippet and add it to the used TmpCfgScript
-                  logger.debug("[HCAL " + functionManager.FMname + "] Loading a CfgScript snippet from a from file named: " + CVSCfgScriptFileName);
-
-                  // CFG snippet blocking mechanism by means of the given RUN_KEY // TODO translate this
-                  // TODO Add comments that are intelligible to humans
-                  {
-                    Boolean SnippetNotBlocked = true;
-
-                    // zero supression
-                    if (!functionManager.useZS && (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + ZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // special zero suppression
-                    if (!functionManager.useSpecialZS && (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + SpecialZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // VdM scan options
-                    if (!functionManager.useVdMSnippet && (smallCVSCfgScriptFileName.equals(VdMSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special VdM scan CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + VdMSnippetName +"\n";
-                    }
-
-                    if (SnippetNotBlocked) { LocalCfgScriptFromFile = readTextFile(CVSCfgScriptFileName); }
-                  }
-
-                  // sanity checks if there are CFG snippet name ambiguities
-                  if (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName)) {
-                    foundZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName)) {
-                    foundSpecialZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(VdMSnippetName)) {
-                    foundVdMSnippet = true;
-                  }
-
-                }
-
-                if (!LocalCfgScriptFromFile.equals("")) {
-
-                  TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpCfgScript += LocalCfgScriptFromFile;
-                  TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSCfgScriptFileName + " a definition of a CfgScript - good!\nIt looks like this:\n" + LocalCfgScriptFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] CfgScript from CVS based file named: " + CVSCfgScriptFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              // TODO startstop-here
-              else {
-                TmpCfgScript += CVSCfgScriptLineToParse + "\n";
-              }
-            }
-
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getCfgScript()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local CfgScript\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Found definition of a CfgScript is this FM userXML.\nIt looks like this:\n" + LocalCfgScript);
-
-      // sanity checks if there are CFG snippet name ambiguities
-      if (!RunType.equals("local")) {
-        if (functionManager.useZS && (!foundZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a zero supression HCAL Cfg snippet!\nThe name looked for was: " + ZeroSuppressionSnippetName);
-        }
-        if (functionManager.useSpecialZS && (!foundSpecialZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special zero supression HCAL Cfg snippet!\nThe name looked for was: " + SpecialZeroSuppressionSnippetName);
-        }
-        if (functionManager.useVdMSnippet && (!foundVdMSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special VdM scan snippet!\nThe name looked for was: " + VdMSnippetName);
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No CfgScript found in userXML of this FM.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullCfgScript = TmpCfgScript;
-
+    FullCfgScript=configString;
     logger.debug("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
 
-    FullCfgScript=configString;
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
   }
 
@@ -932,214 +755,31 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getTTCciControl() {
-    String TmpTTCciControl = "";
-
-    // check for LV1 TTCciControl definition
-    if (!FullTTCciControlSequence.equals("not set")) {
-      TmpTTCciControl += FullTTCciControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1TTCciControl:\n" + FullTTCciControlSequence);
-    }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the TTCciControl section or have a CVSTTCciControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add TTCciControls from a CVS maintained file - if defined
-    String LocalCVSTTCciControl = GetUserXMLElement("CVSTTCciControl");
-    if (!LocalCVSTTCciControl.equals("")) {
-
-      // parsing the lines found in the CVSTTCciControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
-
-      {
-        String CVSTTCciControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSTTCciControl));
-
-        try {
-          while ((CVSTTCciControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTTCciControlLineToParse.length() > 0) && (!CVSTTCciControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTTCciControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTTCciControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTTCciControl()! Parsing of CVSTTCciControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTTCciControl is: " + LocalCVSTTCciControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the TTCciControl snippet from a file
-              String CVSTTCciControlFileName = CfgCVSBasePath;
-              CVSTTCciControlFileName += result.group(2);
-              CVSTTCciControlFileName += "/";
-              CVSTTCciControlFileName += result.group(4);
-
-              // getting the TTCciControl snippet and adding it to the used TmpTTCciControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a TTCciControl snippet from a from file named: " + CVSTTCciControlFileName);
-
-              String LocalTTCciControlFromFile = readTextFile(CVSTTCciControlFileName);
-
-              if (!LocalTTCciControlFromFile.equals("")) {
-
-                TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpTTCciControl += LocalTTCciControlFromFile;
-                TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTTCciControlFileName + " a definition of a TTCciControl - good!\nIt looks like this:\n" + LocalTTCciControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] TTCciControl from CVS based file named: " + CVSTTCciControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
+    String tmpTTCciControlSequence="";
+    // Load the master snippet from the found file and parse it.
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTTCciControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
+        String TagName = "TTCciControl";
+        tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based TTCciControl area found in userXML ..."); }
+    catch ( ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
     }
-
-    // add local TTCciControl - if available
-    String LocalTTCciControl = GetUserXMLElement("TTCciControl");
-    if (!LocalTTCciControl.equals("")) {
-
-      TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local TTCciControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSTTCciControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
-
-      {
-        String CVSTTCciControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalTTCciControl));
-
-        try {
-          while ((CVSTTCciControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTTCciControlLineToParse.length() > 0) && (!CVSTTCciControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTTCciControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTTCciControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTTCciControl()! Parsing of CVSTTCciControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTTCciControl is: " + LocalCVSTTCciControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the TTCciControl snippet from a file
-                String CVSTTCciControlFileName ="/nfshome0/hcalcfg/cvs/RevHistory/";
-                CVSTTCciControlFileName += result.group(2);
-                CVSTTCciControlFileName += "/";
-                CVSTTCciControlFileName += result.group(4);
-
-                // getting the TTCciControl snippet and adding it to the used TmpTTCciControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a TTCciControl snippet from a from file named: " + CVSTTCciControlFileName);
-
-                String LocalTTCciControlFromFile = readTextFile(CVSTTCciControlFileName);
-
-                if (!LocalTTCciControlFromFile.equals("")) {
-
-                  TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpTTCciControl += LocalTTCciControlFromFile;
-                  TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTTCciControlFileName + " a definition of a TTCciControl - good!\nIt looks like this:\n" + LocalTTCciControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] TTCciControl from CVS based file named: " + CVSTTCciControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpTTCciControl += CVSTTCciControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTTCciControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local TTCciControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using TTCciControl:\n" + LocalTTCciControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No TTCciControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullTTCciControlSequence = TmpTTCciControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
-
+    FullTTCciControlSequence = tmpTTCciControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
   }
 
@@ -1147,213 +787,31 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getLTCControl() {
-    String TmpLTCControl = "";
-
-    // check for LV1 LTCControl definition
-    if (!FullLTCControlSequence.equals("not set")) {
-      TmpLTCControl += FullLTCControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1LTCControl:\n" + FullLTCControlSequence);
-    }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LTCControl section or have a CVSLTCControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add LTCControls from a CVS maintained file - if defined
-    String LocalCVSLTCControl = GetUserXMLElement("CVSLTCControl");
-    if (!LocalCVSLTCControl.equals("")) {
-
-      // parsing the lines found in the CVSLTCControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LTCControl section in userXML found.\nHere is it:\n" + LocalCVSLTCControl);
-
-      {
-        String CVSLTCControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSLTCControl));
-
-        try {
-          while ((CVSLTCControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLTCControlLineToParse.length() > 0) && (!CVSLTCControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLTCControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLTCControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLTCControl()! Parsing of CVSLTCControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLTCControl is: " + LocalCVSLTCControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the LTCControl snippet from a file
-              String CVSLTCControlFileName = CfgCVSBasePath;
-              CVSLTCControlFileName += result.group(2);
-              CVSLTCControlFileName += "/";
-              CVSLTCControlFileName += result.group(4);
-
-              // getting the LTCControl snippet and adding it to the used TmpLTCControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a LTCControl snippet from a from file named: " + CVSLTCControlFileName);
-
-              String LocalLTCControlFromFile = readTextFile(CVSLTCControlFileName);
-
-              if (!LocalLTCControlFromFile.equals("")) {
-
-                TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpLTCControl += LocalLTCControlFromFile;
-                TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLTCControlFileName + " a definition of a LTCControl - good!\nIt looks like this:\n" + LocalLTCControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] LTCControl from CVS based file named: " + CVSLTCControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
+    String tmpLTCControlSequence="";
+    // Load the master snippet from the found file and parse it.
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLTCControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
+        String TagName = "LTCControl";
+        tmpLTCControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based LTCControl area found in userXML ..."); }
+    catch ( ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml: " + e.getMessage());
     }
-
-    // add local LTCControl - if available
-    String LocalLTCControl = GetUserXMLElement("LTCControl");
-    if (!LocalLTCControl.equals("")) {
-
-      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local LTCControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSLTCControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LTCControl section in userXML found.\nHere is it:\n" + LocalCVSLTCControl);
-
-      {
-        String CVSLTCControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalLTCControl));
-
-        try {
-          while ((CVSLTCControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLTCControlLineToParse.length() > 0) && (!CVSLTCControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLTCControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLTCControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLTCControl()! Parsing of CVSLTCControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLTCControl is: " + LocalCVSLTCControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the LTCControl snippet from a file
-                String CVSLTCControlFileName = CfgCVSBasePath;
-                CVSLTCControlFileName += result.group(2);
-                CVSLTCControlFileName += "/";
-                CVSLTCControlFileName += result.group(4);
-
-                // getting the LTCControl snippet and adding it to the used TmpLTCControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a LTCControl snippet from a from file named: " + CVSLTCControlFileName);
-
-                String LocalLTCControlFromFile = readTextFile(CVSLTCControlFileName);
-
-                if (!LocalLTCControlFromFile.equals("")) {
-
-                  TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpLTCControl += LocalLTCControlFromFile;
-                  TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLTCControlFileName + " a definition of a LTCControl - good!\nIt looks like this:\n" + LocalLTCControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] LTCControl from CVS based file named: " + CVSLTCControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpLTCControl += CVSLTCControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLTCControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local LTCControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using LTCControl:\n" + LocalLTCControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] No LTCControl found in userXML.\nProbably this is OK if no LTC is used for this run config ..."); }
-    }
-
-    FullLTCControlSequence = TmpLTCControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
+    FullLTCControlSequence = tmpLTCControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(FullLTCControlSequence)));
   }
@@ -1362,213 +820,31 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getTCDSControl() {
-    String TmpTCDSControl = "";
-
-    // check for LV1 TCDSControl definition
-    if (!FullTCDSControlSequence.equals("not set") && !TmpTCDSControl.contains(FullTCDSControlSequence)) {
-      TmpTCDSControl += FullTCDSControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1TCDSControl:\n" + FullTCDSControlSequence);
-    }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the TCDSControl section or have a CVSTCDSControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add TCDSControls from a CVS maintained file - if defined
-    String LocalCVSTCDSControl = GetUserXMLElement("CVSTCDSControl");
-    if (!LocalCVSTCDSControl.equals("")) {
-
-      // parsing the lines found in the CVSTCDSControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TCDSControl section in userXML found.\nHere is it:\n" + LocalCVSTCDSControl);
-
-      {
-        String CVSTCDSControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSTCDSControl));
-
-        try {
-          while ((CVSTCDSControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTCDSControlLineToParse.length() > 0) && (!CVSTCDSControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTCDSControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTCDSControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTCDSControl()! Parsing of CVSTCDSControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTCDSControl is: " + LocalCVSTCDSControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the TCDSControl snippet from a file
-              String CVSTCDSControlFileName = CfgCVSBasePath;
-              CVSTCDSControlFileName += result.group(2);
-              CVSTCDSControlFileName += "/";
-              CVSTCDSControlFileName += result.group(4);
-
-              // getting the TCDSControl snippet and adding it to the used TmpTCDSControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a TCDSControl snippet from a from file named: " + CVSTCDSControlFileName);
-
-              String LocalTCDSControlFromFile = readTextFile(CVSTCDSControlFileName);
-
-              if (!LocalTCDSControlFromFile.equals("") && !TmpTCDSControl.contains(LocalTCDSControlFromFile)) {
-
-                //                TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpTCDSControl += LocalTCDSControlFromFile;
-                //                TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTCDSControlFileName + " a definition of a TCDSControl - good!\nIt looks like this:\n" + LocalTCDSControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] TCDSControl from CVS based file named: " + CVSTCDSControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
+    String tmpTCDSControlSequence="";
+    // Load the master snippet from the found file and parse it.
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTCDSControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
+        String TagName = "TCDSControl";
+        tmpTCDSControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based TCDSControl area found in userXML ..."); }
+    catch ( ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml: " + e.getMessage());
     }
-
-    // add local TCDSControl - if available
-    String LocalTCDSControl = GetUserXMLElement("TCDSControl");
-    if (!LocalTCDSControl.equals("")) {
-
-      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local TCDSControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSTCDSControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TCDSControl section in userXML found.\nHere is it:\n" + LocalCVSTCDSControl);
-
-      {
-        String CVSTCDSControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalTCDSControl));
-
-        try {
-          while ((CVSTCDSControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTCDSControlLineToParse.length() > 0) && (!CVSTCDSControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTCDSControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTCDSControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTCDSControl()! Parsing of CVSTCDSControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTCDSControl is: " + LocalCVSTCDSControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the TCDSControl snippet from a file
-                String CVSTCDSControlFileName = CfgCVSBasePath;
-                CVSTCDSControlFileName += result.group(2);
-                CVSTCDSControlFileName += "/";
-                CVSTCDSControlFileName += result.group(4);
-
-                // getting the TCDSControl snippet and adding it to the used TmpTCDSControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a TCDSControl snippet from a from file named: " + CVSTCDSControlFileName);
-
-                String LocalTCDSControlFromFile = readTextFile(CVSTCDSControlFileName);
-
-                if (!LocalTCDSControlFromFile.equals("") && !TmpTCDSControl.contains(LocalTCDSControlFromFile)) {
-
-                  //                  TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpTCDSControl += LocalTCDSControlFromFile;
-                  //                  TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTCDSControlFileName + " a definition of a TCDSControl - good!\nIt looks like this:\n" + LocalTCDSControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] TCDSControl from CVS based file named: " + CVSTCDSControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else if (!TmpTCDSControl.contains(CVSTCDSControlLineToParse)){
-                TmpTCDSControl += CVSTCDSControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTCDSControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local TCDSControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using TCDSControl:\n" + LocalTCDSControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No TCDSControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullTCDSControlSequence = TmpTCDSControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
+    FullTCDSControlSequence = tmpTCDSControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTCDSControlSequence)));
   }
@@ -1577,430 +853,66 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getLPMControl() {
-    String TmpLPMControl = "";
-
-    // check for LV1 LPMControl definition
-    if (!FullLPMControlSequence.equals("not set")) {
-      TmpLPMControl += FullLPMControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1LPMControl:\n" + FullLPMControlSequence);
-    }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LPMControl section or have a CVSLPMControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add LPMControls from a CVS maintained file - if defined
-    String LocalCVSLPMControl = GetUserXMLElement("CVSLPMControl");
-    if (!LocalCVSLPMControl.equals("")) {
-
-      // parsing the lines found in the CVSLPMControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LPMControl section in userXML found.\nHere is it:\n" + LocalCVSLPMControl);
-
-      {
-        String CVSLPMControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSLPMControl));
-
-        try {
-          while ((CVSLPMControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLPMControlLineToParse.length() > 0) && (!CVSLPMControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLPMControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLPMControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLPMControl()! Parsing of CVSLPMControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLPMControl is: " + LocalCVSLPMControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the LPMControl snippet from a file
-              String CVSLPMControlFileName = CfgCVSBasePath;
-              CVSLPMControlFileName += result.group(2);
-              CVSLPMControlFileName += "/";
-              CVSLPMControlFileName += result.group(4);
-
-              // getting the LPMControl snippet and adding it to the used TmpLPMControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a LPMControl snippet from a from file named: " + CVSLPMControlFileName);
-
-              String LocalLPMControlFromFile = readTextFile(CVSLPMControlFileName);
-
-              if (!LocalLPMControlFromFile.equals("") && !TmpLPMControl.contains(LocalLPMControlFromFile)) {
-
-                //                TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpLPMControl += LocalLPMControlFromFile;
-                //                TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLPMControlFileName + " a definition of a LPMControl - good!\nIt looks like this:\n" + LocalLPMControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] LPMControl from CVS based file named: " + CVSLPMControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
+    String tmpLPMControlSequence="";
+    // Load the master snippet from the found file and parse it.
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLPMControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
+        String TagName = "LPMControl";
+        tmpLPMControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based LPMControl area found in userXML ..."); }
+    catch ( ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml: " + e.getMessage());
     }
+    FullLPMControlSequence = tmpLPMControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
 
-    // add local LPMControl - if available
-    String LocalLPMControl = GetUserXMLElement("LPMControl");
-    if (!LocalLPMControl.equals("")) {
-
-      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local LPMControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSLPMControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LPMControl section in userXML found.\nHere is it:\n" + LocalCVSLPMControl);
-
-      {
-        String CVSLPMControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalLPMControl));
-
-        try {
-          while ((CVSLPMControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLPMControlLineToParse.length() > 0) && (!CVSLPMControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLPMControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLPMControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLPMControl()! Parsing of CVSLPMControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLPMControl is: " + LocalCVSLPMControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the LPMControl snippet from a file
-                String CVSLPMControlFileName = CfgCVSBasePath;
-                CVSLPMControlFileName += result.group(2);
-                CVSLPMControlFileName += "/";
-                CVSLPMControlFileName += result.group(4);
-
-                // getting the LPMControl snippet and adding it to the used TmpLPMControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a LPMControl snippet from a from file named: " + CVSLPMControlFileName);
-
-                String LocalLPMControlFromFile = readTextFile(CVSLPMControlFileName);
-
-                if (!LocalLPMControlFromFile.equals("") && !TmpLPMControl.contains(LocalLPMControlFromFile)) {
-
-                  //                  TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpLPMControl += LocalLPMControlFromFile;
-                  //                  TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLPMControlFileName + " a definition of a LPMControl - good!\nIt looks like this:\n" + LocalLPMControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] LPMControl from CVS based file named: " + CVSLPMControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else if (!TmpLPMControl.contains(CVSLPMControlLineToParse)){
-                TmpLPMControl += CVSLPMControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLPMControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local LPMControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using LPMControl:\n" + LocalLPMControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No LPMControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullLPMControlSequence = TmpLPMControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
-
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
+      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
   }
 
   // Function, which compiles a PIControl sequence, which can then "be sent" to the HCAL supervisor application.
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getPIControl() {
-    String TmpPIControl = "";
-
-    // check for LV1 PIControl definition
-    if (!FullPIControlSequence.equals("not set")) {
-      TmpPIControl += FullPIControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1PIControl:\n" + FullPIControlSequence);
-    }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the PIControl section or have a CVSPIControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add PIControls from a CVS maintained file - if defined
-    String LocalCVSPIControl = GetUserXMLElement("CVSPIControl");
-    if (!LocalCVSPIControl.equals("")) {
-
-      // parsing the lines found in the CVSPIControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based PIControl section in userXML found.\nHere is it:\n" + LocalCVSPIControl);
-
-      {
-        String CVSPIControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSPIControl));
-
-        try {
-          while ((CVSPIControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSPIControlLineToParse.length() > 0) && (!CVSPIControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSPIControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSPIControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getPIControl()! Parsing of CVSPIControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSPIControl is: " + LocalCVSPIControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the PIControl snippet from a file
-              String CVSPIControlFileName = CfgCVSBasePath;
-              CVSPIControlFileName += result.group(2);
-              CVSPIControlFileName += "/";
-              CVSPIControlFileName += result.group(4);
-
-              // getting the PIControl snippet and adding it to the used TmpPIControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a PIControl snippet from a from file named: " + CVSPIControlFileName);
-
-              String LocalPIControlFromFile = readTextFile(CVSPIControlFileName);
-
-              if (!LocalPIControlFromFile.equals("")) {
-
-                //                TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpPIControl += LocalPIControlFromFile;
-                //                TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSPIControlFileName + " a definition of a PIControl - good!\nIt looks like this:\n" + LocalPIControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] PIControl from CVS based file named: " + CVSPIControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
+   String tmpPIControlSequence="";
+    // Load the master snippet from the found file and parse it.
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getPIControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
+        String TagName = "PIControl";
+        tmpPIControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based PIControl area found in userXML ..."); }
+    catch ( ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml: " + e.getMessage());
     }
+    FullPIControlSequence = tmpPIControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
-    // add local PIControl - if available
-    String LocalPIControl = GetUserXMLElement("PIControl");
-    if (!LocalPIControl.equals("")) {
-
-      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local PIControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSPIControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based PIControl section in userXML found.\nHere is it:\n" + LocalCVSPIControl);
-
-      {
-        String CVSPIControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalPIControl));
-
-        try {
-          while ((CVSPIControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSPIControlLineToParse.length() > 0) && (!CVSPIControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSPIControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSPIControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getPIControl()! Parsing of CVSPIControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSPIControl is: " + LocalCVSPIControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the PIControl snippet from a file
-                String CVSPIControlFileName = CfgCVSBasePath;
-                CVSPIControlFileName += result.group(2);
-                CVSPIControlFileName += "/";
-                CVSPIControlFileName += result.group(4);
-
-                // getting the PIControl snippet and adding it to the used TmpPIControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a PIControl snippet from a from file named: " + CVSPIControlFileName);
-
-                String LocalPIControlFromFile = readTextFile(CVSPIControlFileName);
-
-                if (!LocalPIControlFromFile.equals("")) {
-
-                  //                  TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpPIControl += LocalPIControlFromFile;
-                  //                  TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSPIControlFileName + " a definition of a PIControl - good!\nIt looks like this:\n" + LocalPIControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] PIControl from CVS based file named: " + CVSPIControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpPIControl += CVSPIControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getPIControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local PIControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using PIControl:\n" + LocalPIControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No PIControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullPIControlSequence = TmpPIControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
-
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
+     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
@@ -2229,6 +1141,7 @@ public class HCALEventHandler extends UserEventHandler {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
     boolean itsThisLvl2 = false;
+    boolean itsAdummy = false;
     String allMaskedResources = "";
     String ruInstance = "";
     String lpmSupervisor = "";
@@ -2265,9 +1178,11 @@ public class HCALEventHandler extends UserEventHandler {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                  logger.warn("[JohnLog] found a DummyTriggerAdapter after somebody else is already handling the TA.");
+              if (somebodysHandlingTA && !itsAdummy) { 
+                if (level2resource.getName().contains("DummyTriggerAdapter") ) {
+                  itsThisLvl2=true;
+                  itsAdummy=true;
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
                   logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
@@ -2278,7 +1193,6 @@ public class HCALEventHandler extends UserEventHandler {
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
                        otherLevel2FM.getResource().setRole("HCAL");
                        logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-		       itsThisLvl2=true;
                        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                        logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
@@ -2295,6 +1209,9 @@ public class HCALEventHandler extends UserEventHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
+                if (qr.getName().contains("DummyTriggerAdapter")){
+                  itsAdummy = true;
+                }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
@@ -2307,8 +1224,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
+      	      else {
+             	  EvmTrigsApps += level2resource.getName()+";";
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
@@ -2316,10 +1233,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
-              }
-              else {
+       	      else {
+            		EvmTrigsApps += level2resource.getName()+";";
                 ruInstance=level2resource.getName();
                 logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
@@ -2327,6 +1242,10 @@ public class HCALEventHandler extends UserEventHandler {
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
+              }
+              else if (somebodysHandlingTA && itsThisLvl2) {
+                logger.info("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
+                lpmSupervisor=level2resource.getName();
               }
               else {
                 logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
@@ -2730,7 +1649,6 @@ public class HCALEventHandler extends UserEventHandler {
       functionManager.containerLTCControl     = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("LTCControl"));
     }
 
-    functionManager.containerMonLogger      = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalMonLogger"));
 
     functionManager.containerEVM   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("EVM"));
     functionManager.containerBU    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("BU"));
@@ -2752,13 +1670,6 @@ public class HCALEventHandler extends UserEventHandler {
     // find out if this FM controlls applications which talk asynchronous SOAP
     if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
       functionManager.asyncSOAP = true;
-    }
-
-    // check if MonLogger applications are found
-    if (HandleMonLoggers) {
-      if (!functionManager.containerMonLogger.isEmpty()) {
-        logger.warn("[HCAL " + functionManager.FMname + "] MonLogger applications found in this configuration - good!");
-      }
     }
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {

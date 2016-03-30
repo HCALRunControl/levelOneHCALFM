@@ -471,6 +471,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configuring")));
 
+      //if (!functionManager.containerTTCciControl.isEmpty()) {
+      //  TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
+      //  ttcciwatchthread.run();
+      //}
+     
       String LVL1CfgScript            = "not set";
       String LVL1TTCciControlSequence = "not set";
       String LVL1LTCControlSequence   = "not set";
@@ -1023,23 +1028,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
 
-      // configuring the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Configuring the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.CONFIGURE);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configureAction executed ... - we're close ...")));
@@ -1582,23 +1570,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
 
-      // starting the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting i.e. sending Enable to the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALSTART);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
         if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
@@ -1810,23 +1781,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("halting")));
-
-      // halting the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Halting the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALHALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
 
       // stop i.e. halt the triggering immediately and not waiting for the trigger adapter to report that it is stopped
       if (functionManager.FMrole.equals("EvmTrig")) {
@@ -2177,23 +2131,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-
-      // stopping the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Stopping the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALHALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
 
       // stop the triggering
       if (functionManager.FMrole.equals("EvmTrig")) {
