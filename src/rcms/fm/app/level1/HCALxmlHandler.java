@@ -280,7 +280,7 @@ public class HCALxmlHandler {
     String newExecXMLstring = "";
     try {
 
-      System.out.println(execXMLstring);
+      //System.out.println(execXMLstring);
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));

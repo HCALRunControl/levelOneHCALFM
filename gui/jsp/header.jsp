@@ -23,14 +23,14 @@
 		<!-- Central title end -->
 		
 		<td width="50%" align="right" bgcolor="#EEEEEE">
-				<p id="versionSpot"></p>
-				<p>
-				<!-- Version begin -->
-				<font color="#000099" size="1" face="Arial, Helvetica, sans-serif">
-					Tag : <b><%=getServletContext().getAttribute("version")%></b>
-				</font>
-				<!-- Version end -->
-			</p>
+			<p id="versionSpot"></p>
+			<p>
+			<!-- Version begin -->
+			<font color="#000099" size="1" face="Arial, Helvetica, sans-serif">
+				Tag : <b><%=getServletContext().getAttribute("version")%></b>
+			</font>
+			<!-- Version end -->
+		  </p>
 			<!-- Tag begin -->
 			<%if (request.getRemoteUser() != null) {%>
 			<font size="1" color="#000099" face="Arial, Helvetica, sans-serif">
@@ -39,6 +39,13 @@
 			</font>
 			<%}%>
 			<!-- Tag end -->
+      <p>
+			<!-- Bug-report link begin -->
+			<font color="#000099" size="1" face="Arial, Helvetica, sans-serif">
+				<a href="https://github.com/HCALRunControl/levelOneHCALFM/issues"> File a bug report </a>
+			</font>
+			<!-- Bug-report link  end -->
+		  </p>
 		</td>
 	</tr>
 	<!-- T1_Row1 end -->
