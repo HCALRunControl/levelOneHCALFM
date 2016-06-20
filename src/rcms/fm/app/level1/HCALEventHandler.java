@@ -605,7 +605,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Try to find a common masterSnippet from UserXML
     try{
-			CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
+			//CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
+			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,"CommonMS");
 
 			if (CommonMasterSnippetFile.equals("")){
 			    logger.info("[Martin log " + functionManager.FMname + "] No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
