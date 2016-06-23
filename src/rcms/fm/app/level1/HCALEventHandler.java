@@ -3343,8 +3343,7 @@ public class HCALEventHandler extends UserEventHandler {
             LittleA.movehim();
           }
           // move the little fishy when running
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
-                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ) {
             LittleB.movehim();
           }
         }
@@ -3695,9 +3694,13 @@ public class HCALEventHandler extends UserEventHandler {
 					      		if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 					      				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+ alarmerStatusName +" is " + alarmerStatusValue + " which is not OK; going to RUNNINGDEGRADED state");
 					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+												if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+												if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
 					      		}
                     else {
-					      		  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
+						      		  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
+												if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+												if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
                     }
 					      	}
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
@@ -3724,9 +3727,11 @@ public class HCALEventHandler extends UserEventHandler {
 					      		if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 					      				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not boht OK; going to RUNNINGDEGRADED state");
 					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+												functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!!!");
 					      		}
                     else {
 					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to stay in RUNNINGDEGRADED state"); 
+											functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!!!");
                     }
 					      	}
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
