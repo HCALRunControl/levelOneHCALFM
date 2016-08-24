@@ -41,6 +41,7 @@ import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
+import rcms.fm.fw.parameter.ParameterException;
 import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
@@ -48,6 +49,8 @@ import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.bean.FunctionManagerParameterBean;
+import rcms.fm.fw.parameter.util.ParameterUtil;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -71,6 +74,7 @@ import rcms.utilities.runinfo.RunInfoException;
 import rcms.statemachine.definition.Input;
 import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.fm.fw.service.parameter.ParameterRelayRemote;
 import rcms.fm.fw.service.parameter.ParameterServiceException;
 
 /**
@@ -355,6 +359,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
+      try {
+        fillBeamMode();
+      }
+      catch (UserActionException e) {
+        logger.error("[HCAL LVL1 " + functionManager.FMname + "] initAction failure after fillBeamMode, message: " + e.getMessage());
+      }
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("initAction executed ...")));
@@ -672,9 +682,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       boolean NeventIsSetFromGUI = !xmlHandler.hasDefaultValue("NUMBER_OF_EVENTS",1000);
 
       if(!CommonMasterSnippetFile.equals("")){    
-          //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
+        //parse and set HCAL parameters from CommonMasterSnippet
+        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
+        xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
       }
       //Parse and set HCAL parameters from MasterSnippet
       logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
@@ -732,8 +742,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
       if( functionManager.alarmerPartition.equals("")){
-          functionManager.alarmerPartition = "HBHEHO";
-          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
+        functionManager.alarmerPartition = "HBHEHO";
+        logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
       }
       AlarmerWatchThread thread4 = new AlarmerWatchThread();
       thread4.start();
@@ -830,7 +840,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         if (!RunType.equals("local")) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! command parameter problem for the startAction ...";
-					functionManager.goToError(errMessage);
+          functionManager.goToError(errMessage);
         }
         else {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] startAction: We are in local mode ...");
@@ -863,7 +873,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         else {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Did not receive a run number ...";
-					functionManager.goToError(errMessage);
+          functionManager.goToError(errMessage);
         }
 
         // get the run sequence number from the start command
@@ -1424,6 +1434,48 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] testingTTSAction executed ...");
+    }
+  }
+  //public void fillBeamMode(HCALFunctionManager functionManager) throws UserActionException {
+  public void fillBeamMode() throws UserActionException {
+    ParameterRelayRemote parameterService = null;
+    try {
+      parameterService = new ParameterRelayRemote();
+    } 
+    catch (ParameterServiceException e) {
+      logger.error("Problem creating a ParameterRelayRemote object: " + e.getMessage());
+      throw new UserActionException("Got an exception in fillBeamMode(), message from caught exception is: " + e.getMessage()); // TODO fix this
+    }
+
+    // Creates the uriPath from the URI
+    String[] uriPath = new String[1];
+    uriPath[0] = "http://cmsrc-top.cms:10000/urn:rcms-fm:fullpath=/toppro/PublicGlobal/levelZeroFMwithAutomator,group=levelZeroFM,owner=toppro"; // TODO: test this
+
+    // Retrieve the parameter of the Function Manager 
+    FunctionManagerParameterBean[] parBean = null;
+    try {
+      parBean = parameterService.getParameter(uriPath, functionManager.FMuri);
+    }
+    catch (ParameterServiceException e) {
+      logger.error("Could not retrieve the parameters from the Function manager with uri=" + uriPath[0] + ": " + e.getMessage());
+    }
+
+    // Transform FunctionManagerParameterBean array to parameterSet<FunctionManagerParameter> object
+    ParameterSet<FunctionManagerParameter> parSet = new ParameterSet<FunctionManagerParameter>();
+    if (parBean != null) {
+      try {
+        parSet = new ParameterSet<FunctionManagerParameter>(ParameterUtil.transform(parBean));
+        if (parSet.get("LHC_BEAM_MODE") != null) {
+          logger.warn("[BeamStatusLog]: Got LHC_BEAM_MODE: " + ((StringT)parSet.get("LHC_BEAM_MODE").getValue()).getString());
+        }
+        else { 
+          logger.warn("[BeamStatusLog]: LHC_BEAM_MODE was null");
+          for (String s : parSet.getNames()) { logger.info(s); }
+        }
+      } 
+      catch (ParameterException e) {
+        logger.error("[BeamStatusLog] Transform parameters from bean to java object (uri = " + uriPath[0] + " ." + e.getMessage());
+      }
     }
   }
 }
