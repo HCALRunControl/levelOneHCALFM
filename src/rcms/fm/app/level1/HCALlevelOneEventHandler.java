@@ -1451,30 +1451,32 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     String[] uriPath = new String[1];
     uriPath[0] = "http://cmsrc-top.cms:10000/urn:rcms-fm:fullpath=/toppro/PublicGlobal/levelZeroFMwithAutomator,group=levelZeroFM,owner=toppro"; // TODO: test this
 
+    FunctionManagerParameter beamModeParameter = new FunctionManagerParameter<StringT>("LHC_BEAM_MODE", new StringT(""));
+    FunctionManagerParameterBean[] beamModeRequestBean = { ParameterUtil.transform(beamModeParameter) };
+
     // Retrieve the parameter of the Function Manager 
     FunctionManagerParameterBean[] parBean = null;
     try {
-      parBean = parameterService.getParameter(uriPath, functionManager.FMuri);
+      parBean = parameterService.getParameter(uriPath, beamModeRequestBean, functionManager.FMuri);
     }
     catch (ParameterServiceException e) {
       logger.error("Could not retrieve the parameters from the Function manager with uri=" + uriPath[0] + ": " + e.getMessage());
     }
 
     // Transform FunctionManagerParameterBean array to parameterSet<FunctionManagerParameter> object
-    ParameterSet<FunctionManagerParameter> parSet = new ParameterSet<FunctionManagerParameter>();
     if (parBean != null) {
       try {
-        parSet = new ParameterSet<FunctionManagerParameter>(ParameterUtil.transform(parBean));
-        if (parSet.get("LHC_BEAM_MODE") != null) {
-          logger.warn("[BeamStatusLog]: Got LHC_BEAM_MODE: " + ((StringT)parSet.get("LHC_BEAM_MODE").getValue()).getString());
+        //parSet = new ParameterSet<FunctionManagerParameter>(ParameterUtil.transform(parBean));
+        if (parBean.length > 0) {
+          Parameter lhcBeamMode = ParameterUtil.transform(parBean[0]);
+          logger.warn("[BeamStatusLog]: Got LHC_BEAM_MODE: " + lhcBeamMode.getValue().toString());
         }
         else { 
-          logger.warn("[BeamStatusLog]: LHC_BEAM_MODE was null");
-          for (String s : parSet.getNames()) { logger.info(s); }
+          logger.warn("[BeamStatusLog]: Beam mode parameter request returned empty response.");
         }
       } 
       catch (ParameterException e) {
-        logger.error("[BeamStatusLog] Transform parameters from bean to java object (uri = " + uriPath[0] + " ." + e.getMessage());
+        logger.error("[BeamStatusLog] Transform parameters from bean to java object (uri = " + uriPath[0] + ")." + e.getMessage());
       }
     }
   }
