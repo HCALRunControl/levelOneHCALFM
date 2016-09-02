@@ -213,6 +213,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         setTimeoutThread(false);
         String infomsg = "Received a State Notification while taskSequence is null \n";
         //logger.warn(infomsg);
+        fm.theEventHandler.computeNewState(notification);
 
         return;
       }
