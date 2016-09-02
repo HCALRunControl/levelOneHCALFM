@@ -2186,10 +2186,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
       else {
-        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No DCC (HCAL FED) found: preparingTTSTestModeAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! No DCC (HCAL FED) found, DTC version of preparingTTSTestModeAction() has not been implemented";
+        logger.warn(warnMessage);
       }
 
       // leave intermediate state
@@ -2201,7 +2199,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("preparingTestModeAction executed ...")));
 
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] preparingTestModeAction executed ...");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] preparingTestModeAction executed ...");
     }
   }
 
@@ -2290,13 +2288,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
       else {
-        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No DCC (HCAL FED) found: testingTTSAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! No DCC (HCAL FED) found, DTC version of testingTTSAction() has not been implemented";
+        logger.warn(warnMessage);
       }
 
       // leave intermediate state
@@ -2308,7 +2301,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] testingTTSAction executed ...");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] testingTTSAction executed ...");
     }
   }
   public class TTCciWatchThread extends Thread {
