@@ -515,6 +515,9 @@ public class HCALxmlHandler {
     catch ( UserActionException e){
         // Warn when found more than one tag name in mastersnippet
         functionManager.goToError(e.getMessage());
+        // FIX HERE: UserActionException e2 = new UserActionException();
+        // String errMessage = "xmlHanlder.parseMasterSnippet() : caught exception " + e.getMessage()
+        // throw e2
     }
   }
 
