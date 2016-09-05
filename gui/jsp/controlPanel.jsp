@@ -36,13 +36,14 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/stateNotification.js" />
   <script type="text/javascript">
     var guiInst = new GUI();
   </script>
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequest.js" />
   <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequestFunctions.js" />--%>
   <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />--%>
-  <script type="text/javascript" src="../js/stateNotification.js"></script>
+  <%--<script type="text/javascript" src="../js/stateNotification.js"></script>--%>
   <script type="text/javascript" src="../js/common.js"></script>
   <script type="text/javascript" src="../js/control.js"></script>
   <script type="text/javascript" src="../js/globalParameters.js"></script>

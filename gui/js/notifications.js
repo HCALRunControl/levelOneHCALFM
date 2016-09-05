@@ -1,4 +1,6 @@
-function drawMyCommandButtons() {}
+function drawMyCommandButtons(state) {
+  //console.log("called drawMyCommandButtons with state: " + state);
+}
 
 function myUpdateParameters(message) {
     var pArray = message.getElementsByTagName('PARAMETER');
