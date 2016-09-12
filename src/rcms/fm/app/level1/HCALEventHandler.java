@@ -1082,7 +1082,64 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("")));
   }
 
+  //Set instance numbers and HandleLPM after initXDAQ()
+  protected void initXDAQinfospace() {
+      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
+      QualifiedResourceContainer qrc = new QualifiedResourceContainer(xdaqApplicationList);
+      for (QualifiedResource qr : qrc.getActiveQRList()) {
+          try {
+            XDAQParameter pam = null;
+            pam = ((XdaqApplication)qr).getXDAQParameter();
+            String ruInstance = ((StringT)functionManager.getHCALparameterSet().get("RU_INSTANCE").getValue()).getString();
+            if (ruInstance==""){
+              logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
+            }
+            for (String pamName : pam.getNames()){
+              if (pamName.equals("RUinstance")) {
+                pam.select(new String[] {"RUinstance"});
+                pam.setValue("RUinstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("BUInstance")) {
+                pam.select(new String[] {"BUInstance"});
+                pam.setValue("BUInstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("EVMinstance")) {
+                pam.select(new String[] {"EVMinstance"});
+                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("HandleLPM")) {
+                pam.select(new String[] {"HandleLPM"});
+                pam.setValue("HandleLPM", "true");
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
+              }
+              ////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+              //if (pamName.equals("usePrimaryTCDS")) {
+              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+              //  pam.select(new String[] {"usePrimaryTCDS"});
+              //  pam.setValue("usePrimaryTCDS", "false");
+              //  pam.send();
+              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+              //}
+            }
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
+            functionManager.goToError(errMessage);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
+            functionManager.goToError(errMessage);
+          }
+      }
 
+  }
   // prepare SOAP bag for sTTS test
   protected XDAQMessage getTTSBag(String TTSMessage, int sourceid, int cycle, int value) throws XDAQMessageException {
     Map<String, String> v=new HashMap<String, String>();

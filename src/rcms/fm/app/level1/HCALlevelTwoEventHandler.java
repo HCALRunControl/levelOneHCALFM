@@ -90,12 +90,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
   static RCMSLogger logger = new RCMSLogger(HCALlevelTwoEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
-
   public HCALlevelTwoEventHandler() throws rcms.fm.fw.EventHandlerException {}
 
   public void init() throws rcms.fm.fw.EventHandlerException {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     qualifiedGroup  = functionManager.getQualifiedGroup();
+
     xmlHandler = new HCALxmlHandler(this.functionManager);
     super.init();
       
@@ -138,7 +138,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
           //logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
           for (QualifiedResource qr : xdaqApplicationList) {
-            //if (qr.getName().equals(MaskedApplication.getString()) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
+            //if (qr.getName().equals(MaskedApplication.getString()) || qr.getName().equals(MaskedAppWcolonsNoCommas)) 
             //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
             if (qr.getName().equals(MaskedApplication.getString())) {
               //logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
@@ -205,78 +205,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // we also halt the LPM applications inside here
       initXDAQ();
 
-      //logger.info("[JohnLogX] just after initXdaq");
       String ruInstance = "";
       if (parameterSet.get("RU_INSTANCE") != null) {
         ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE",new StringT(ruInstance)));
       }
-      logger.info("[JohnLogX] finished setting ruInstance after initXdaq");
       String lpmSupervisor = "";
       if (parameterSet.get("LPM_SUPERVISOR") != null) {
         lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
       }
 
-      logger.info("[JohnLogX] finished setting parameters after initXdaq");
-      for (QualifiedResource qr : xdaqApplicationList) {
-        if (qr.isActive()) {
-          try {
-            XDAQParameter pam = null;
-            pam = ((XdaqApplication)qr).getXDAQParameter();
-            for (String pamName : pam.getNames()){
-              if (pamName.equals("RUinstance")) {
-                pam.select(new String[] {"RUinstance"});
-                pam.setValue("RUinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("BUInstance")) {
-                pam.select(new String[] {"BUInstance"});
-                pam.setValue("BUInstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("EVMinstance")) {
-                pam.select(new String[] {"EVMinstance"});
-                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("HandleLPM")) {
-                pam.select(new String[] {"HandleLPM"});
-                pam.setValue("HandleLPM", "true");
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
-              }
-              ////XXX SIC TODO FIXME WHY DOES THIS CRASH?
-              //if (pamName.equals("usePrimaryTCDS")) {
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //  pam.select(new String[] {"usePrimaryTCDS"});
-              //  pam.setValue("usePrimaryTCDS", "false");
-              //  pam.send();
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //}
-            }
-          }
-          catch (XDAQTimeoutException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          catch (XDAQException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-      }
+      //Set instance numbers and HandleLPM in the infospace
+      initXDAQinfospace();
+
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
@@ -418,6 +360,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // init all XDAQ executives
       // also halt all LPM applications inside here
       initXDAQ();
+
+      // init xdaq infospace for instance number and HandleLPM
+      initXDAQinfospace();
 
       // go to Halted
       if (!functionManager.ErrorState) {
@@ -1552,6 +1497,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               functionManager.goToError(errMessage,e);
             }
 
+            // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
+            waitforTriggerAdapter(10);
           }
           else {
             if (functionManager.FMrole.equals("EvmTrig")) {
@@ -1660,8 +1607,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
            }
            }
            */
-        // halt LPM
-        functionManager.haltLPMControllers();
 
         // stop the StorageManagers
         if (!functionManager.containerStorageManager.isEmpty()) {
@@ -1674,6 +1619,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             functionManager.goToError(errMessage,e);
           }
         }
+      }
+
+      // halt LPM
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        functionManager.haltLPMControllers();
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
@@ -1791,6 +1741,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
+
+      // go to Halted
+      if (!functionManager.ErrorState) {
+        functionManager.fireEvent( HCALInputs.SETCOLDRESET );
+      }
 
 
       // set action
@@ -2176,10 +2131,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
       else {
-        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No DCC (HCAL FED) found: preparingTTSTestModeAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! No DCC (HCAL FED) found, DTC version of preparingTTSTestModeAction() has not been implemented";
+        logger.warn(warnMessage);
       }
 
       // leave intermediate state
@@ -2191,7 +2144,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("preparingTestModeAction executed ...")));
 
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] preparingTestModeAction executed ...");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] preparingTestModeAction executed ...");
     }
   }
 
@@ -2280,13 +2233,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
       else {
-        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No DCC (HCAL FED) found: testingTTSAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! No DCC (HCAL FED) found, DTC version of testingTTSAction() has not been implemented";
+        logger.warn(warnMessage);
       }
 
       // leave intermediate state
@@ -2298,7 +2246,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] testingTTSAction executed ...");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] testingTTSAction executed ...");
     }
   }
   public class TTCciWatchThread extends Thread {

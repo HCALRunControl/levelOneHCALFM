@@ -941,13 +941,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       }
     }
-    // FIXME SIC IS THIS NEEDED?
-    //else {
-    //  if (!functionManager.ErrorState) {
-    //    logger.info("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
-    //    functionManager.fireEvent(HCALInputs.SETSTART);
-    //  }
-    //}
 
     // set action
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1091,30 +1084,34 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
         // halt all FMs
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        FunctionManager fmChild = null;
-        while (it.hasNext()) {
-          fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals(HCALStates.HALTING.toString()) || fmChild.refreshState().toString().equals(HCALStates.HALTED.toString()))) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.HALT);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.HALT + " failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Halted\".\nWill sent not send" + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-            }
-          }
+        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+        List<FunctionManager> normalFMsToHaltList = new ArrayList<FunctionManager>();
+        for(QualifiedResource qr : fmChildrenList)
+          normalFMsToHaltList.add((FunctionManager)qr);
+        normalFMsToHaltList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
+        normalFMsToHaltList.removeAll(functionManager.containerFMTCDSLPM.getQualifiedResourceList());
+        QualifiedResourceContainer normalFMsToHaltContainer = new QualifiedResourceContainer(normalFMsToHaltList);
+        // include scheduling
+        // SIC TODO I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
+        TaskSequence haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+        // 1) EvmTrig (TA) FM
+        if(!functionManager.containerFMChildrenEvmTrig.isEmpty()) {
+          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting EvmTrig child FM");
+          haltTaskSeq.addLast(evmTrigTask);
         }
+        // 2) TCDSLPM FM
+        if(!functionManager.containerFMTCDSLPM.isEmpty()) {
+          SimpleTask tcdslpmTask = new SimpleTask(functionManager.containerFMTCDSLPM,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting TCDSLPM child FM");
+          haltTaskSeq.addLast(tcdslpmTask);
+        }
+        // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
+        if(!normalFMsToHaltContainer.isEmpty()) {
+          SimpleTask fmChildrenTask = new SimpleTask(normalFMsToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting normal child FMs");
+          haltTaskSeq.addLast(fmChildrenTask);
+        }
+
+        logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+        functionManager.theStateNotificationHandler.executeTaskSequence(haltTaskSeq);
       }
       else {
         if (!functionManager.ErrorState) {
@@ -1122,7 +1119,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           functionManager.fireEvent(HCALInputs.SETHALT);
         }
       }
-
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
