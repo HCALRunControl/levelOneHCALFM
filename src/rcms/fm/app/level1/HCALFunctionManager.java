@@ -228,6 +228,9 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String alarmerPartition = "";
 
+  // Set of parameter to pass to LV2 from LV1 during init
+  public ParameterSet<CommandParameter> initPset = null;
+
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
 
