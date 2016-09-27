@@ -205,8 +205,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       QualifiedGroup qg = functionManager.getQualifiedGroup();
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
-
       VectorT<StringT> MaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+
 
       if (MaskedResources.size() > 0) {
         //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
@@ -324,6 +324,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // prepare command plus the parameters to send
       Input initInput = new Input(HCALInputs.INITIALIZE.toString());
       initInput.setParameters( pSet );
+      //Save the pSet
+      functionManager.initPset = pSet;
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
@@ -737,6 +739,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       AlarmerWatchThread thread4 = new AlarmerWatchThread();
       thread4.start();
 
+      List<FunctionManager>   ReInitFMList   = new ArrayList<FunctionManager>();
 
       // Disable FMs based on FED_ENABLE_MASK, if all FEDs in the FM partition are masked.
       // First, make map <partition => fed list>
@@ -768,24 +771,46 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked, and destroy.
       List<String> maskedChildFMs = getMaskedChildFMsFromFedMask(FedEnableMask, childFMFedMap);
-      String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString(); // For local runs, masking the evmTrigFM will cause problems, so forbid it.
+
+      // 1) Check if we need to ReInit any FM:
+      for(QualifiedResource qr : fmChildrenList) {
+        String childFMName = qr.getName();
+        // Conditions to bring back the FM:
+        // 1. At least 1 FED is enabled
+        // 2. Is not active (destroy previously)
+        // 3. Is not masked during initialize (not in containerFMChildren )
+        if (!maskedChildFMs.contains(childFMName) && !qr.isActive()  ) {
+          // Try to bring back the FM to init
+          try {
+            FunctionManager LV2FM = ((FunctionManager)qr);
+            LV2FM.init();
+            qr.setActive(true);
+            ReInitFMList.add(LV2FM);
+          }
+          //XXX FIXME: should be changed to the proper exception type
+          catch (Exception e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Exception: ReInit during configureAction failed ...";
+            functionManager.goToError(errMessage);
+          }
+        }
+      }
+
+      String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString(); 
+      // 2) Destroy the FM if the FEDList is completely out
       for(QualifiedResource qr : fmChildrenList) {
         String childFMName = qr.getName();
         if (maskedChildFMs.contains(childFMName)) {
           logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to mask and destroy FM child " + childFMName + "." );
 
           // Check that the partition is not responsible for event building/triggering
+          // For local runs, masking the evmTrigFM will cause problems, so forbid it.
           if (childFMName.equals(evmTrigFM)) {
             functionManager.goToError("[HCAL LVL 1 " + functionManager.FMname + "] Error! I want to disable " + childFMName + " based on FED_ENABLE_MASK, but it is designated as EVM_TRIG_FM.");
           }
-          // kill all XDAQ executives
-          //FunctionManager fm = (FunctionManager)qr;
-          //UserFunctionManager myFM = fm.getUserFunctionManager();
-          //UserFunctionManager myFM = UserFunctionManager(qr);
-          //logger.warn("[HCAL LVL1 " + functionManager.FMname + "] SethLog -- Found FM child named "+ ((HCALFunctionManager)(((FunctionManager)qr).getUserFunctionManager())).FMname+": will now mask it and kill its xdaqs!" );
-          //((HCALFunctionManager)((FunctionManager)qr).getUserFunctionManager()).destroyXDAQ();
+          // Disable the FM in RCMS land
           qr.setActive(false);
           try {
+            // Destroy the xdaq processes via JC
             ((FunctionManager)qr).destroy();
           }
           //XXX FIXME: should be changed to the proper exception type
@@ -793,6 +818,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Exception: destroy failed ...";
             functionManager.goToError(errMessage);
           }
+
         }
       }
       // END TEST PARTITION DISABLING
@@ -824,6 +850,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
       configureInput.setParameters( pSet );
 
+      Input initInput = new Input(HCALInputs.INITIALIZE.toString());
+      initInput.setParameters( functionManager.initPset );
+
       if (!functionManager.containerFMChildren.isEmpty()) {
         logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
 
@@ -833,11 +862,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
-        // now configure the rest in parallel
+        // 1) Revive the destroyed FM in neccesary
+        QualifiedResourceContainer ReInitFMContainer = new QualifiedResourceContainer( ReInitFMList );
+        if(!ReInitFMContainer.isEmpty()){
+          String ReInitFMnames     = getQRnamesFromContainer(ReInitFMContainer);
+          logger.info("HCAL LV1 "+functionManager.FMname +" Going to ReInit these FM: " + ReInitFMnames);
+          SimpleTask ReInitFMTask = new SimpleTask(ReInitFMContainer,initInput,HCALStates.INITIALIZING,HCALStates.HALTED,"Re-Init the destroyedFM");
+          configureTaskSeq.addLast(ReInitFMTask);
+        }
+
+        // 2) now configure the rest in parallel
         //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
         List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : fmChildrenList)
+        for(QualifiedResource qr : fmChildrenList){
           normalFMsToConfigureList.add((FunctionManager)qr);
+        }
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
         String normalFMnames     = getQRnamesFromContainer(normalFMsToConfigureContainer);
