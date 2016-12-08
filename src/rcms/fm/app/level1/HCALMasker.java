@@ -19,8 +19,9 @@ import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.user.UserActionException;
 
 /**
+ * Class that provides methods to perform resource masking
+ * 
  *  @author John Hakala
- *
  */
 
 public class HCALMasker {
@@ -37,6 +38,12 @@ public class HCALMasker {
     logger.warn("Done constructing masker.");
   }
 
+  /**
+   * Judge whether an HCALlevelTwoFM is suitable for the EvmTrig role
+   * 
+   * @param level2Children the list of resources of the HCALlevelTwoFunctionManager
+   * @return               a map of booleans that indicate whether the HCALlevelTwoFunctionManager is suitable as the EvmTrig
+   */
   protected Map<String, Boolean> isEvmTrigCandidate(List<Resource> level2Children) {
     boolean hasAtriggerAdapter = false;
     boolean hasAdummy = false;
@@ -74,6 +81,14 @@ public class HCALMasker {
     return response;
   }
 
+  /**
+   * Get the resources needed for EvmTrig operation in an HCALlevelTwoFunctionManager
+   * 
+   * @param  level2Children      the list of child resources of an HCALlevelTwoFunctionManager
+   * @return                     a map indicating which of the HCALlevelTwoFunctionManager's
+   *                             resources will perform each EvmTrig duty
+   * @throws UserActionException if this gets called on a level2 that's not suitable for the EvmTrig role 
+   */
   protected Map<String, Resource> getEvmTrigResources(List<Resource> level2Children) throws UserActionException { 
     if (isEvmTrigCandidate(level2Children).get("isAcandidate")) {
       // This implementation assumes no level2 function managers will have no more than one TA.
@@ -97,9 +112,13 @@ public class HCALMasker {
     }
   }
 
+  /**
+   * Function to pick an FM that has the needed applications for triggering and eventbuilding, and put it in charge of those duties
+   * This will prefer an FM with a DummyTriggerAdapter to other kinds of trigger adapters.
+   * 
+   * @return a map of the candidate EvmTrig FM and associated resources
+   */
   protected Map<String, Resource> pickEvmTrig() {
-    // Function to pick an FM that has the needed applications for triggering and eventbuilding, and put it in charge of those duties
-    // This will prefer an FM with a DummyTriggerAdapter to other kinds of trigger adapters.
 
     Map<String, Resource> candidates = new HashMap<String, Resource>();
 
@@ -163,6 +182,9 @@ public class HCALMasker {
     return candidates;
   }
 
+  /**
+   * Mask the FMs that should be masked
+   */
   protected void setMaskedFMs() {
 
     // functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));

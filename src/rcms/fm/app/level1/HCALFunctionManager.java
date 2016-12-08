@@ -792,6 +792,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   /**----------------------------------------------------------------------
    * set the current Action
+   * @param action the action message string to appear in the ACTION_MESSAGE
    */
   public void setAction(String action) {
 
@@ -817,6 +818,9 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   /**----------------------------------------------------------------------
    * go to the error state, setting messages and so forth, with exception
+   * 
+   * @param  errMessage  the leading part of the error message to display 
+   * @param  e   an exception whose getMessage() will be added to the displayed error message
    */
   public void goToError(String errMessage, Exception e) {
     errMessage += " Message from the caught exception is: "+e.getMessage();
@@ -825,6 +829,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   /**----------------------------------------------------------------------
    * go to the error state, setting messages and so forth, without exception
+   * 
+   * @param errMessage the error message to display
    */
   public void goToError(String errMessage) {
     logger.error(errMessage);
