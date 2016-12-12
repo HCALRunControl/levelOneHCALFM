@@ -218,8 +218,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String rcmsStateListenerURL = "";
 
-  public String alarmerURL = "";
-
   public String alarmerPartition = "";
 
   public HCALFunctionManager() {
