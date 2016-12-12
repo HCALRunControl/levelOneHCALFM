@@ -28,6 +28,7 @@ import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.service.parameter.ParameterServiceException;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
@@ -187,7 +188,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
-      VectorT<StringT> MaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+      VectorT<StringT> MaskedResources  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
 
       if (MaskedResources.size() > 0) {
         //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
@@ -1522,7 +1523,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       while ( stopProgressThread == false && functionManager.isDestroyed() == false && Math.abs(progress-1.0)>0.001) {
 
         Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+        VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
         progress = 0.0;
         while (it.hasNext()) {
           FunctionManager childFM = (FunctionManager) it.next();

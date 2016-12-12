@@ -12,6 +12,7 @@ import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
@@ -84,7 +85,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
       boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
       if (doMasking) {
-        VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
+        VectorT<StringT> MaskedResources  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
         StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
@@ -597,7 +598,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // Instead of setting infospace, destoryXDAQ if this FM is mentioned in EmptyFM
       if (parameterSet.get("EMPTY_FMS")!=null ) {
-        VectorT<StringT> EmptyFMs  = (VectorT<StringT>)parameterSet.get("EMPTY_FMS").getValue();
+        VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
         if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
           // configure PeerTransportATCPs
@@ -816,7 +817,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.warn("[HCAL LVL2 B] TestMode! ... RunInfo summary should be published.");
         }
       }
-      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Start EmptyFM
         logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Starting EmptyFM");
@@ -1068,7 +1069,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("pausing")));
 
       // FireEvent and return if this FM is empty
-      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Stop EmptyFM
         logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Pausing EmptyFM");
@@ -1131,7 +1132,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("resuming")));
 
       // FireEvent and return if this FM is empty
-      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Resume EmptyFM
         logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Resuming EmptyFM");
@@ -1193,7 +1194,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("halting")));
 
-      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Bring back the destroyed XDAQ
         logger.info("[HCAL LV2 " + functionManager.FMname + "] Bringing back the XDAQs");
@@ -1428,7 +1429,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("stopping")));
 
       // FireEvent and return if this FM is empty
-      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      VectorT<StringT> EmptyFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue());
+
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Stop EmptyFM
         logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Stopping EmptyFM");

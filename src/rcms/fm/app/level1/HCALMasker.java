@@ -16,6 +16,7 @@ import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.user.UserActionException;
 
 /**
@@ -42,7 +43,7 @@ public class HCALMasker {
     boolean hasAdummy = false;
     boolean hasAnEventBuilder = false;
     boolean hasAnFU = false;
-    VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    VectorT<StringT> maskedRss  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
     logger.warn(maskedRss.toString());
     StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
 
@@ -108,7 +109,7 @@ public class HCALMasker {
 
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    VectorT<StringT> MaskedFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
 
@@ -172,7 +173,7 @@ public class HCALMasker {
     // This includes user GUI input and userXML maskedapps input.
     // The qr.setActive(false) will turn off the RCMS status of the FM. 
     // It's OK for an maskedapps to call that method too, although maskedapps will be stripped by the stripExecXML() anyway.
-    VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    VectorT<StringT> MaskedFMs  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
 
     logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs.toString());
     String userXmlMaskedFM = "not set";
@@ -264,7 +265,7 @@ public class HCALMasker {
               }
 
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-              allMaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+              allMaskedResources  = ParameterTypeFactory.toSimple(functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue());
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources.add(new StringT(level2resource.getName()));

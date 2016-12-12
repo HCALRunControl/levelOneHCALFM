@@ -45,6 +45,7 @@ import rcms.fm.fw.parameter.type.ShortT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -163,7 +164,7 @@ public class HCALxmlHandler {
       execXML.getDocumentElement().normalize();
 
       //String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
-      VectorT<StringT> maskedAppsVector = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
+      VectorT<StringT> maskedAppsVector = ParameterTypeFactory.toSimple(parameterSet.get("MASKED_RESOURCES").getValue());
       StringT[] maskedAppArray = maskedAppsVector.toArray(new StringT[maskedAppsVector.size()]);
       String newExecXMLstring = "";
       int NxcContexts = 0;
