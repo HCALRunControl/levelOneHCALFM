@@ -30,8 +30,6 @@ public final class HCALStates {
 
 	public static final State PREINIT = new State("Pre-Init");
 
-	public static final State COLDINIT = new State("Cold-Init");
-
 	public static final State INIT = new State("Init");
 
 	public static final State CONFIGURED = new State("Configured");

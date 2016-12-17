@@ -13,7 +13,6 @@ import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.IntegerT;
-import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
@@ -180,7 +179,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // start the HCALSupervisor watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!functionManager.containerhcalSupervisor.isEmpty()) {
+      if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
         HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
         thread2.start();
       } 
@@ -394,11 +393,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (!functionManager.containerTTCciControl.isEmpty()) {
         TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
         ttcciwatchthread.start();
-      }
-
-      if (functionManager.containerhcalSupervisor.isEmpty()) {
-       // TODO: handle this case appropriately for FMs with no hcalSupervisor
-       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS",new DoubleT(1.0)));
       }
      
       String CfgCVSBasePath           = "not set";

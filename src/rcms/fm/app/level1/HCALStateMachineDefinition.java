@@ -170,6 +170,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  hcalLPMControl                    =  new CommandParameter<StringT>  ("HCAL_LPMCONTROL"         ,  new StringT("")     );
     CommandParameter<StringT>  hcalPIControl                     =  new CommandParameter<StringT>  ("HCAL_PICONTROL"          ,  new StringT("")     );
     CommandParameter<StringT>  configureSUPERVISOR_ERROR         =  new CommandParameter<StringT>  ("SUPERVISOR_ERROR"        ,  new StringT("")     );
+    CommandParameter<StringT>  configureAVAILABLE_RUN_CONFIGS    =  new CommandParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"   ,  new StringT("")     );
     CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
     CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
@@ -200,6 +201,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(hcalPIControl);
       configureParameters.add(configureUSE_PRIMARY_TCDS);
       configureParameters.add(configureSUPERVISOR_ERROR);
+      configureParameters.add(configureAVAILABLE_RUN_CONFIGS);
       configureParameters.add(configureRUN_CONFIG_SELECTED);
       configureParameters.add(configureSID);
       configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);

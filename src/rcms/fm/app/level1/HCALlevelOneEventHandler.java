@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.HashMap;
-import java.lang.Math;
 
 import java.io.StringReader; 
 import java.io.IOException;
@@ -27,9 +26,7 @@ import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
-import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.parameter.type.IntegerT;
-import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
@@ -63,11 +60,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
   public HCALMasker masker = null;
-  private AlarmerWatchThread alarmerthread = null;
-
-  private Double  progress           = 0.0;
-  private Integer nChildren          = 0;
-  private Boolean stopProgressThread = false;
 
   public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -103,7 +95,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // RunType = "global";
 
         // request a session ID
-        functionManager.getSessionId();
+        getSessionId();
         // get the Sid from the init command
         if (functionManager.getParameterSet().get("SID") != null) {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
@@ -121,7 +113,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("GLOBAL_CONF_KEY",new StringT(GlobalConfKey)));
 
-        // RUN_CONFIG_SELECTED = LocalRunKey; CFGSNIPPET_KEY_SELECTED = MasterSnippet file of LocalRunKey
         RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
         CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
       }
@@ -448,7 +439,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
 
   public void configureAction(Object obj) throws UserActionException {
-    
+
     if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing configureAction");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] Executing configureAction");
@@ -636,8 +627,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Parse the mastersnippet:
       String selectedRun = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
       String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      // Reset HCAL_CFGSCRIPT:
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
 
       // Try to find a common masterSnippet from MasterSnippet
       String CommonMasterSnippetFile ="";
@@ -698,6 +687,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
       TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
 
+
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence              );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence               );
@@ -712,20 +702,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL
-      if (alarmerthread!=null){
-        if (alarmerthread.isAlive()){
-          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] AlarmerWatchThread is alive, not creating a new one...");
-        }else{
-          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] AlarmerWatchThread is not alive, creating a new one...");
-          alarmerthread = new AlarmerWatchThread();
-          alarmerthread.start();
-        }
+      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+      if( functionManager.alarmerPartition.equals("")){
+          functionManager.alarmerPartition = "HBHEHO";
+          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
       }
-      else{
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
-        alarmerthread = new AlarmerWatchThread();
-        alarmerthread.start();
-      }
+      AlarmerWatchThread thread4 = new AlarmerWatchThread();
+      thread4.start();
+
 
       // Disable FMs based on FED_ENABLE_MASK, if all FEDs in the FM partition are masked.
       // First, make map <partition => fed list>
@@ -777,13 +761,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         emptyFMnames += FMname.getString()+";";
       }
       // END TEST PARTITION DISABLING
-      
-      // Start Progress Watchthread after updating EmptyFM
-      nChildren    = functionManager.containerFMChildren.getQualifiedResourceList().size();
-      int nEmptyFM = ((VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue()).size();
-      nChildren    = nChildren - nEmptyFM;
-      ProgressThread progressThread = new ProgressThread(functionManager);
-      progressThread.start();
 
 
       // prepare run mode to be passed to level 2
@@ -856,9 +833,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
-
-      // delay the first poll of alarmerWatchThread
-      delayAlarmerWatchThread    = true;
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
@@ -1129,8 +1103,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
-      stopProgressThread = true;
-      progress = 0.0;
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
@@ -1376,6 +1348,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
+
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("stoppingAction executed ...")));
@@ -1504,54 +1477,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] testingTTSAction executed ...");
-    }
-  }
-  protected class ProgressThread extends Thread {
-    protected HCALFunctionManager functionManager = null;
-    RCMSLogger logger = null;
-
-    public ProgressThread(HCALFunctionManager parentFunctionManager) {
-      this.logger = new RCMSLogger(HCALFunctionManager.class);
-      this.functionManager = parentFunctionManager;
-      logger.info("Done constructing ProgressThread " + functionManager.FMname + ".");
-    }
-
-    public void run() {
-      stopProgressThread = false;
-      progress = 0.0;
-      logger.debug("[JohnLogProgress] " + functionManager.FMname + ": starting ProgressThread.");
-      while ( stopProgressThread == false && functionManager.isDestroyed() == false && Math.abs(progress-1.0)>0.001) {
-
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
-        progress = 0.0;
-        while (it.hasNext()) {
-          FunctionManager childFM = (FunctionManager) it.next();
-          if (childFM.isInitialized() && !EmptyFMs.contains(new StringT(childFM.getName()))) {
-            ParameterSet<FunctionManagerParameter> lvl2pars;
-            try {
-              lvl2pars = childFM.getParameter(functionManager.getHCALparameterSet());
-            }
-            catch (ParameterServiceException e) {
-              logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + childFM.getResource().getName() + " The exception is:", e);
-              return;
-            }
-            logger.debug("Got progress from level2 FM" + childFM.getName() + " = " +((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble());
-            progress += ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
-          }
-        }
-        logger.debug("[JohnLogProgress] " + functionManager.FMname + ": got total progress " + progress);
-        progress = progress/(nChildren.doubleValue());
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
-
-        // delay between polls
-        try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
-      }
-
-      // stop the Monitor watchdog thread
-      logger.info("[HCAL " + functionManager.FMname + "]: Total progress is " + progress+ ". Done configuring. Stopping ProgressThread.");
-      logger.debug("[HCAL " + functionManager.FMname + "] ... stopping ProgressThread.");
     }
   }
   public void exitAction(Object obj) throws UserActionException {

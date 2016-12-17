@@ -175,10 +175,26 @@ public class HCALMasker {
     VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
     logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs.toString());
+    String userXmlMaskedFM = "not set";
     String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
+    try{
+        userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
+        logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
+    } catch (UserActionException e){
+        logger.error("[Martin log " + functionManager.FMname + "]: Got an error when getting maskedFM from userXML: " + e);
+    }
+    if (!userXmlMaskedFM.equals("")) {
+      String[] userXmlMaskedFMarray = userXmlMaskedFM.split(";");
+      for (String xmlMaskedFM : userXmlMaskedFMarray) {
+        MaskedFMs.add(new StringT(xmlMaskedFM));
+      }
+    }
     logger.info("[Martin log "+ functionManager.FMname + "]: The final list of MaskedFMs is " + MaskedFMs.toString());
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    //boolean somebodysHandlingTA = false;
+    //boolean itsThisLvl2 = false;
+    //boolean itsAdummy = false;
 
     //Update the MaskedResources for pickEvmTrig
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
@@ -201,6 +217,9 @@ public class HCALMasker {
       logger.error("Caught a CloneNotSupportedException when cloning the MaskedFMs vector.");
     }
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
+    //String ruInstance = "";
+    //String lpmSupervisor = "";
+    //String EvmTrigsApps = "";
     Map<String, Resource> evmTrigResources = pickEvmTrig();
 
     String eventBuilder   = "none";
@@ -222,6 +241,7 @@ public class HCALMasker {
          qr.getResource().setRole("EvmTrig");
          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
       }
+      //itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());

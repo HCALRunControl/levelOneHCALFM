@@ -28,7 +28,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
  
     Thread timeoutThread = null;
  
-    static final int COLDINITTIMEOUT = 1000*1200; // 20 minutes in ms
 //    public Boolean interruptedTransition = false;
     //this is active only in global mode..
  
@@ -158,11 +157,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           }
           handleError(errMsg,actionMsg);
           return;
-        } else if ( notification.getToState().equals(HCALStates.COLDINIT.toString()) ) {
-          fm.setAction("HCAL is in Cold-Init");
-          logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification for Cold-Init; setting timeout thread to a longer value");
-          setTimeoutThread(true,COLDINITTIMEOUT);
-          return;
         }
       }
 
@@ -250,7 +244,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             taskSequence.startExecution();
  
             //logger.warn("started execution of taskSequence");
-            setTimeoutThread(true,COLDINITTIMEOUT); // set maximum timeout for level-1; level-2s can still time out earlier
+            setTimeoutThread(true);
             try {
                 fm.getParameterSet().get("ACTION_MSG")
                     .setValue(new StringT(""+taskSequence.getDescription()));
@@ -289,12 +283,9 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     }
  
     /*--------------------------------------------------------------------------------
-     * Start or stop the timeout thread for transitions; default timeout is 4 minutes
+     *
      */
     public void setTimeoutThread(Boolean action) {
-        setTimeoutThread(action,240000);
-    }
-    public void setTimeoutThread(Boolean action, int msTimeout) {
  
         if (timeoutThread!=null) {
             try {
@@ -314,7 +305,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             isTimeoutActive = true;
             timeoutThread = new Thread( new Runnable()
                 {
-                    int milliSecondSleepTime = msTimeout;
+                    //int milliSecondSleepTime = 1000*fm.getEventHandler().getTimeout();
+                    int milliSecondSleepTime = 1000*240; // 4 mins timeout
  
                     public void run() {    
                         try {

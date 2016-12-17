@@ -26,7 +26,6 @@ import rcms.fm.resource.StateVector;
 import rcms.fm.resource.StateVectorCalculation;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionConnector;
-import rcms.util.logsession.LogSession;
 import rcms.errorFormat.CMS.CMSError;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -303,6 +302,8 @@ public class HCALFunctionManager extends UserFunctionManager {
       if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
     }
 
+    FMpartition = FMname.substring(5);
+
     System.out.println("[HCAL " + FMname + "] createAction called.");
     logger.debug("[HCAL " + FMname + "] createAction called.");
 
@@ -314,6 +315,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     RunSetupDetails += "\nFM URL: " + FMurl;
     RunSetupDetails += "\nFM URI: " + FMuri;
     RunSetupDetails += "\nFM role: " + FMrole;
+    RunSetupDetails += "\nused for HCAL partition: " + FMpartition;
     RunSetupDetails += "\nthis FM was started at: " + utcFMtimeofstart;
 
     logger.info("[HCAL " + FMname + "] Run configuration details" + RunSetupDetails);
@@ -379,27 +381,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
     }*/
 
-    // LV1 should try to close any open session ID not requested by LV0 
-    if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {
-      int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
-      Integer SIDforLV0   = ((IntegerT)getParameterSet().get("INITIALIZED_WITH_SID").getValue()).getInteger();
-      if (logSessionConnector.getSession(sessionId)!=null){
-        LogSession currentSession = logSessionConnector.getSession(sessionId);
-        logger.debug("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
-        if (currentSession.isOpen()){
-          if(SIDforLV0.equals(-1)){
-            logger.info("[HCAL "+FMname+"] Closing current log session "+sessionId);
-            closeSessionId(); 
-          }
-          else{
-            logger.info("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is requested by LV0 ");
-          }
-        }
-        else{
-            logger.info("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is already closed");
-        }
-      }
-    }
+    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs and if it's a LV1FM
+    if (RunType.equals("local") && !containerFMChildren.isEmpty()) { closeSessionId(); }
 
     // unsubscribe from retrieving XMAS info
     if (XMASMonitoringEnabled) { unsubscribeWSE(); }  
@@ -420,8 +403,8 @@ public class HCALFunctionManager extends UserFunctionManager {
           }
           catch (Exception e) {
             String errMessage = "[HCAL " + FMname + "] Could not destroy FM client named: " + fmChild.getResource().getName().toString() +"\n The URI is: "+ fmChild.getResource().getURI().toString() + "\nThe exception is:\n" + e.toString();
-            goToError(errMessage,e);
-            throw (UserActionException) e;
+            logger.error(errMessage,e);
+            // supressed to not worry the CDAQ shifter sendCMSError(errMessage);
           }
         }
       }
@@ -433,18 +416,12 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopAlarmerWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
-    try{
-      destroyXDAQ();
-    }
-    catch (UserActionException e){
-      String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";
-      goToError(errMessage,e);
-      throw e;
-    }
+    destroyXDAQ();
+
     destroyed = true;
 
     System.out.println("[HCAL " + FMname + "] destroyAction executed ...");
-    logger.info("[HCAL " + FMname + "] destroyAction executed ...");
+    logger.debug("[HCAL " + FMname + "] destroyAction executed ...");
   }
 
   public void unsubscribeWSE() {
@@ -574,7 +551,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
         sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
         if (asynchcalSupervisor) {
-          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.COLDINIT,HCALStates.INIT));
+          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
         }
         svCalc.add(sv);
       }
@@ -712,20 +689,19 @@ public class HCALFunctionManager extends UserFunctionManager {
       String description = getQualifiedGroup().getGroup().getDirectory().getFullPath();
       int sessionId = 0;
 
-      logger.debug("[HCAL "+FMname+"] Log session connector: " + logSessionConnector );
+      logger.debug("[HCAL base] Log session connector: " + logSessionConnector );
 
       if (logSessionConnector != null) {
         try {
           sessionId = logSessionConnector.createSession( user, description );
-          logger.debug("[HCAL "+FMname+"] New session Id obtained =" + sessionId );
-          logger.info("[HCAL "+FMname+"] New session obtained :" + logSessionConnector.getSession(sessionId).toString() );
+          logger.debug("[HCAL base] New session Id obtained =" + sessionId );
         }
         catch (LogSessionException e1) {
-          logger.warn("[HCAL "+FMname+"] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
+          logger.warn("[HCAL base] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
         }
       }
       else {
-        logger.warn("[HCAL "+FMname+"] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");      
+        logger.warn("[HCAL base] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");      
       }
 
       // put the session ID into parameter set
@@ -886,7 +862,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * get all XDAQ executives and kill them
    */
-  protected void destroyXDAQ() throws UserActionException {
+  protected void destroyXDAQ() {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
     if (containerhcalSupervisor != null) {
@@ -896,14 +872,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         supervExecURI = qrSupervParentExec.getURI();
         QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
-        try{
-            ex.destroy();
-        }
-        catch( Exception e){
-          String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
-          goToError(errMessage,e);
-          throw (UserActionException) e;
-        }
+        ex.destroy();
       }
     }
 
@@ -914,14 +883,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       while (it.hasNext()) {
         XdaqExecutive ex = (XdaqExecutive) it.next();
         if (!ex.getURI().equals(supervExecURI)) {
-          try{
-            ex.destroy();
-          }
-          catch(Exception e){
-            String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
-            goToError(errMessage,e);
-            throw (UserActionException)e;
-          }
+          ex.destroy();
         }
       }
     }

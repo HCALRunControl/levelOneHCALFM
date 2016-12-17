@@ -68,7 +68,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 </head>
 
-<body onload='hcalOnLoad(); makecheckboxes();'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
