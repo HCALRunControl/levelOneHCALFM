@@ -554,6 +554,7 @@ public class HCALxmlHandler {
               } else {
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
               }
+              break;
             }
             case "UnsignedIntegerT":
             {
@@ -633,7 +634,8 @@ public class HCALxmlHandler {
       //}
       
     } catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got an error when parsing masterSnippet: " + e.getMessage());
+        String errMessage="[HCAL " + functionManager.FMname + "]: Got an error when parsing masterSnippet" ;
+        functionManager.goToError(errMessage,e);
     }
 
   }
