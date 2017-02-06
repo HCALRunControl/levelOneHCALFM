@@ -47,9 +47,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
-      //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
-      //
+      //    "from " + notification.getIdentifier() +
+      //    " from state: " + notification.getFromState()+
+      //    " to: " + notification.getToState());
+      
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
@@ -57,7 +58,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         return;
       }
 
-      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().equals(HCALStates.FAILED.toString())) {
+      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().compareToIgnoreCase(HCALStates.FAILED.toString())==0) {
         String appName = "";
         try {
           appName = fm.findApplicationName( notification.getIdentifier() );

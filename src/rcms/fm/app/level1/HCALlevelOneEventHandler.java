@@ -13,6 +13,8 @@ import java.io.IOException;
 
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
+import rcms.fm.resource.qualifiedresource.XdaqApplication;
+import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -38,6 +40,8 @@ import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.common.db.DBConnectorException;
+import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
@@ -45,6 +49,7 @@ import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
+import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.SimpleTask;
@@ -53,6 +58,8 @@ import rcms.utilities.runinfo.RunNumberData;
 import rcms.statemachine.definition.Input;
 import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.xdaqctl.XDAQParameter;
+import net.hep.cms.xdaqctl.XDAQException;
 
 /**
  * Event Handler class for HCAL Function Managers
@@ -79,7 +86,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
@@ -327,7 +333,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       masker.pickEvmTrig();
       masker.setMaskedFMs();
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
+      
+      // convert TCDS apps to service apps
+      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // reset QG to modified one
+      functionManager.setQualifiedGroup(qg);
+      //Set SID of QG for service App
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", sid);
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
+      }
+
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
@@ -397,11 +418,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the RU_INSTANCE " + ruInstance);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE", new StringT(ruInstance)));
       pSet.put(new CommandParameter<StringT>("RU_INSTANCE", new StringT(ruInstance)));
-
-      String lpmSupervisor =  ((StringT)functionManager.getHCALparameterSet().get("LPM_SUPERVISOR").getValue()).getString();
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR", new StringT(lpmSupervisor)));
-      pSet.put(new CommandParameter<StringT>("LPM_SUPERVISOR", new StringT(lpmSupervisor)));
 
       String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the EVM_TRIG_FM " + evmTrigFM);
@@ -802,6 +818,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
       TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
+      // We default skipPLLreset to true for now. 
+      BooleanT skipPLLreset    = ((BooleanT)functionManager.getHCALparameterSet().get("TCDS_SKIP_PLLRESET"     ).getValue());
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence              );
@@ -815,6 +833,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
+      //Set up infospace parameters needed by localDAQ FM
+      SetLocalDAQinfospace();
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -912,6 +932,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
+      pSet.put(new CommandParameter<BooleanT>("TCDS_SKIP_PLLRESET"    , skipPLLreset));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
@@ -930,16 +951,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         // now configure the rest in parallel
         //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
-        List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : fmChildrenList)
-          normalFMsToConfigureList.add((FunctionManager)qr);
-        QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
-        SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+        //List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
+        //for(QualifiedResource qr : fmChildrenList){
+        //  normalFMsToConfigureList.add((FunctionManager)qr);
+        //}
+        //QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
+        //SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+        SimpleTask fmChildrenTask = new SimpleTask(functionManager.containerFMChildrenNormal,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
+        SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");
         
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: ");
-        PrintQRnames(normalFMsToConfigureContainer);
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
+        PrintQRnames(functionManager.containerFMChildrenNormal);
         configureTaskSeq.addLast(fmChildrenTask);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig FM last: ");
+        PrintQRnames(functionManager.containerFMChildrenEvmTrig);
+        configureTaskSeq.addLast(EvmTrigConfigureTask);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
         functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);
@@ -948,9 +975,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed.")));
 
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] configureAction executed ... - were are close ...");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] configureAction executed.");
     }
   }
 
@@ -1659,6 +1686,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] ... stopping ProgressThread.");
     }
   }
+
   public void exitAction(Object obj) throws UserActionException {
 
     if (obj instanceof StateEnteredEvent) {
@@ -1668,6 +1696,65 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       haltAction(obj);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("EXITING")));
       logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
+    }
+  }
+
+  public void SetLocalDAQinfospace(){
+    List<QualifiedResource> EvmTrigFMlist = functionManager.containerFMEvmTrig.getActiveQRList();
+    Boolean isUsingLocalDAQ = false;
+    for (QualifiedResource qr : EvmTrigFMlist){
+      if (qr.getName().contains("localDAQ")){
+        isUsingLocalDAQ = true;
+        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: We have a localDAQ FM!");
+      }
+    }
+    // Set infospace of first LV2 with DTCReadout
+    if (isUsingLocalDAQ){
+      List<QualifiedResource> level2list    = functionManager.containerFMChildrenNormal.getActiveQRList();
+      Boolean foundDTCReadout = false;
+      // getQualifiedGroup() returns the Group in which the FM is created with. ie.: 
+      // ((FunctionManager)level2).getQualifiedGroup() still returns the LV1 QG
+      QualifiedGroup level1group = functionManager.getQualifiedGroup();
+      for (QualifiedResource level2 : level2list){
+        if (!foundDTCReadout){
+          try {
+            //Get the light LV2 group from rs connector of the group
+            Group lv2Group = level1group.rs.retrieveLightGroup(level2.getResource());
+            logger.debug("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s Group after getting from DB: "+lv2Group.toString());
+            //Create a QG from the group
+            //KKH: XdaqApplications lost their class info, i.e. xdaq.getApplication()=null;
+            QualifiedGroup lv2QG = new QualifiedGroup(lv2Group);
+       
+            List<QualifiedResource> xdaqList = lv2QG.seekQualifiedResourcesOfType(new XdaqApplication());
+            for (QualifiedResource qr: xdaqList){
+              XdaqApplication xdaq = (XdaqApplication)qr;
+              logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: This LV2: "+level2.getName()+"   has   xdaq named:"+xdaq.getName());
+              if(xdaq.getName().contains("hcal::DTCReadout")){
+                logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
+                try{
+                  XDAQParameter pam = null;
+                  XdaqApplication DTCReadout = xdaq ; 
+                  pam = DTCReadout.getXDAQParameter();
+                  pam.select(new String[]{"TriggerBlockDestClassname","TriggerBlockDestInstance","PollingReadout"});
+                  pam.setValue("TriggerBlockDestClassname","DummyTriggerAdapter");
+                  pam.setValue("TriggerBlockDestInstance","0");
+                  pam.setValue("PollingReadout","true");
+                  pam.send();
+                  logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Just set "+DTCReadout.getName()+" to send trigger blocks");
+                  foundDTCReadout=true;
+                }
+                catch (XDAQException e) {
+                  String errMessage="[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Failed to get infospace from "+level2.getName();
+                  functionManager.goToError(errMessage,e);
+                }
+              }
+            }
+          }
+          catch (DBConnectorException ex) {
+            logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
+          }
+        }
+      }
     }
   }
 }
