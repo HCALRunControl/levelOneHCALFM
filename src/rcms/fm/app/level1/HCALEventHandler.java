@@ -737,6 +737,14 @@ public class HCALEventHandler extends UserEventHandler {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
+    // If LV1 is in multipartition mode but do not have a LV2 TCDSLPM child, goToError
+    if (!functionManager.containerFMChildren.isEmpty()){
+      boolean isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
+      if(functionManager.containerFMTCDSLPM.isEmpty() && !isSinglePartition) {
+        String errMessage="[HCAL LVL1" + functionManager.FMname+"] Multipartition mode is used but no TCDSLPM FM is found.";
+        functionManager.goToError(errMessage);
+      }
+    }
 
     // see if we have any "special" FMs
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
