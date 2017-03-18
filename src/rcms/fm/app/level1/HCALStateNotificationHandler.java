@@ -52,8 +52,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       //logger.warn("["+fm.FMname+"]: State notification received "+
       //    "from " + notification.getIdentifier() +
       //    " from state: " + notification.getFromState()+
-      //    " to: " + notification.getToState()+
-      //    " with reason: " + notification.getReason());
+      //    " to: " + notification.getToState());
       
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
@@ -132,6 +131,17 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         }
       }
 
+      // process the notification from the FM when stopping 
+      if ( fm.getState().equals(HCALStates.STOPPING) ) {
+
+        // ignore notifications to Stopping but set timeout
+        if ( notification.getToState().equals(HCALStates.STOPPING.toString()) ) {
+          String msg = "HCAL is stopping ";
+          fm.setAction(msg);
+          setTimeoutThread(true);
+          return;
+        }
+      }
 
       // process the notification from the FM when configuring
       if ( fm.getState().equals(HCALStates.CONFIGURING) ) {
@@ -275,9 +285,9 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         }
  
         try {
+            //logger.info("Martin log: Start Execution: "+taskSequence.getDescription());
             taskSequence.startExecution();
- 
-            //logger.warn("started execution of taskSequence");
+
             setTimeoutThread(true,COLDINITTIMEOUT); // set maximum timeout for level-1; level-2s can still time out earlier
             try {
                 fm.getParameterSet().get("ACTION_MSG")
