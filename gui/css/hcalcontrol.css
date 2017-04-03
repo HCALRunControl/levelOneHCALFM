@@ -329,3 +329,65 @@ body {
   border-style: solid;
   border-radius: 5px;
 }
+.control_wrapper {
+  position: relative;
+  left: -13px;
+  display: inline;
+  pointer-events: none;
+}
+.control__indicator {
+  width: 11px;
+  height: 11px;
+  padding-right: 2px;
+  display: inline-block;
+  z-index: 10;
+  pointer-events: none;
+  font-size: 11px;
+  position: relative;
+  top: 2px;
+  left: -1px;
+}
+.control__indicator > span::after {
+  content: "\2705";
+  position: relative;
+  left: -1px;
+  top: -3px;
+}
+.radio_wrapper {
+  position: relative;
+  left: -13px;
+  display: inline;
+  pointer-events: none;
+}
+.radio__indicator {
+  width: 11px;
+  height: 11px;
+  padding-right:2px;
+  display: inline-block;
+  z-index: 10;
+  pointer-events: none;
+  font-size: 11px;
+  position: relative;
+  top: 2px;
+  left: -1px;
+}
+.radio__indicator > span::after {
+  content: "\274c";
+  position: relative;
+  left: -1px;
+  top: -3px;
+}
+#multiPartitionSelection input{
+  z-index: 11;
+  opacity: 0;
+}
+#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator > span::after{
+  content: "\274c";
+}
+#singlePartitionSelection input{
+  z-index: 11;
+  opacity: 0;
+}
+#singlePartitionSelection input:checked ~ .radio_wrapper > .radio__indicator > span::after{
+  content: "\2705";
+}

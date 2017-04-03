@@ -100,8 +100,9 @@ public class HCALxmlHandler {
         userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
       }
       else{
-        String errMessage="[HCAL "+functionManager.FMname+"] The file "+CfgCVSBasePath+fileName+"/pro  does not exists";
-        functionManager.goToError(errMessage);
+        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandMaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
+        throw new UserActionException(errMessage);
+        //functionManager.goToError(errMessage);
       }
       logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -113,22 +114,27 @@ public class HCALxmlHandler {
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
-      logger.error(errMessage);
+      functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
   }
 
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
-    try {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
       Element hcalUserXML = null;
+    try {
       if (!isGrandMaster){
         hcalUserXML = getHCALuserXML();
       }
       else{
         hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
       }
+    }
+    catch(UserActionException e){
+      throw e;
+    }
+    try{
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
           return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();

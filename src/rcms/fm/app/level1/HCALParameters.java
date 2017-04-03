@@ -76,8 +76,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_FED_ENABLE_MASK"  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  FED enable mask at last configure
 
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_PRIMARY_TCDS"                 ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using the secondary TCDS system
-		this.put( new FunctionManagerParameter<BooleanT> ("HCAL_RUNINFOPUBLISH"              ,  new BooleanT(false)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for publishing RunInfo 
-		this.put( new FunctionManagerParameter<BooleanT> ("OFFICIAL_RUN_NUMBERS"             ,  new BooleanT(false)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using official Run number 
+		this.put( new FunctionManagerParameter<BooleanT> ("HCAL_RUNINFOPUBLISH"              ,  new BooleanT(true)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for publishing RunInfo 
+		this.put( new FunctionManagerParameter<BooleanT> ("OFFICIAL_RUN_NUMBERS"             ,  new BooleanT(true)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using official Run number 
 
     // User editable parameters. These can also be dictated by the level0
 		this.put( new FunctionManagerParameter<IntegerT> ("RUN_NUMBER"                       ,  new IntegerT(0)           ) );  // Current run number

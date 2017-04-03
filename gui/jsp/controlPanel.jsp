@@ -252,11 +252,11 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id ="newMASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
-                              <tr id="singlePartitionField">
+                               <tr id="singlePartitionField" >
                                 <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
-                                  <strong>Multi/Singlepartition</strong>
+                                  <strong>Singlepartition</strong>
                                 </td>
                                 <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
                                 </td>
@@ -330,7 +330,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                     </div>
                                     <br />
                                     <div>
-                                      Masked resources: <span id="maskTest"></span>
+                                      Masked FMs: <span id="maskTest"></span>
                                       <div>
                                         <div id="multiPartitionSelection" class="tbl"></div>
                                         <div id="singlePartitionSelection" class="tbl"></div>

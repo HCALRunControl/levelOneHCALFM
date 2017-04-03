@@ -49,19 +49,15 @@ public class HCALMasker {
     for (Resource level2resource : level2Children) {
       if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))) {
         if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a TA.");
           hasAtriggerAdapter=true;
           if (level2resource.getName().contains("DummyTriggerAdapter")) {
-            logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a DummyTriggerAdapter.");
             hasAdummy=true;
           }
         }
         if (level2resource.getName().contains("hcalTrivialFU")) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a FU.");
           hasAnFU=true;
         }
         if (level2resource.getName().contains("hcalEventBuilder")) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has an eventBuilder.");
           hasAnEventBuilder=true;
         }
       }
@@ -130,18 +126,16 @@ public class HCALMasker {
           Group fullConfig = level2group.rs.retrieveLightGroup(level2.getResource());
           List<Resource> level2Children = fullConfig.getChildrenResources();
 
-          logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
-          logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
+          logger.debug("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
+          logger.debug("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
 
           try {
             if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
-              logger.warn("[JohnLog2] found a non-dummy candidate.");
               candidates = getEvmTrigResources(level2Children);
               candidates.put("EvmTrigFM", level2.getResource());
               theresAcandidate = true;
             }
             if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
-              logger.warn("[JohnLog2] found a dummy candidate.");
               candidates = getEvmTrigResources(level2Children);
               candidates.put("EvmTrigFM", level2.getResource());
               theresAcandidate = true;
@@ -149,7 +143,7 @@ public class HCALMasker {
             }
           }
           catch (UserActionException ex) {
-            logger.error("[JohnLog2] " + functionManager.FMname + ": got an exception while getting the EvmTrig resources for " + level2.getName() + ": " + ex.getMessage());
+            logger.error("[HCAL " + functionManager.FMname + " ]: got an exception while getting the EvmTrig resources for " + level2.getName() + ": " + ex.getMessage());
           }
         }
         catch (DBConnectorException ex) {
@@ -162,7 +156,7 @@ public class HCALMasker {
 
     for (Map.Entry<String, Resource> entry : candidates.entrySet()) {
       String key = entry.getKey();
-      logger.warn("[JohnLog2] key:" + key);
+      //logger.warn("[JohnLog2] key:" + key);
    }
   
   
@@ -223,7 +217,7 @@ public class HCALMasker {
               qr.setActive(false);
               StringT thisMaskedFM = new StringT(qr.getName());
               if (!Arrays.asList(maskedFMsVector.toArray()).contains(thisMaskedFM)) {
-                logger.info("[JohnLogMask] " + functionManager.FMname + ": about to add " + thisMaskedFM.getString() + " to the maskedFMsVector.");
+                logger.debug("[JohnLogMask] " + functionManager.FMname + ": about to add " + thisMaskedFM.getString() + " to the maskedFMsVector.");
                 maskedFMsVector.add(thisMaskedFM);
               }
 
@@ -240,7 +234,6 @@ public class HCALMasker {
               }
             }
           }
-          logger.info("[JohnLogMask] " + functionManager.FMname + ": about to set the global parameter MASK_SUMMARY");
         }
         for (Resource level2resource : fullconfigList) {
           if (level2resource.getName().contains("FanoutTTCciTA") || level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
