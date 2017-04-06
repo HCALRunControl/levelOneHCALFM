@@ -95,6 +95,7 @@ function isCommandEnabled(transitions, command, state) {
         }
       }
     }
+    checkSpectator();
   }
   return result;
 }

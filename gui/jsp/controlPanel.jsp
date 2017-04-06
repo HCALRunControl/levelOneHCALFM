@@ -34,6 +34,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/md5.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.browser-fingerprint-1.1.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/stateNotification.js" />
@@ -252,13 +254,22 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id ="newMASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
-                               <tr id="singlePartitionField" >
+                              <tr id="singlePartitionField" >
                                 <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Singlepartition</strong>
                                 </td>
                                 <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="driverIdField" style="display: none;"> 
+                                <td id="newDRIVER_IDENTIFIERcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Driver Identifier</strong>
+                                </td>
+                                <td id ="newDRIVER_IDENTIFIER" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -354,6 +365,11 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                           <br />
                           <!--Buttons for main table -->
                           <center>
+                            <input id="spectate" class="button1" type="button" onclick="spectatorMode(true);" value="Spectate">
+                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
+                          </center>
+			  <br>
+                          <center>
                             <input id="setGlobalParametersButton" class="button1" type="button" onclick="onClickSetGlobalParameters()" value="Set Enabled Parameters" name="setGlobalParametersButton">
                             <input id="refreshGlobalParametersButton" class="button1" type="button" onclick="onClickRefreshGlobalParameter()" value="Refresh Parameters" name="refreshGlobalParametersButton">
                           </center>
@@ -364,7 +380,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
                       <tr>
                         <td align="center" class="label_center_black">
-                          <input type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
+                          <input id="globalParametersCheckbox" type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
                           <br /><br />
                           <table id="GlobalParamsTable" class="tbl">
                             <tr>

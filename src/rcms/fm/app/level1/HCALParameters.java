@@ -26,7 +26,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT"};
+  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT","DRIVER_IDENTIFIER"};
 
 	private HCALParameters() {
 		super();
@@ -92,6 +92,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
 		this.put( new FunctionManagerParameter<StringT>  ("EVM_TRIG_FM"                      ,  new StringT("")           ) );  // Function manager doing eventbuilding and triggeradapting duties
 		this.put( new FunctionManagerParameter<StringT>  ("FM_PARTITION"                     ,  new StringT("not set")    ) );  // TCDS partition of LV2 FM 
+		this.put( new FunctionManagerParameter<StringT>  ("DRIVER_IDENTIFIER"                ,  new StringT("not set")    ) );  // MD5 hash to identify browser session in charge 
 
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
