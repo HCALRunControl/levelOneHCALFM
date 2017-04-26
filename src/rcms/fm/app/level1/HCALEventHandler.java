@@ -858,41 +858,33 @@ public class HCALEventHandler extends UserEventHandler {
             if (ruInstance==""){
               logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
             }
-            for (String pamName : pam.getNames()){
-              // TODO: Understand why this block will sometimes cause null pointer exception 
-              logger.debug("[HCAL LVL2 " + functionManager.FMname + "]: Getting this pamName "+pamName+ " from this QR"+ qr.getName() );
-              if (pamName.equals("RUinstance")) {
-                pam.select(new String[] {"RUinstance"});
-                pam.setValue("RUinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("BUInstance")) {
-                pam.select(new String[] {"BUInstance"});
-                pam.setValue("BUInstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("EVMinstance")) {
-                pam.select(new String[] {"EVMinstance"});
-                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("HandleLPM")) {
-                pam.select(new String[] {"HandleLPM"});
-                pam.setValue("HandleLPM", "true");
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
-              }
-              ////XXX SIC TODO FIXME WHY DOES THIS CRASH?
-              //if (pamName.equals("usePrimaryTCDS")) {
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //  pam.select(new String[] {"usePrimaryTCDS"});
-              //  pam.setValue("usePrimaryTCDS", "false");
-              //  pam.send();
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //}
+            List<String> pamNames      = pam.getNames();
+            List<String> pamNamesToSet = new ArrayList<String>();
+            if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
+            if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
+            if (pamNames.contains("EVMinstance")){              pamNamesToSet.add("EVMinstance")             ;}
+            if (pamNames.contains("HandleLPM"))  {              pamNamesToSet.add("HandleLPM")               ;}
+            //KKH: These are for local DAQ
+            //if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
+            //if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
+            
+            // WARNING: Cannot reuse pam for the same Xdaq, select the paramters needed in array and then send.
+            if(pamNamesToSet.size()!=0){        
+              String[] pamNamesToSet_str = new String[pamNamesToSet.size()];
+              pamNamesToSet_str = pamNamesToSet.toArray(pamNamesToSet_str);
+
+              pam.select(pamNamesToSet_str);
+              if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
+              if (pamNamesToSet.contains("HandleLPM"))  {              pam.setValue("HandleLPM"  ,"true")                                ;}
+              // KKH: these are for local DAQ
+              //if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
+              //if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
+ 
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace(): Setting parameters:"+pamNamesToSet.toString()+" in infospace of "+qr.getName() );
+
+              pam.send();
             }
           }
           catch (XDAQTimeoutException e) {
@@ -1202,8 +1194,9 @@ public class HCALEventHandler extends UserEventHandler {
       // check if it's a tcds app
       for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()) {
         if(app.getURL().equals(resource.getURL())) {
-          if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
+          if(!functionManager.containerhcalSupervisor.isEmpty()){ // we have a supervisor to listen to; ignore all TCDS notifications
             return;
+          }
           if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
             logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
             return; 
@@ -1361,7 +1354,7 @@ public class HCALEventHandler extends UserEventHandler {
   private boolean checkIfControlledResource(QualifiedResource resource) {
     boolean foundResource = false;
 
-    if (resource.getResource().getQualifiedResourceType().equals("rcms.fm.resource.qualifiedresource.FunctionManager") || resource.getResource().getQualifiedResourceType().equals("rcms.fm.resource.qualifiedresource.XdaqApplication")) {
+    if (resource.getResource().getQualifiedResourceType().equals("rcms.fm.resource.qualifiedresource.FunctionManager") || resource.getResource().getQualifiedResourceType().equals("rcms.fm.resource.qualifiedresource.XdaqApplication") || resource.getResource().getQualifiedResourceType().equals("rcms.fm.resource.qualifiedresource.XdaqServiceApplication")) {
       foundResource = true;
 
       logger.debug("[HCAL " + functionManager.FMname + "] ... got asynchronous StateNotification from controlled ressource");
