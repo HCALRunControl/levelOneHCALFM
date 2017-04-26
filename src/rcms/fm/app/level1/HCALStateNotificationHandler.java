@@ -46,18 +46,18 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     public void processNotice( Object notice ) throws UserActionException {
 
       StateNotification notification = (StateNotification)notice;
-      //logger.warn("["+fm.FMname+"]: State notification received "+
-      //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
-      //
+      logger.warn("["+fm.FMname+"]: State notification received "+
+          "from: " + notification.getFromState()
+          +" to: " + notification.getToState());
+      
       String actualState = fm.getState().getStateString();
-      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
       if ( fm.getState().equals(HCALStates.ERROR) ) {
         return;
       }
 
-      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().equals(HCALStates.FAILED.toString())) {
+      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().compareToIgnoreCase(HCALStates.FAILED.toString())==0) {
         String appName = "";
         try {
           appName = fm.findApplicationName( notification.getIdentifier() );
@@ -67,6 +67,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         if (!fm.containerhcalSupervisor.isEmpty()) {
           ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
           errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+        }
+        // Handles error from TCDS
+        else if (!fm.containerTCDSControllers.isEmpty()){
+          errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
           errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received: " + notification.getReason();
