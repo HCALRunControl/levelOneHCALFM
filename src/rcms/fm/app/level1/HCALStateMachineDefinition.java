@@ -175,7 +175,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
     CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
-    CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
     CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
     //CommandParameter<BooleanT> singlepartitionmode               =  new CommandParameter<BooleanT> ("SINGLEPARTITION_MODE"    ,  new BooleanT(false) );
     CommandParameter<BooleanT> configureCLOCK_CHANGED            =  new CommandParameter<BooleanT> ("CLOCK_CHANGED"           ,  new BooleanT(false) );
@@ -211,7 +210,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureAVAILABLE_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);
       configureParameters.add(configureRU_INSTANCE);
-      configureParameters.add(configureLPM_SUPERVISOR);
       configureParameters.add(configureEVM_TRIG_FM);
     } catch (ParameterException nothing) {
       // Throws an exception if a parameter is duplicate

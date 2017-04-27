@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
+import java.util.ListIterator;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.Math;
@@ -57,9 +58,14 @@ import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
+import rcms.fm.resource.qualifiedresource.XdaqServiceApplication;
 import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -71,6 +77,7 @@ import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
+
 
 /**
  * Event Handler base class for HCAL Function Managers
@@ -86,7 +93,6 @@ public class HCALEventHandler extends UserEventHandler {
   public LogSessionConnector logSessionConnector;  // Connector for logsession DB
 
   // Essential xdaq stuff
-  public QualifiedGroup qualifiedGroup = null;
   public static final String XDAQ_NS = "urn:xdaq-soap:3.0";
 
 
@@ -271,13 +277,11 @@ public class HCALEventHandler extends UserEventHandler {
                                            String FedEnableMask, boolean UsePrimaryTCDS
                                          ) {
     if (!functionManager.containerTTCciControl.isEmpty()) {
-
       {
         String debugMessage = "[HCAL " + functionManager.FMname + "] TTCciControl found - good!";
         System.out.println(debugMessage);
         logger.debug(debugMessage);
       }
-
       {
         XDAQParameter pam = null;
 
@@ -294,19 +298,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the TTCciControl application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()" + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
       }
@@ -336,19 +332,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the LTCControl application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()" + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
       }
@@ -405,56 +393,26 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the HCAL supervisor application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
       }
 
-      // send SOAP configure to the HCAL supervisor
-      try {
-        functionManager.containerhcalSupervisor.execute(HCALInputs.CONFIGURE);
-      }
-      catch (QualifiedResourceContainerException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sendRunTypeConfiguration()";
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-      }
     }
     else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: sendRunTypeConfiguration()";
-      logger.error(errMessage);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
+      functionManager.goToError(errMessage);
     }
   }
 
   // get the TriggerAdapter name from the HCAL supervisor only if no trigger adapter was already set
   protected void getTriggerAdapter() {
-    if (functionManager.containerTriggerAdapter==null) {
+    if (functionManager.containerTriggerAdapter.isEmpty()) {
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-        {
-          String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking the TriggerAdapter name- good!";
-          logger.debug(debugMessage);
-        }
 
         XDAQParameter pam = null;
         String TriggerAdapter = "undefined";
@@ -483,19 +441,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: getTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: getTriggerAdapter()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
 
@@ -503,21 +453,13 @@ public class HCALEventHandler extends UserEventHandler {
 
         if (functionManager.containerTriggerAdapter.isEmpty()) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! Not at least one TriggerAdapter with name " +  TriggerAdapter + " found. This is not good ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
 
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: getTriggerAdapter()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
     }
   }
@@ -668,30 +610,45 @@ public class HCALEventHandler extends UserEventHandler {
   // initialize qualified group, i.e. all XDAQ executives
   protected void initXDAQ() {
     // Look if the configuration uses TCDS and handle accordingly.
-    // First check if TCDS is being used, and if so, tell RCMS that the TCDS executives are already initialized.
-    Boolean usingTCDS = false;
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-    for (QualifiedResource qr : xdaqExecutiveList) {
-      String hostName = qr.getResource().getHostName();
-      // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
-      // TODO This needs to be moved out into userXML or a snippet!!!
-      if (hostName.contains("tcds") ) {
-        usingTCDS = true;
-        logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
-        qr.setInitialized(true);
-      }
+
+    Object sidObj = qg.getRegistryEntry("SID");
+    if (sidObj!=null){
+      logger.info("[HCAL "+ functionManager.FMname+"] initXDAQ() :SID object is "+sidObj.toString());
+    }else{
+      logger.warn("[HCAL "+ functionManager.FMname+"] initXDAQ():SID object is null. This is OK if LV2 has not received it from LV1.");
     }
 
-    List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
-    for (QualifiedResource qr: jobControlList) {
-      if (qr.getResource().getHostName().contains("tcds")  ) {
-        logger.info("[HCAL " + functionManager.FMname + "] Masking the  application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() );
-        qr.setActive(false);
-      }
+    //Always set TCDS executive to initialized and the Job control to Active false
+    maskTCDSExecAndJC(qg);
+
+    // Fill containers of TCDS apps
+    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
+
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    if(!functionManager.containerICIController.isEmpty())
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HAS_ICICONTROLLER",new BooleanT(true)));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    
+
+    // Halt TCDS apps
+    try{
+      functionManager.haltTCDSControllers();
+    }catch(UserActionException e){
+      String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+      //TODO: throw an exception to stop LV2's initAction to continue
+      //throw e;
+      functionManager.goToError(errMessage,e);
+      return;
     }
 
-    // Now if we are using TCDS, give all of the TCDS applications the URN that they need.
     try {
       qg.init();
     }
@@ -705,34 +662,25 @@ public class HCALEventHandler extends UserEventHandler {
       functionManager.goToError(errMessage,e);
     }
 
-    // find xdaq applications
-    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
-    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
-    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
-
-    // fill applications for level one role
+    ////////////////////////////////////////
+    // Fill containers for levelOne FM
+    ////////////////////////////////////////
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
-    functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-    // get the EvmTrig FM and handle it separately for sane state calculation
-    List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    Iterator fmChItr = childFMs.iterator();
-    while (fmChItr.hasNext()) {
-      FunctionManager fmChild = (FunctionManager) fmChItr.next();
-      //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-      // role is set at beginning of init() so it's already set here
-      if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
-        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-        fmChItr.remove();
-      }
-    }
+    // Get list of childFMs from QG
+    List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    // Fill containerFMchildren with Active FMs only
+    List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
+    functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
+ 
+    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    childFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
+    childFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+
     functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
-    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
-    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
-    // get masked FMs and remove them from container
-    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getActiveQRList();
-    functionManager.containerFMChildren   = new QualifiedResourceContainer(allChildFMs);
-    
+   
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
@@ -741,35 +689,34 @@ public class HCALEventHandler extends UserEventHandler {
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
-    {
-      Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-      FunctionManager fmChild = null;
-      while (it.hasNext()) {
-        fmChild = (FunctionManager) it.next();
-        if (fmChild.getRole().toString().equals("EvmTrig")) {
+    for(QualifiedResource qr : functionManager.containerFMChildren.getActiveQRList()){
+      FunctionManager fmChild = (FunctionManager)qr;
+      if (fmChild.getRole().toString().equals("EvmTrig")){
           evmTrigList.add(fmChild);
-        }
-        else {
+      }
+      else{
           normalList.add(fmChild);
-        }
       }
     }
     functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
     functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
-    // fill applications for level two role
+    ////////////////////////////////////////
+    // Fill applications for level two FMs
+    ////////////////////////////////////////
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving HCAL XDAQ applications ...")));
+    // find xdaq applications
+    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
+    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
+    logger.debug("[HCAL " + functionManager.FMname + "] Printing list of XDAQ:");
+    //PrintQRnames(functionManager.containerXdaqApplication);
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
-    // TCDS apps
-    List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
-    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
-    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(lpmList);
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
-    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    // TA container to be filled by getTriggerAdapter
+    functionManager.containerTriggerAdapter = new XdaqApplicationContainer(new ArrayList<XdaqApplication>());
 
+    
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
 
@@ -785,9 +732,6 @@ public class HCALEventHandler extends UserEventHandler {
       functionManager.containerLTCControl     = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("LTCControl"));
     }
 
-    functionManager.containerEVM               = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("EVM"));
-    functionManager.containerBU                = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("BU"));
-    functionManager.containerRU                = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("RU"));
     functionManager.containerFUResourceBroker  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUResourceBroker"));
     functionManager.containerFUEventProcessor  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUEventProcessor"));
     functionManager.containerStorageManager    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("StorageManager"));
@@ -838,9 +782,6 @@ public class HCALEventHandler extends UserEventHandler {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
 
-    // finally, halt all LPM apps
-    functionManager.haltLPMControllers();
-
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("")));
@@ -848,7 +789,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   //Set instance numbers and HandleLPM after initXDAQ()
   protected void initXDAQinfospace() {
-      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
+      List<QualifiedResource> xdaqApplicationList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqApplication());
       QualifiedResourceContainer qrc = new QualifiedResourceContainer(xdaqApplicationList);
       for (QualifiedResource qr : qrc.getActiveQRList()) {
           try {
@@ -858,41 +799,31 @@ public class HCALEventHandler extends UserEventHandler {
             if (ruInstance==""){
               logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
             }
-            for (String pamName : pam.getNames()){
-              // TODO: Understand why this block will sometimes cause null pointer exception 
-              logger.debug("[HCAL LVL2 " + functionManager.FMname + "]: Getting this pamName "+pamName+ " from this QR"+ qr.getName() );
-              if (pamName.equals("RUinstance")) {
-                pam.select(new String[] {"RUinstance"});
-                pam.setValue("RUinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("BUInstance")) {
-                pam.select(new String[] {"BUInstance"});
-                pam.setValue("BUInstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("EVMinstance")) {
-                pam.select(new String[] {"EVMinstance"});
-                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              if (pamName.equals("HandleLPM")) {
-                pam.select(new String[] {"HandleLPM"});
-                pam.setValue("HandleLPM", "true");
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
-              }
-              ////XXX SIC TODO FIXME WHY DOES THIS CRASH?
-              //if (pamName.equals("usePrimaryTCDS")) {
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //  pam.select(new String[] {"usePrimaryTCDS"});
-              //  pam.setValue("usePrimaryTCDS", "false");
-              //  pam.send();
-              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-              //}
+            logger.debug("HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace() :"+qr.getName()+" with pamNames:"+ pam.getNames().toString());
+
+            List<String> pamNames      = pam.getNames();
+            List<String> pamNamesToSet = new ArrayList<String>();
+            if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
+            if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
+            if (pamNames.contains("EVMinstance")){              pamNamesToSet.add("EVMinstance")             ;}
+            if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
+            if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
+            
+            // WARNING: Cannot reuse pam for the same Xdaq, select the paramters needed in array and then send.
+            if(pamNamesToSet.size()!=0){        
+              String[] pamNamesToSet_str = new String[pamNamesToSet.size()];
+              pamNamesToSet_str = pamNamesToSet.toArray(pamNamesToSet_str);
+
+              pam.select(pamNamesToSet_str);
+              if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
+              if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
+              if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
+ 
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace(): Setting parameters:"+pamNamesToSet.toString()+" in infospace of "+qr.getName() );
+
+              pam.send();
             }
           }
           catch (XDAQTimeoutException e) {
@@ -1481,91 +1412,6 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
 
-  // find out if all controlled EVMs are happy before stopping the run
-  protected boolean isRUBuildersEmpty() {
-    if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-      logger.warn("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
-    }
-
-    boolean reply = true;
-
-    XdaqApplication evmApp = null;
-    Iterator evmIterator = functionManager.containerEVM.getQualifiedResourceList().iterator();
-    while (evmIterator.hasNext()) {
-      evmApp = (XdaqApplication) evmIterator.next();
-
-      try {
-        waitRUBuilderToEmpty(evmApp);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Could not flush RUBuilder\nEVM URI: " + evmApp.getResource().getURI().toString();
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-        reply = false;
-      }
-    }
-    return reply;
-  }
-
-  // find out if one EVM is happy
-  private void waitRUBuilderToEmpty(XdaqApplication app) throws UserActionException {
-    if(app == null) { return; }
-    String nbEvtIdsValue;
-    String freeEvtIdsValue;
-    String freeEvtIdsInLastIteration;
-    String freeEvtIdsInFirstIteration;
-    XDAQParameter nbEvtIdsParm;
-    XDAQParameter freeEvtIdsParm;
-    int ntry = 0;
-
-    String nbEvtIdsInBuilderName = "nbEvtIdsInBuilder";
-    String freeEvtIdsName = "freeEventIdFIFOElements";
-    try {
-      nbEvtIdsParm = app.getXDAQParameter();
-      nbEvtIdsParm.select(nbEvtIdsInBuilderName);
-      nbEvtIdsValue = getValue(nbEvtIdsParm, nbEvtIdsInBuilderName);
-
-      freeEvtIdsParm = app.getXDAQParameter();
-      freeEvtIdsParm.select(freeEvtIdsName );
-      freeEvtIdsInLastIteration = getValue(freeEvtIdsParm,freeEvtIdsName);
-      freeEvtIdsInFirstIteration = freeEvtIdsInLastIteration;
-    }
-    catch (Exception e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "] RUBuilder: exception occured while getting parameter ...";
-      logger.error(errMessage, e);
-      throw new UserActionException(errMessage,e);
-    }
-
-    while(true) {
-      try {
-        Thread.sleep(10000);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Sleeping thread failed while waiting for the RU builder to flush!";
-        logger.error(errMessage, e);
-        throw new UserActionException(errMessage);
-      }
-      freeEvtIdsValue = getValue(freeEvtIdsParm,freeEvtIdsName);
-      if(nbEvtIdsValue.equals(freeEvtIdsValue)) {
-        break;
-      }
-
-      if(!freeEvtIdsInFirstIteration .equals(freeEvtIdsValue) && freeEvtIdsInLastIteration.equals(freeEvtIdsValue )) {
-        ntry++;
-        logger.warn("[HCAL " + functionManager.FMname + "] Free IDs: " + freeEvtIdsValue);
-        if(ntry == 5) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] EVM on URI " + app.getResource().getURI().toString() + " seems to have stopped building when not flushed.\nLast number of fre events Ids was: " + freeEvtIdsInLastIteration;
-          logger.error(errMessage);
-          throw new UserActionException(errMessage);
-        }
-      }
-      else {
-        ntry = 0;
-      }
-      freeEvtIdsInLastIteration = freeEvtIdsValue;
-    }
-  }
-
   private String getValue(XDAQParameter param, String s) throws UserActionException {
     try {
       if(param.get()) {
@@ -1611,29 +1457,17 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+            functionManager.goToError(errMessage,e);
           }
         }
 
         if (status.equals("Failed")) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ...(E4)";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+          functionManager.goToError(errMessage);
         }
 
         if (status.equals("Ready")) {
@@ -1645,11 +1479,7 @@ public class HCALEventHandler extends UserEventHandler {
       }
       else {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: TriggerAdapterWatchThread()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+        functionManager.goToError(errMessage);
       }
     }
 
@@ -2332,8 +2162,8 @@ public class HCALEventHandler extends UserEventHandler {
         icount++;
         Date now = Calendar.getInstance().getTime();
 
-        // poll TriggerAdapter status every 5 sec
-        if (icount%5==0) {
+        // poll TriggerAdapter status every 1 sec
+        if (icount%1==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
                 (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             // check the state of the TriggerAdapter
@@ -2344,21 +2174,15 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.debug(debugMessage);
                 }
                 XDAQParameter pam = null;
-                String status = "undefined";
                 Double NextEventNumber = -1.0;
 
-                // ask for the status of the TriggerAdapter and wait until it is Ready, Failed
+                // Poll the nextEventNumber from TA to update the GUI run progress
                 for (QualifiedResource qr : functionManager.containerTriggerAdapter.getApplications() ){
                   try {
                     pam =((XdaqApplication)qr).getXDAQParameter();
 
-                    pam.select(new String[] {"stateName", "NextEventNumber"});
+                    pam.select(new String[] {"NextEventNumber"});
                     pam.get();
-                    status = pam.getValue("stateName");
-                    if (status==null) {
-                      String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
-                      functionManager.goToError(errMessage);
-                    }
 
                     String NextEventNumberString = pam.getValue("NextEventNumber");
                     if (NextEventNumberString!=null) {
@@ -2375,40 +2199,21 @@ public class HCALEventHandler extends UserEventHandler {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the NextEventNumber when Running resulted in a NULL pointer - this is bad!";
                       functionManager.goToError(errMessage);
                     }
+                    if(icount%5==0){
+                      logger.info("[HCAL " + functionManager.FMname + "] The NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
+                    }
 
-                    logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
-
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
+                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
 
                   }
                   catch (XDAQTimeoutException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
                     functionManager.goToError(errMessage,e);
-
                   }
                   catch (XDAQException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
                     functionManager.goToError(errMessage,e);
                   }
-                }
-
-                if (status.equalsIgnoreCase("Failed")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E9)";
-                  functionManager.goToError(errMessage);
-                }
-
-                if (status.equals("Ready")) {
-                  logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter reports: " + status + " , which means that all Triggers were sent ...");
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Stopping the TA ...")));
-
-                  if (!SpecialFMsAreControlled) {
-                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
-                    functionManager.fireEvent(HCALInputs.STOP);
-                  }
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] TriggerAdapter should have reported to be in the Ready state, which means the events are taken ...");
-                  logger.info("[HCAL " + functionManager.FMname + "] All L1As were sent, i.e. Trigger adapter is in the Ready state, changing back to Configured state ...");
                 }
               }
               else {
@@ -2689,6 +2494,7 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException(errMessage);
     }
   }
+
   // Print of the names of the QR in a QRContainer 
   void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
@@ -2701,4 +2507,75 @@ public class HCALEventHandler extends UserEventHandler {
     logger.info(Names);
   }
 
+  // turn all TCDS apps into XdaqServiceApplication 
+  QualifiedGroup ConvertTCDSAppsToServiceApps(QualifiedGroup qg) {
+     boolean groupWasChanged = false;
+     Group origGroup = qg.getGroup();
+     List<Resource> childrenRscList = origGroup.getChildrenResources();
+     List<QualifiedResource> xdaqQRExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+
+     for (QualifiedResource qr : xdaqQRExecutiveList) {
+       boolean isTCDSExec = false;
+       XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
+       List<XdaqApplicationResource> appList = exec.getApplications();
+       for (ListIterator<XdaqApplicationResource> iterator = appList.listIterator(); iterator.hasNext();) {
+         XdaqApplicationResource xar = iterator.next();
+         if (xar.getName().contains("tcds") || xar.getName().contains("TCDS")) {
+           isTCDSExec = true;
+           childrenRscList.remove(xar); // remove the app!
+           iterator.remove();
+           // try to make new xdaqserviceapp
+           String qrTypeOfServiceApp = "rcms.fm.resource.qualifiedresource.XdaqServiceApplication";
+           try {
+             XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(xar.getDirectory(),
+                 xar.getName(),xar.getURI(),qrTypeOfServiceApp,xar.getConfigFile(),xar.getRole());
+             iterator.add(tcdsAppRsc);
+             childrenRscList.add(tcdsAppRsc);
+           } catch (Exception e) {
+             String errMessage = "[HCAL " + functionManager.FMname + "] got an Exception while attempting to modify TCDS applications";
+             functionManager.goToError(errMessage,e);
+           }
+         }
+       } // end loop over apps
+       if(isTCDSExec) {
+         groupWasChanged = true;
+       }
+     } // end of loop over execs
+
+     if(groupWasChanged) {
+       // reset children resources
+       try {
+         origGroup.setChildrenResources(childrenRscList);
+       } catch (Exception e) {
+         String errMessage = "[HCAL " + functionManager.FMname + "] got an Exception while attempting to modify QG application resources in ConvertTCDSAppsToServiceApps()" ;
+         functionManager.goToError(errMessage,e);
+       }
+
+       // make new QG
+       QualifiedGroup newQG = new QualifiedGroup(origGroup);
+
+       return newQG;
+     }
+
+     return qg;
+  }
+
+  void maskTCDSExecAndJC(QualifiedGroup qg){
+     // mark TCDS execs as initialized and mask their JobControl
+    List<QualifiedResource> xdaqExecutiveList   = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+    List<QualifiedResource> xdaqServiceAppsList = qg.seekQualifiedResourcesOfType(new XdaqServiceApplication());
+    for (QualifiedResource qr : xdaqExecutiveList) {
+      if (qr.getResource().getHostName().contains("tcds") ) {
+        qr.setInitialized(true);
+        qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
+        logger.info("[HCAL LV2 " + functionManager.FMname +"] Setting TCDS Exective to initialized: "+qr.getName()+" and its JC to Active(false): "+ qg.seekQualifiedResourceOnPC(qr, new JobControl()).getName());
+      }
+    }   
+    // mark TCDS service apps as initialized 
+    for (QualifiedResource qr : xdaqServiceAppsList) {
+      if (qr.getResource().getHostName().contains("tcds") ) {
+        qr.setInitialized(true);
+      }
+    }
+  } 
 }

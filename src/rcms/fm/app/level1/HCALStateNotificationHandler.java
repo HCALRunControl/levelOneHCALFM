@@ -7,6 +7,7 @@ import rcms.fm.fw.user.UserEventHandler;
 import rcms.stateFormat.StateNotification;
 import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
+import rcms.utilities.fm.task.Task;
 import rcms.utilities.fm.task.TaskSequence;
  
  
@@ -28,6 +29,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
  
     Thread timeoutThread = null;
  
+    Task activeTask = null;
+
     static final int COLDINITTIMEOUT = 1000*1200; // 20 minutes in ms
 //    public Boolean interruptedTransition = false;
     //this is active only in global mode..
@@ -47,9 +50,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
-      //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
-      //
+      //    "from " + notification.getIdentifier() +
+      //    " from state: " + notification.getFromState()+
+      //    " to: " + notification.getToState());
+      
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
@@ -57,16 +61,22 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         return;
       }
 
-      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().equals(HCALStates.FAILED.toString())) {
+      if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().compareToIgnoreCase(HCALStates.FAILED.toString())==0) {
         String appName = "";
         try {
           appName = fm.findApplicationName( notification.getIdentifier() );
         } catch(Exception e){}
         String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
-        String errMsg =  actionMsg;
-        if (!fm.containerhcalSupervisor.isEmpty()) {
+        //Default errMessage
+        String errMsg    = actionMsg;
+        //Check if notification comes from my supervisor
+        if (!fm.containerhcalSupervisor.isEmpty() && appName.contains("hcalSupervisor")) {
           ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
           errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+        }
+        // Handles error from TCDS
+        else if (!fm.containerTCDSControllers.isEmpty()){
+          errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
           errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received: " + notification.getReason();
@@ -121,30 +131,45 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           setTimeoutThread(true);
           return;
         }
-        // don't ignore these! may need to step to the next task
-        //else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
-        //  setTimeoutThread(false);
-        //  // calculate the updated state
-        //  fm.theEventHandler.computeNewState(notification);
-        //  return;
-        //}
       }
 
+      // process the notification from the FM when stopping 
+      if ( fm.getState().equals(HCALStates.STOPPING) ) {
+
+        // ignore notifications to Stopping but set timeout
+        if ( notification.getToState().equals(HCALStates.STOPPING.toString()) ) {
+          String msg = "HCAL is stopping ";
+          fm.setAction(msg);
+          setTimeoutThread(true);
+          return;
+        }
+      }
 
       // process the notification from the FM when configuring
       if ( fm.getState().equals(HCALStates.CONFIGURING) ) {
 
         if ( notification.getToState().equals(HCALStates.CONFIGURING.toString()) ) {
 
-          String services = notification.getReason().trim();
-          if ( services == null | services.length() == 0 ) return;
+          //String services = notification.getReason().trim();
+          //if ( services == null | services.length() == 0 ) return;
 
           //String transMsg = String.format( "services ["+fm.getConfiguredServices()+"] done : ["+services+"] in progress");
           //fm.setTransitionMessage( transMsg );
           //fm.addConfiguredServices(services);
-          String msg = "HCAL is configuring "+services;
+          String msg = "HCAL is configuring ";
           fm.setAction(msg);
 
+          setTimeoutThread(true);
+          return;
+        } else if ( notification.getToState().equals(HCALStates.PREINIT.toString()) ) {
+          String services = notification.getReason().trim();
+          String msg = "HCAL is preconfiguring ";
+          fm.setAction(msg);
+          setTimeoutThread(true);
+          return;
+        } else if ( notification.getToState().equals(HCALStates.INIT.toString()) ) {
+          String msg = "HCAL is configuring ";
+          fm.setAction(msg);
           setTimeoutThread(true);
           return;
         } else if ( notification.getToState().equals(HCALStates.FAILED.toString()) ) {
@@ -208,25 +233,38 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         logger.debug("FM is in local mode");
         fm.theEventHandler.computeNewState(notification);
         return;
-    }
-
-
-    try {
-      if( taskSequence.isCompleted() ) {
-        logger.info("Transition completed");
-        completeTransition();
-      } else {
-        taskSequence.startExecution();
-        logger.info("taskSequence not reported complete, start executing:" + taskSequence.getDescription());
-        //logger.info("[SethLog] Start executing: "+taskSequence.getDescription());
-        //                fm.setAction("Executing: "+_taskSequence.getDescription());
-        //                logger.debug("_taskSequence status after a second startExecution: "+_taskSequence.isCompleted() );
       }
-    } catch (Exception e){
-      taskSequence = null;
-      String errmsg = "Exception while stepping to the next task: "+e.getMessage();
-      handleError(errmsg," ");
-    }
+
+      // do a while loop to cover synchronous tasks which finish immediately (adapted from top FM code)
+      //
+      //
+      while (activeTask==null || activeTask.isCompleted()) {
+        if (taskSequence.isEmpty()) {
+          String completionMsg = "Transition completed";
+          fm.setAction(completionMsg);
+          logger.info(completionMsg);
+          try {
+            completeTransition();
+          } catch (Exception e) {
+            taskSequence = null;
+            String errmsg = "Exception while completing taskSequence ["+taskSequence.getDescription()+"]: "+e.getMessage();
+            handleError(errmsg,errmsg);
+          }
+          break;
+        }
+        else {
+          activeTask = (Task) taskSequence.removeFirst();
+          logger.info("Start new task: " + activeTask.getDescription());
+          fm.setAction("Executing: " + activeTask.getDescription());
+          try {
+            activeTask.startExecution();
+          } catch (Exception e) {
+            taskSequence = null;
+            String errmsg = "Exception while stepping to the next task: "+e.getMessage();
+            handleError(errmsg,errmsg);
+          }
+        }
+      }
 }
  
     /*--------------------------------------------------------------------------------
@@ -249,9 +287,9 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         }
  
         try {
+            //logger.info("Martin log: Start Execution: "+taskSequence.getDescription());
             taskSequence.startExecution();
- 
-            //logger.warn("started execution of taskSequence");
+
             setTimeoutThread(true,COLDINITTIMEOUT); // set maximum timeout for level-1; level-2s can still time out earlier
             try {
                 fm.getParameterSet().get("ACTION_MSG")
@@ -277,15 +315,11 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
  
         fm.setAction("Transition Completed");
  
-        if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {
-            //String transMsg = String.format( "services configured ["+fm.getConfiguredServices()+"]");
-            //fm.setTransitionMessage( transMsg );
-        }
- 
         //fm.setTransitionEndTime();
         setTimeoutThread(false);
         logger.info("completeTransition: fire taskSequence completion event "+taskSequence.getCompletionEvent().toString());
         fm.fireEvent(taskSequence.getCompletionEvent());
+        activeTask = null;
         taskSequence = null;
  
     }

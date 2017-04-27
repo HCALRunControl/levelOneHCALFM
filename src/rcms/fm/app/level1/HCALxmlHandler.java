@@ -220,9 +220,13 @@ public class HCALxmlHandler {
       int NxcContexts = 0;
       int removedContexts = 0;
       int removedApplications = 0;
+      //logger.info("[JohnLogVector] " + functionManager.FMname + ":  maskedAppArray is" + maskedAppsVector.toString());
       for (StringT maskedApp: maskedAppArray) {
-        //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
+        if (maskedAppParts.length<2){
+          String errMessage = "[HCAL LVL2 "+functionManager.FMname + "] Cannot split this maskedapp into class and instance : "+ maskedApp.getString()+" Format: ClassName_instance.";
+          functionManager.goToError(errMessage);
+        }
 
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
@@ -335,7 +339,6 @@ public class HCALxmlHandler {
         transformer.transform(domSource, result);
         newExecXMLstring = writer.toString();
         newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-        //logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
       }
       return newExecXMLstring;
     }

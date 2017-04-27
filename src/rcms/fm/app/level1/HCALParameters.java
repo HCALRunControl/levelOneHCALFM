@@ -90,13 +90,14 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_CONFIG_SELECTED"              ,  new StringT("not set")    ) );  // User selected local run type
 		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user (aka Mastersnippet file)
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
-		this.put( new FunctionManagerParameter<StringT>  ("LPM_SUPERVISOR"                   ,  new StringT("")           ) );  // Supervisor configuring the LPM
 		this.put( new FunctionManagerParameter<StringT>  ("EVM_TRIG_FM"                      ,  new StringT("")           ) );  // Function manager doing eventbuilding and triggeradapting duties
 		this.put( new FunctionManagerParameter<StringT>  ("FM_PARTITION"                     ,  new StringT("not set")    ) );  // TCDS partition of LV2 FM 
 		this.put( new FunctionManagerParameter<StringT>  ("DRIVER_IDENTIFIER"                ,  new StringT("not set")    ) );  // MD5 hash to identify browser session in charge 
 
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
+		this.put( new FunctionManagerParameter<BooleanT> ("TCDS_SKIP_PLLRESET"               ,  new BooleanT(true)        ) );  // Switch for PI configuration parameter: skipPLLReset
+		this.put( new FunctionManagerParameter<BooleanT> ("HAS_ICICONTROLLER"                ,  new BooleanT(false)       ) );  // Does this FM have an iciController?
 		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for triggering a halt+destroy
 		this.put( new FunctionManagerParameter<BooleanT> ("SINGLEPARTITION_MODE"             ,  new BooleanT(false)       ) );  // Switch for toggling singlepartition mode based on user selection
 
