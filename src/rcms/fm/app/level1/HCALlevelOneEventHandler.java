@@ -43,6 +43,8 @@ import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
@@ -53,6 +55,7 @@ import rcms.utilities.runinfo.RunNumberData;
 import rcms.statemachine.definition.Input;
 import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.common.db.DBConnectorException;
 
 /**
  * Event Handler class for HCAL Function Managers
@@ -943,12 +946,28 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+
+        //Subtract TTCciFM from containerFMTCDSLPM, Add TTCciFM to containerFMEvmTrig
+        List<FunctionManager> TTCciFMList            = new ArrayList<FunctionManager>();
+        List<QualifiedResource> LPMFMList              = functionManager.containerFMTCDSLPM.getActiveQRList();
+        List<QualifiedResource> EvmTrigAndTTCciList    = functionManager.containerFMEvmTrig.getActiveQRList();
+        for(QualifiedResource qr : functionManager.containerFMTCDSLPM.getActiveQRList()){
+          if (qr.getName().contains("TTCci")){
+            TTCciFMList.add((FunctionManager)qr);
+          }
+        }
+        LPMFMList.removeAll(TTCciFMList);
+        EvmTrigAndTTCciList.addAll(TTCciFMList);
+        
+        QualifiedResourceContainer LPMFMcontainer           = new QualifiedResourceContainer(LPMFMList);
+        QualifiedResourceContainer EvmTrigAndTTCciContainer = new QualifiedResourceContainer(EvmTrigAndTTCciList);
+
        
         // 1) Configure TCDSLPM FM
-        if (!functionManager.containerFMTCDSLPM.isEmpty()){
-          SimpleTask LPMTask   = new SimpleTask(functionManager.containerFMTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring TCDSLPMFM first");
+        if (!LPMFMcontainer.isEmpty()){
+          SimpleTask LPMTask   = new SimpleTask(LPMFMcontainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring TCDSLPMFM first");
           logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring LPM FM first: ");
-          PrintQRnames(functionManager.containerFMTCDSLPM);
+          PrintQRnames(LPMFMcontainer);
           configureTaskSeq.addLast(LPMTask);
         } 
         // 2) Normal FMs
@@ -960,10 +979,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         // 3) Configure EvmTrig FM  
         // NOTE: Emptyness check is important to support global run
-        if (!functionManager.containerFMEvmTrig.isEmpty()){
-          SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
+        if (!EvmTrigAndTTCciContainer.isEmpty()){
+          SimpleTask EvmTrigConfigureTask = new SimpleTask(EvmTrigAndTTCciContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
           logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig: ");
-          PrintQRnames(functionManager.containerFMEvmTrig);
+          PrintQRnames(EvmTrigAndTTCciContainer);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
         if(nEmptyFM>0){
