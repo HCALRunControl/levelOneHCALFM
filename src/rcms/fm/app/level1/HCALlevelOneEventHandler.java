@@ -79,7 +79,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
@@ -332,7 +331,24 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       masker.pickEvmTrig();
       masker.setMaskedFMs();
+
+      // convert TCDS apps to service apps
+      //QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // Use normal QG for now
       QualifiedGroup qg = functionManager.getQualifiedGroup();
+
+      // reset QG to modified one
+      functionManager.setQualifiedGroup(qg);
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", sid);
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
+      }
+
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
@@ -368,7 +384,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Initializing")));
 
       // initialize all XDAQ executives
-      initXDAQ();
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV1 "+functionManager.FMname+"] Failed to init LV1 containers";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
       functionManager.parameterSender.start();
 
       // start the monitor thread
@@ -376,12 +398,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting Monitor thread ...");
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
-
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -430,11 +446,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             }
             catch (CommandException e) {
               String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage,e);
             }
           }
         }
@@ -963,7 +975,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           PrintQRnames(containerEvmAndLPM);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        if(nEmptyFM>0){
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        }
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
         functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);

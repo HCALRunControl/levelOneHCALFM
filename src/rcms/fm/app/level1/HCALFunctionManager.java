@@ -13,6 +13,7 @@ import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
+import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
@@ -46,6 +47,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.Map;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -70,9 +72,12 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   // definition of some XDAQ containers
   public XdaqApplicationContainer containerXdaqApplication = null;  // this container contains _all_ XDAQ executives
+  public XdaqApplicationContainer containerXdaqServiceApplication = null;  // this container contains _all_ XDAQ service applications 
 
   public XdaqApplicationContainer containerhcalSupervisor      = null;
   public XdaqApplicationContainer containerlpmController       = null;
+  public XdaqApplicationContainer containerPIController       = null;
+  public XdaqApplicationContainer containerICIController       = null;
   public XdaqApplicationContainer containerTCDSControllers     = null;
   public XdaqApplicationContainer containerhcalDCCManager      = null;
   public XdaqApplicationContainer containerTriggerAdapter      = null;
@@ -272,7 +277,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     logger.debug("[HCAL base] entering createAction ...");
 
     // Retrieve the configuration for this Function Manager from the Group
-    FunctionManagerResource fmConf = ((FunctionManagerResource) qualifiedGroup.getGroup().getThisResource());
+    FunctionManagerResource fmConf = ((FunctionManagerResource) getQualifiedGroup().getGroup().getThisResource());
 
     FMfullpath = fmConf.getDirectory().getFullPath().toString();
     FMname = fmConf.getName();
@@ -436,14 +441,11 @@ public class HCALFunctionManager extends UserFunctionManager {
         if (!containerTCDSControllers.isEmpty()){
           try{
             logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
-            for(XdaqApplication tcdsApp: containerTCDSControllers.getApplications()){
-              tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
-            }
+            haltTCDSControllers(false);
           }
-          catch (Exception e) {
-            String errMessage = "[HCAL LVL2 " + FMname + "] Error! Exception: Halt TCDS failed during destroy..."+e.getMessage();
-            logger.error(errMessage);
+          catch (UserActionException e) {
+            String errMessage = "[HCAL LVL2 " + FMname + "] DestroyAction: "+e.getMessage();
+            logger.warn(errMessage);
           }
         }
       }
@@ -493,7 +495,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     logger.debug("[HCAL " + FMname + "] Getting the updated state ...");
 
     // without the qualified group we cannout do anything ;-)
-    if (!qualifiedGroup.isInitialized()) {
+    if (!getQualifiedGroup().isInitialized()) {
       logger.debug("[HCAL " + FMname + "] QualifiedGroup not initialized.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
 
       return this.getState();
@@ -540,7 +542,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
       CustomStatesDefined=true;
 
-      Set<QualifiedResource> resourceGroup = qualifiedGroup.getQualifiedResourceGroup();
+      Set<QualifiedResource> resourceGroup = getQualifiedGroup().getQualifiedResourceGroup();
       svCalc = new StateVectorCalculation(resourceGroup);
 
       // all FM's are assumed to have either a supervisor or an LPMController which will give state notifications via xdaq2rc
@@ -871,28 +873,59 @@ public class HCALFunctionManager extends UserFunctionManager {
   }
 
   /**----------------------------------------------------------------------
-   * halt the LPM controller 
+   * halt the TCDS controllers 
    */
-  public void haltLPMControllers() {
-    if (!containerlpmController.isEmpty()) {
-      XdaqApplication lpmApp = null;
-      try {
-        Iterator it = containerlpmController.getQualifiedResourceList().iterator();
-        int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
-        logger.info("[HCAL LVL2 " + FMname + "] haltLPMControllers: Halting LPM with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
-        while (it.hasNext()) {
-          lpmApp = (XdaqApplication) it.next();
-          lpmApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+  public void haltTCDSControllers(boolean isServiceApp) throws UserActionException{
+    try{
+      int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+      //logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Halting with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+
+      if (!containerlpmController.isEmpty()) {
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to LPM with SID="+sessionId);
+          containerlpmController.execute(HCALInputs.HALT);
+        }
+        else{
+          for(XdaqApplication lpmApp : containerlpmController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to LPM with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            lpmApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
         }
       }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
-        logger.error(errMessage,e);
-        sendCMSError(errMessage);
-        getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-        if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+      if (!containerPIController.isEmpty()) {
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId);
+          containerPIController.execute(HCALInputs.HALT);
+        }else{
+          for(XdaqApplication PIapp : containerPIController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            PIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
+        }
       }
+      if (!containerICIController.isEmpty()) {
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI with SID="+sessionId);
+          containerICIController.execute(HCALInputs.HALT);
+        }else{
+          for(XdaqApplication ICIapp : containerICIController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            ICIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
+        }
+      }
+    }
+    catch (QualifiedResourceContainerException e) {
+      String errMessage = " haltTCDSControllers: ";
+      Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
+      for (QualifiedResource qr : CommandExceptionMap.keySet()){
+      errMessage += " Failed to halt "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+      }
+      throw new UserActionException(errMessage);
+    }
+    catch (CommandException e) {
+      String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
+      throw new UserActionException(errMessage);
     }
   }
 
@@ -907,7 +940,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
         XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
         supervExecURI = qrSupervParentExec.getURI();
-        QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
+        QualifiedResource qrExec = getQualifiedGroup().seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
         try{
             ex.destroy();
@@ -921,8 +954,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
 
     // find all XDAQ executives and kill them
-    if (qualifiedGroup != null) {
-      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+    if (getQualifiedGroup() != null) {
+      List listExecutive = getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqExecutive());
       Iterator it = listExecutive.iterator();
       while (it.hasNext()) {
         XdaqExecutive ex = (XdaqExecutive) it.next();
