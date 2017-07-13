@@ -1760,16 +1760,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
 
     if (LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
-      String[] maskedapps         = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
-      String errorMessage         = "";
-      for (String app:maskedapps){
-        String[] appArray = app.split("\\_");
-        if (appArray.length != 2 || isValidInstanceNumber(appArray[0]) || !(isValidInstanceNumber(appArray[1]))){
-          errorMessage = errorMessage + " " + app;
+      String   allmaskedapps      = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString();
+      if(allmaskedapps !=""){
+        String[] maskedapps         = allmaskedapps.split("\\|");
+        String errorMessage         = "";
+        for (String app:maskedapps){
+          String[] appArray = app.split("\\_");
+          if (appArray.length != 2 || isValidInstanceNumber(appArray[0]) || !(isValidInstanceNumber(appArray[1]))){
+            errorMessage = errorMessage + " " + app;
+          }
         }
-      }
-      if (errorMessage != ""){
-        throw new UserActionException("Runkey " + runkeyName +" maskedapps incorrectly formated:" + errorMessage); 
+        if (errorMessage != ""){
+          throw new UserActionException("Runkey " + runkeyName +" maskedapps incorrectly formated:" + errorMessage); 
+        }
       }
     }
   }
