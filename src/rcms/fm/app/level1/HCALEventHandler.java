@@ -858,13 +858,28 @@ public class HCALEventHandler extends UserEventHandler {
         }
         for(XdaqApplication xdaqApp : functionManager.containerhcalSupervisor.getApplications()){
           try{
-            XDAQParameter pam = xdaqApp.getXDAQParameter();
-            pam.select(new String[] {"SessionID", "HandleLPM"});
-            pam.setValue("HandleLPM"  ,"true");
-            pam.setValue("SessionID"  ,sid.toString());
-            logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+            if (functionManager.FMrole.equals("EvmTrig")){
+              XDAQParameter pam = xdaqApp.getXDAQParameter();
+              pam.select(new String[] {"SessionID", "HandleLPM"});
+              pam.setValue("HandleLPM"  ,"true");
+              pam.setValue("SessionID"  ,sid.toString());
+              logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
 
-            pam.send();
+              pam.send();
+            }
+            // test ignoreEnable to ICI for non-EvmTrig supervisors
+            else{
+              XDAQParameter pam = xdaqApp.getXDAQParameter();
+              pam.select(new String[] {"SessionID", "HandleLPM","IgnoreForEnableVector"});
+              pam.setValue("HandleLPM"  ,"true");
+              pam.setValue("SessionID"  ,sid.toString());
+              String [] appsToIgnoreAtEnable = {"tcds::ici::ICIController"};
+              pam.setVector("IgnoreForEnableVector"  ,appsToIgnoreAtEnable);
+              logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreForEnableVector to supervisor: tcds::ici::ICIController");
+
+              pam.send();
+            }
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQTimeoutException: when trying init HCAL supervisor infospace";
