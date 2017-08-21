@@ -11,7 +11,7 @@
 #       ./buildHCALFM.sh release minor
 # OR  
 #       ./buildHCALFM.sh release
-# Usage 4) Build HCALFM.jar with commit hash:
+# Usage 4) Build HCALFM.jar with commit hash
 #       ./buildHCALFM.sh hash
 #
 # Created: John Hakala 4/14/2016
@@ -47,7 +47,17 @@ if [ "$1" = "release" ]; then
     echo "No changes since the last commit are permitted when building a release FM. Please commit your changes or stash them."
     exit 1
   fi
-    
+elif [ "$1" = "hash" ]; then
+  git diff-index --quiet HEAD
+  if [ "$?" = "0" ]; then
+    commitHash=`git rev-parse HEAD | head -c 7`
+    sed -i '$ d' ../gui/jsp/footer.jspf
+    echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${commitHash}\">HCALFM version:${commitHash} </a></div>" >> ../gui/jsp/footer.jspf
+    ant -DgitRev="${commitHash}"
+  else
+    echo "No changes since the last commit are permitted when building FM with hash stamp. Please commit your changes or stash them."
+    exit 1
+  fi
 elif [ "$1" = "test" ]; then
   DATE=`date  +%m-%d-%y`
   ITERATION=1
