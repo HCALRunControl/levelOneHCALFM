@@ -11,6 +11,9 @@
 #       ./buildHCALFM.sh release minor
 # OR  
 #       ./buildHCALFM.sh release
+# Usage 4) Build HCALFM.jar with commit hash:
+#       ./buildHCALFM.sh hash
+#
 # Created: John Hakala 4/14/2016
 # Modified: Martin Kwok 8/14/2017
 
@@ -21,6 +24,9 @@ if [ "$1" = "release" ]; then
     release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | tail -1`
     Year=`date  +%y`
     versionArr=(${release//./ })
+    remotes=`git remote -v | grep HCALRunControl | tail -1`
+    RC_remote=(${remotes[0]})
+    git fetch $RC_remote --tags
     if [ "$2" = "major" ]; then
       GITREV="${Year}.$((versionArr[1]+1)).0"
       GITREV_fname="${Year}_$((versionArr[1]+1))_0"
@@ -30,11 +36,13 @@ if [ "$1" = "release" ]; then
       GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
     fi
     echo "Building HCALFM release: $GITREV"
-    git tag $GITREV 
-    tagCommit=`git rev-list -n 1 $GITREV  | head -c 7`
     sed -i '$ d' ../gui/jsp/footer.jspf
     echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version:${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
     ant -DgitRev="${GITREV_fname}"
+    echo "Tagging HCALFM release: $GITREV"
+    git tag $GITREV 
+    tagCommit=`git rev-list -n 1 $GITREV  | head -c 7`
+    git push $RC_remote $GITREV 
   else
     echo "No changes since the last commit are permitted when building a release FM. Please commit your changes or stash them."
     exit 1
