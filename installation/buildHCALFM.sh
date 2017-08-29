@@ -51,7 +51,7 @@ if [ "$1" = "release" ]; then
         GITREV_fname="${fnameArr[*]}"
         currentBranch=`git branch | grep \* | cut -d ' ' -f2`
         echo Chcking out to a new branch for building previous release
-        git checkout $GITREV -b "build_"$GITREV
+        git checkout $GITREV -b "build_"$GITREV_fname
       else
          printf "$inputTag is not a valid release tag!\n Usage: ./buildHCALFM release [major|minor|releaseTag] \n Use \"git tag -l\" to see all the releases. \n"
          exit -1
@@ -71,6 +71,7 @@ if [ "$1" = "release" ]; then
         git push $RC_remote $GITREV 
       else
         echo "Returning to this branch: " $currentBranch
+        git branch -d "build_"$GITREV_fname
         git checkout $currentBranch
       fi
     else
