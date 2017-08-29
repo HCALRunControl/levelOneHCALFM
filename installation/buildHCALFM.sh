@@ -19,9 +19,10 @@
 
 if [ "$1" = "release" ]; then
   git diff-index --quiet HEAD
-  if [ "$?" == "0" ]; then
+  if [ "$?" = "0" ]; then
     #get the latest tag version
     release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | tail -1`
+    releaseTags=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n`
     Year=`date  +%y`
     versionArr=(${release//./ })
     remotes=`git remote -v | grep HCALRunControl | tail -1`
@@ -31,21 +32,47 @@ if [ "$1" = "release" ]; then
     if [ "$2" = "major" ]; then
       GITREV="${Year}.$((versionArr[1]+1)).0"
       GITREV_fname="${Year}_$((versionArr[1]+1))_0"
-    else
-      #Default is minor increment
+    elif [ "$2" = "minor" ]; then
       GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
       GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+    else
+      #Check if input is a valid release tags
+      inputTag=$2
+      isValidRelease="false"
+      for tag in ${releaseTags}
+      do
+          if [ "$tag" == "${inputTag}" ]; then
+            isValidRelease="true"
+          fi
+      done
+      if [ $isValidRelease == "true" ] ; then
+        GITREV="${inputTag}"
+        fnameArr=(${GITREV//./_})
+        GITREV_fname="${fnameArr[*]}"
+        currentBranch=`git branch | grep \* | cut -d ' ' -f2`
+        echo Chcking out to a new branch for building previous release
+        git checkout $GITREV -b "build_"$GITREV
+      else
+         printf "$inputTag is not a valid release tag!\n Usage: ./buildHCALFM release [major|minor|releaseTag] \n Use \"git tag -l\" to see all the releases. \n"
+         exit -1
+      fi
     fi
-    echo "Building HCALFM new release: $GITREV"
+    echo "Building HCALFM release: $GITREV"
     tagCommit=`git rev-parse HEAD | head -c 7`
     sed -i '$ d' ../gui/jsp/footer.jspf
     echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version:${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
     ant -DgitRev="${GITREV_fname}"
+    #Update the tags only if build successful and not building old release
     if [ "$?" = "0" ]; then
-      echo "Tagging HCALFM release: $GITREV"
-      git tag $GITREV 
-      echo "Pushing tag to gihub ... "
-      git push $RC_remote $GITREV 
+      if [ $isValidRelease == "false" ]; then
+        echo "Tagging HCALFM release: $GITREV"
+        git tag $GITREV 
+        echo "Pushing tag to gihub ... "
+        git push $RC_remote $GITREV 
+      else
+        echo "Returning to this branch: " $currentBranch
+        git checkout $currentBranch
+      fi
     else
       echo "Build not successful, tags are not updated"
     fi
