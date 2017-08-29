@@ -41,9 +41,14 @@ if [ "$1" = "release" ]; then
     sed -i '$ d' ../gui/jsp/footer.jspf
     echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version:${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
     ant -DgitRev="${GITREV_fname}"
-    echo "Tagging HCALFM release: $GITREV"
-    git tag $GITREV 
-    git push $RC_remote $GITREV 
+    if [ "$?" = "0" ]; then
+      echo "Tagging HCALFM release: $GITREV"
+      git tag $GITREV 
+      echo "Pushing tag to gihub ... "
+      git push $RC_remote $GITREV 
+    else
+      echo "Build not successful, tags are not updated"
+    fi
   else
     echo "No changes since the last commit are permitted when building a release FM. Please commit your changes or stash them."
     exit 1
