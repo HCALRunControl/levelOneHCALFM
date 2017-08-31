@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.lang.Math;
+import java.lang.Integer;
 
 import java.io.StringReader; 
 import java.io.IOException;
@@ -185,8 +186,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if(MasterSnippetList!=""){
         NodeList nodes = xmlHandler.getHCALuserXML(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
         for (int i=0; i < nodes.getLength(); i++) {
-          logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-              + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+          //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+          //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           
           MapT<StringT> RunKeySetting = new MapT<StringT>();
           StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
@@ -246,6 +247,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if (parameterSet.size()==0 || parameterSet.get("SID") == null )  {
 
         RunType = "local";
+        functionManager.RunType = RunType;
         // below: this is a hack for testing
         // RunType = "global";
 
@@ -275,6 +277,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       else {
 
         RunType = "global";
+        functionManager.RunType = RunType;
 
         // set the run type in the function manager parameters
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
@@ -306,11 +309,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             CfgSnippetKeySelected = "global_HCAL";
             RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet",true);
             logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CFGSNIPPET_KEY_SELECTED",new StringT(CfgSnippetKeySelected)));
           }
           else if (functionManager.FMrole.equals("HF")) {
             CfgSnippetKeySelected = "global_HF";
             RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet",true);
             logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CFGSNIPPET_KEY_SELECTED",new StringT(CfgSnippetKeySelected)));
           }
           else {
             String errMessage = "[JohnLog3] " + functionManager.FMname + ": This FM is a level1 in global but it has neither the role 'HCAL' nor 'HF'. This is probably bad. Make sure the role is correctly assigned in the configuration.";  
@@ -328,7 +335,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }else{
         logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
-
+    
+      //Check to see if maskedapps has an instance number
+      try{
+        checkMaskedappsFormat();
+      }catch(UserActionException e){
+        functionManager.goToError("[HCAL "+ functionManager.FMname+"] " + e.getMessage());
+        return;
+      }
+      
+      //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
+      FillMaskedResources();
       masker.pickEvmTrig();
       masker.setMaskedFMs();
 
@@ -400,7 +417,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread1.start();
 
       // give the RunType to the controlling FM
-      functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
       // prepare run number to be passed to level 2
@@ -662,7 +678,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         if (parameterSet.get("FED_ENABLE_MASK") != null) {
           FedEnableMask = ((StringT)parameterSet.get("FED_ENABLE_MASK").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(TpgKey)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(FedEnableMask)));
 
           functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
 
@@ -786,6 +802,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
+      String DQMtask           = ((StringT)functionManager.getHCALparameterSet().get("DQM_TASK").getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
       RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
@@ -817,6 +834,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The DQM_TASK is : "                              +DQMtask                      );
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -925,6 +943,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
+      pSet.put(new CommandParameter<StringT>("DQM_TASK"               , new StringT(DQMtask)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -1701,4 +1720,57 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
   }
 
+  public void FillMaskedResources(){
+    StringT runkeyName                  = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+    VectorT<StringT> MaskedResources    = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    MapT<MapT<StringT>> LocalRunKeyMap  = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+
+    if (RunType.equals("global") && MaskedResources.isEmpty()){
+      if(LocalRunKeyMap.get(runkeyName)!= null){
+        // Note: Unlike maskedapps here, maskedFM is not to be used in global
+        if(LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
+          String[] maskedapps      = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
+          for (String app:maskedapps){
+            MaskedResources.add(new StringT(app));
+          }
+        }
+        logger.info("[HCAL "+functionManager.FMname+" FillMaskedResources: Filled MASKED_RESOURCES from runkey:" + MaskedResources.toString());
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
+      }
+    }
+  }
+
+  public void checkMaskedappsFormat() throws UserActionException{
+    StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+    MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+
+    if (LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
+      String   allmaskedapps      = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString();
+      if(allmaskedapps !=""){
+        String[] maskedapps         = allmaskedapps.split("\\|");
+        String errorMessage         = "";
+        for (String app:maskedapps){
+          String[] appArray = app.split("\\_");
+          if (appArray.length != 2 || isValidInstanceNumber(appArray[0]) || !(isValidInstanceNumber(appArray[1]))){
+            errorMessage = errorMessage + " " + app;
+          }
+        }
+        if (errorMessage != ""){
+          throw new UserActionException("Runkey " + runkeyName +" maskedapps incorrectly formated:" + errorMessage); 
+        }
+      }
+    }
+  }
+
+ public static boolean isValidInstanceNumber(String s){
+  try{
+    Integer.parseInt(s);
+    return true;
+  }
+  catch(NumberFormatException e){
+    return false;
+  }
+ }
 }
+
+

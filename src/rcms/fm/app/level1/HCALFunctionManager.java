@@ -430,7 +430,9 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopMonitorThread = true;
     theEventHandler.stopHCALSupervisorWatchThread = true;
     theEventHandler.stopTriggerAdapterWatchThread = true;
+    theEventHandler.stopTriggerAdapterWatchThread = true;
     theEventHandler.stopAlarmerWatchThread = true; 
+    theEventHandler.stopTTCciWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
     try{

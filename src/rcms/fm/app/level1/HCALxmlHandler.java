@@ -82,7 +82,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter","DQM_TASK"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -247,7 +247,6 @@ public class HCALxmlHandler {
       for (StringT maskedApp: maskedAppArray) {
         //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
-
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
         NxcContexts = xcContextNodes.getLength();
@@ -901,7 +900,6 @@ public class HCALxmlHandler {
   //    functionManager.goToError(e.getMessage());
   //  }
   //}
-
   public boolean hasDefaultValue(String pam, String def_value){
         String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
         //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
