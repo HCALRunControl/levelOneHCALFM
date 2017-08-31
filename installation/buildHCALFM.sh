@@ -5,13 +5,17 @@
 # Release convention: yy.xx.zz   where yy = year, xx= major version, zz=minor version
 # Usage 1) test build
 #       ./buildHCALFM.sh test
+#
 # Usage 2) Build major release
 #       ./buildHCALFM.sh release major
+#
 # Usage 3) Build minor release: 
 #       ./buildHCALFM.sh release minor
-# OR  
-#       ./buildHCALFM.sh release
-# Usage 4) Build HCALFM.jar with commit hash
+#
+# Usage 4) Build a particular release
+#       ./buildHCALFM.sh release yy.xx.zz
+#
+# Usage 5) Build HCALFM.jar with commit hash
 #       ./buildHCALFM.sh hash
 #
 # Created: John Hakala 4/14/2016
