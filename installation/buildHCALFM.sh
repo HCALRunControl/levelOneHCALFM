@@ -36,9 +36,11 @@ if [ "$1" = "release" ]; then
     if [ "$2" = "major" ]; then
       GITREV="${Year}.$((versionArr[1]+1)).0"
       GITREV_fname="${Year}_$((versionArr[1]+1))_0"
+      isValidRelease="false"
     elif [ "$2" = "minor" ]; then
       GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
       GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+      isValidRelease="false"
     else
       #Check if input is a valid release tags
       inputTag=$2
