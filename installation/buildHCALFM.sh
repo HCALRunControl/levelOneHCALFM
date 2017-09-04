@@ -77,8 +77,9 @@ if [ "$1" = "release" ]; then
         git push $RC_remote $GITREV 
       else
         echo "Returning to this branch: " $currentBranch
-        git branch -d "build_"$GITREV_fname
         git checkout $currentBranch
+        echo "Deleting building branch: build_"$GITREV_fname 
+        git branch -d "build_"$GITREV_fname
       fi
     else
       echo "Build not successful, tags are not updated"
