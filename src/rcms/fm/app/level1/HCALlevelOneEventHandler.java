@@ -773,7 +773,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       //Parse and set HCAL parameters from MasterSnippet
       logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,NeventIsSetFromGUI);
+      try{
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,NeventIsSetFromGUI);
+      }
+      catch(UserActionException e){
+        String errMessage ="[HCAL LV1 "+functionManager.FMname+"] Failed to configure LV1 FM";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
 
       //Pring results from mastersnippet:
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippet(s): ");
