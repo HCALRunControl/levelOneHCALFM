@@ -9,6 +9,7 @@ def PortSnippet(input_path, output_path):
 	re_OfficialRunNumbers = re.compile("OfficialRunNumbers=\"(?P<OfficialRunNumbers>true|false)\"")
 	re_NumberOfEvents = re.compile("NumberOfEvents=\"(?P<NumberOfEvents>\d+)\"")
 
+	re_mastersnippet = re.compile("<mastersnippet")
 	re_include = re.compile("<include")
 	re_include_file = re.compile("file=\"/(?P<file>.+?)\"")
 	re_include_version = re.compile("version=\"(?P<version>.+?)\"")
@@ -19,7 +20,7 @@ def PortSnippet(input_path, output_path):
 		"PIControlSingle":"HCAL_PICONTROL_SINGLE",
 		"PIControlMulti":"HCAL_PICONTROL_MULTI",
 		"ICIControlMulti":"HCAL_ICICONTROL_MULTI",
-		"ICIControlSingle":"HCAL_ICICONTROL_Single",
+		"ICIControlSingle":"HCAL_ICICONTROL_SINGLE",
 		"TCDSControl":"HCAL_ICICONTROL_MULTI",
 		"LPMControl":"HCAL_LPMCONTROL",
 		"FedEnableMask":"FED_ENABLE_MASK",
@@ -54,6 +55,8 @@ def PortSnippet(input_path, output_path):
 				raise ParsingError("Didn't find version in include line {0}".format(line))
 			include_version = match_include_version.group("version")
 			output_snippet_text += "<xi:include parse=\"text\" href=\"{0}/{1}\"/>\n".format(include_file, include_version)
+    elif re_mastersnippet.search(line):
+			output_snippet_text += "<mastersnippet xmlns:xi=\"http://www.w3.org/2001/XInclude\">\n"
 
 		# Tag replacements/nothing to change
 		else:
