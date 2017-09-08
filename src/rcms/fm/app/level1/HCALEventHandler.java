@@ -2379,7 +2379,8 @@ public class HCALEventHandler extends UserEventHandler {
       List<String>  watchedPartitions = new ArrayList<String>();  //All watchedPartitions (LV2 names)
       List<String>  AlarmerPamNames   = new ArrayList<String>();  //All alarmer pam Names
       String        FMstate           =  functionManager.getState().getStateString();
-      XDAQParameter NameQuery         = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+      String        alarmerURL_str    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString();
+      XDAQParameter NameQuery         = new XDAQParameter(alarmerURL_str,"hcalAlarmer",0);
       HashMap<String,String> partitionStatusMap  = new HashMap<String,String>(); // e.g. <HO,HO_Status>,<Laser,LASER_Status>
       HashMap<String,String> partitionMessageMap = new HashMap<String,String>(); // e.g. <HO,HO_Message>,<Laser,LASER_Message>
       try{
