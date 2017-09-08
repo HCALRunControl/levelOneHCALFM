@@ -20,7 +20,7 @@ def PortSnippet(input_path, output_path):
 		"PIControlSingle":"HCAL_PICONTROL_SINGLE",
 		"PIControlMulti":"HCAL_PICONTROL_MULTI",
 		"ICIControlMulti":"HCAL_ICICONTROL_MULTI",
-		"ICIControlSignle":"HCAL_ICICONTROL_Single",
+		"ICIControlSingle":"HCAL_ICICONTROL_Single",
 		"TCDSControl":"HCAL_ICICONTROL_MULTI",
 		"LPMControl":"HCAL_LPMCONTROL",
 		"FedEnableMask":"FED_ENABLE_MASK",
