@@ -16,7 +16,6 @@ def PortSnippet(input_path, output_path):
 	# Define a simple map for string.replaces
 	tag_mapping = {
 		"CfgScript":"HCAL_CFGSCRIPT",
-		"PIControl":"HCAL_PICONTROL_MULTI",
 		"PIControlSingle":"HCAL_PICONTROL_SINGLE",
 		"PIControlMulti":"HCAL_PICONTROL_MULTI",
 		"ICIControlMulti":"HCAL_ICICONTROL_MULTI",
