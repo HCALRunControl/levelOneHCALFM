@@ -533,7 +533,7 @@ public class HCALxmlHandler {
           Element parameterElement = (Element)elements.item(iNode);
 
           String parameterName = parameterElement.getNodeName();
-          if (parameterName == "CommonMasterSnippet") {
+          if (parameterName == "CommonMasterSnippet" || parameterName == "mastersnippet" ) {
             continue;
           }
           logger.info("HCAL " + functionManager.FMname + "]: Found parameter " + parameterName);
@@ -837,69 +837,63 @@ public class HCALxmlHandler {
   }
 
 
-  //public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
-  //  try{
-  //    if(TagName.equals("ICIControlSingle")|| TagName.equals("ICIControlMulti") || TagName.equals("LPMControl")|| TagName.equals("PIControlSingle")||TagName.equals("PIControlMulti") || TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
-  //        String HCALParameter = getHCALParameterFromTagName(TagName);
-  //        String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
-  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
-  //    }
-  //    if(TagName.equals("AlarmerURL")){
-  //        functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
-  //    }
-  //    if(TagName.equals("AlarmerStatus")) {
-  //        functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
-  //    }
-  //    if(TagName.equals("FMSettings")){
-  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
-  //        String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
-  //        if(NeventIsSetFromGUI){
-  //          logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
-  //        }
-  //        else{
-  //          if( !StringNumberOfEvents.equals("")){
-  //             Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
-  //             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
-  //          }
-  //        }
-  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
-  //        String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
-  //        if( !StringRunInfoPublish.equals("")){
-  //          Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
-  //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
-  //        }
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
+    try{
+      if(TagName.equals("ICIControlSingle")|| TagName.equals("ICIControlMulti") || TagName.equals("LPMControl")|| TagName.equals("PIControlSingle")||TagName.equals("PIControlMulti") || TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
+          String HCALParameter = getHCALParameterFromTagName(TagName);
+          String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
+      }
+      if(TagName.equals("FMSettings")){
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+          if(NeventIsSetFromGUI){
+            logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
+          }
+          else{
+            if( !StringNumberOfEvents.equals("")){
+               Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+               functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+            }
+          }
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
+          if( !StringRunInfoPublish.equals("")){
+            Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
+          }
 
-  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
-  //        String  StringOfficialRunNumbers  = getTagAttribute(NodeListOfTagName, TagName,"OfficialRunNumbers");
-  //        if( !StringOfficialRunNumbers.equals("")){
-  //          Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
-  //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
-  //        }
-  //    }
-  //    if(TagName.equals("CfgScript")){
-  //        String tmpCfgScript =""; 
-  //        if( !hasDefaultValue("HCAL_CFGSCRIPT","not set") ){
-  //          //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
-  //          tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
-  //          tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
-  //        }
-  //        else{
-  //          //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
-  //          tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
-  //        }
-  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT(tmpCfgScript)));
-  //    }
-  //    if(TagName.equals("FedEnableMask")){
-  //      if (functionManager.RunType.equals("local")){
-  //        String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
-  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
-  //      }
-  //    }
-  //  } catch (UserActionException e) {
-  //    // Warn when found more than one tag name in mastersnippet
-  //    functionManager.goToError(e.getMessage());
-  //  }
-  //}
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String  StringOfficialRunNumbers  = getTagAttribute(NodeListOfTagName, TagName,"OfficialRunNumbers");
+          if( !StringOfficialRunNumbers.equals("")){
+            Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
+          }
+      }
+      if(TagName.equals("CfgScript")){
+          String tmpCfgScript =""; 
+          if( !hasDefaultValue("HCAL_CFGSCRIPT","not set") ){
+            //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
+            tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
+            tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
+          }
+          else{
+            //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
+            tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT(tmpCfgScript)));
+      }
+      if(TagName.equals("FedEnableMask")){
+        if (functionManager.RunType.equals("local")){
+          String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
+        }
+      }
+    } catch (UserActionException e) {
+      // Warn when found more than one tag name in mastersnippet
+      functionManager.goToError(e.getMessage());
+    }
+  }
   public boolean hasDefaultValue(String pam, String def_value){
         String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
         //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
