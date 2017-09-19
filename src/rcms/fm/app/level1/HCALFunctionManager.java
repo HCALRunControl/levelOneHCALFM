@@ -459,6 +459,22 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
     destroyed = true;
 
+    // Check if the session is closed finally
+    if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {
+      int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+      Integer SIDforLV0   = ((IntegerT)getParameterSet().get("INITIALIZED_WITH_SID").getValue()).getInteger();
+      if (logSessionConnector!=null && logSessionConnector.getSession(sessionId)!=null){
+        LogSession currentSession = logSessionConnector.getSession(sessionId);
+        logger.debug("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
+        if(SIDforLV0.equals(-1)){
+          if (currentSession.isOpen()){
+            logger.error("[HCAL "+FMname+"] ERROR! Current log session "+sessionId+ " is still open after trying to close it");
+          }else{
+            logger.info("[HCAL "+FMname+"] Successfully closed current log session "+sessionId);
+          }
+        }
+      }
+    }
     System.out.println("[HCAL " + FMname + "] destroyAction executed ...");
     logger.info("[HCAL " + FMname + "] destroyAction executed ...");
   }
@@ -756,7 +772,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sessionId = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       }
       catch (Exception e) {
-        logger.warn("[HCAL " + FMname + "] Could not get sessionId for closing session.\nNot closing session.\nThis is OK if no sessionId was requested from within HCAL land, i.e. global runs.",e);
+        logger.error("[HCAL " + FMname + "] Could not get sessionId for closing session. Not closing session. Exception:"+e.getMessage());
       }
       try {
         logger.debug("[HCAL " + FMname + "] Trying to close log sessionId = " + sessionId );
@@ -764,10 +780,9 @@ public class HCALFunctionManager extends UserFunctionManager {
         logger.debug("[HCAL " + FMname + "] ... closed log sessionId = " + sessionId );
       }
       catch (LogSessionException e1) {
-        logger.warn("[HCAL " + FMname + "] Could not close sessionId, but sessionId was requested and used.\nThis is OK only for global runs.\nException: ",e1);
+        logger.error("[HCAL " + FMname + "] Could not close sessionId, but sessionId was requested and used. Exception: "+e1.getMessage());
       }
     }
-
   }
 
   protected void checkHCALPartitionFEDListConsistency() {

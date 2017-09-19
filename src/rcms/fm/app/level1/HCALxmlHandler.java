@@ -113,7 +113,7 @@ public class HCALxmlHandler {
       return hcalUserXML.getDocumentElement();
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster snippet:" + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }

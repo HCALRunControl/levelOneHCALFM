@@ -224,7 +224,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       
     }
     catch (DOMException | UserActionException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: ";
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the grandmaster snippet: ";
       functionManager.goToError(errMessage,e);
     }
 
