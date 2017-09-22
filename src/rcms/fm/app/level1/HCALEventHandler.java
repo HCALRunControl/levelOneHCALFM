@@ -521,11 +521,11 @@ public class HCALEventHandler extends UserEventHandler {
           if (TimeOut!=0) {
             while ((!status.equals("Ready")) && (!status.equals("Failed")) && (elapsedseconds<=TimeOut)) {
               try {
-                if (elapsedseconds%1==0) {
-                  logger.info("[HCAL " + functionManager.FMname + "] asking for the TriggerAdapter stateName after requesting: " + TriggersToTake + " events (with " + TimeOut + "sec time out enabled) ...");
+                if (elapsedseconds%10==0) {
+                  logger.debug("[HCAL " + functionManager.FMname + "] asking for the TriggerAdapter stateName after requesting: " + TriggersToTake + " events (with " + TimeOut + "sec time out enabled) ...");
                 }
 
-                elapsedseconds +=1;
+                elapsedseconds +=5;
                 try { Thread.sleep(1000); }
                 catch (Exception ignored) {}
 
