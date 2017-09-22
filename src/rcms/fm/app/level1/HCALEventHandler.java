@@ -867,16 +867,16 @@ public class HCALEventHandler extends UserEventHandler {
 
               pam.send();
             }
-            // test ignoreEnable to ICI for non-EvmTrig supervisors
+            // ignoreEnable LPM for non-EvmTrig supervisors (LPM should be enabled by TA in EvmTrig FM)
             else{
               XDAQParameter pam = xdaqApp.getXDAQParameter();
               pam.select(new String[] {"SessionID", "HandleLPM","IgnoreForEnableVector"});
               pam.setValue("HandleLPM"  ,"true");
               pam.setValue("SessionID"  ,sid.toString());
-              String [] appsToIgnoreAtEnable = {"tcds::ici::ICIController"};
+              String [] appsToIgnoreAtEnable = {"tcds::lpm::LPMController"};
               pam.setVector("IgnoreForEnableVector"  ,appsToIgnoreAtEnable);
               logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
-              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreForEnableVector to supervisor: tcds::ici::ICIController");
+              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreForEnableVector to supervisor: tcds::lpm::LPMController");
 
               pam.send();
             }
