@@ -500,7 +500,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
@@ -668,7 +668,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
 
         // Give the supervisor error to the level1FM
-        SupervisorError = "";
+        SupervisorError = "not set";
         if (parameterSet.get("SUPERVISOR_ERROR") != null) {
           SupervisorError = ((StringT)parameterSet.get("SUPERVISOR_ERROR").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
