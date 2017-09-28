@@ -860,8 +860,7 @@ public class HCALEventHandler extends UserEventHandler {
           try{
             if (functionManager.FMrole.equals("EvmTrig")){
               XDAQParameter pam = xdaqApp.getXDAQParameter();
-              pam.select(new String[] {"SessionID", "HandleLPM"});
-              pam.setValue("HandleLPM"  ,"true");
+              pam.select(new String[] {"SessionID"});
               pam.setValue("SessionID"  ,sid.toString());
               logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
 
@@ -870,8 +869,7 @@ public class HCALEventHandler extends UserEventHandler {
             // ignoreEnable LPM for non-EvmTrig supervisors (LPM should be enabled by TA in EvmTrig FM)
             else{
               XDAQParameter pam = xdaqApp.getXDAQParameter();
-              pam.select(new String[] {"SessionID", "HandleLPM","IgnoreForEnableVector"});
-              pam.setValue("HandleLPM"  ,"true");
+              pam.select(new String[] {"SessionID","IgnoreForEnableVector"});
               pam.setValue("SessionID"  ,sid.toString());
               String [] appsToIgnoreAtEnable = {"tcds::lpm::LPMController"};
               pam.setVector("IgnoreForEnableVector"  ,appsToIgnoreAtEnable);
