@@ -317,7 +317,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
 
       // kill all XDAQ executives
       functionManager.destroyXDAQ();
@@ -514,7 +514,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         // get the supervisor error from the lvl1 
-        SupervisorError = "";
+        SupervisorError = "not set";
         if (parameterSet.get("SUPERVISOR_ERROR") != null) {
           SupervisorError = ((StringT)parameterSet.get("SUPERVISOR_ERROR").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
