@@ -344,8 +344,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         getTriggerAdapter();
       }
 
-      // go to Halted
-      if (!functionManager.ErrorState && !functionManager.FMrole.equals("Level2_TCDSLPM")) {
+      // go to Halted 
+      if (!functionManager.ErrorState) {
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
 
