@@ -232,7 +232,9 @@ public class HCALMasker {
               allMaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
-                allMaskedResources.add(new StringT(level2resource.getName()));
+                if (!allMaskedResources.contains(new StringT(level2resource.getName()))){
+                  allMaskedResources.add(new StringT(level2resource.getName()));
+                }
               }
             }
           }
