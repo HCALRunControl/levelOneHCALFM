@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 import rcms.util.logger.RCMSLogger;
 import rcms.common.db.DBConnectorException;

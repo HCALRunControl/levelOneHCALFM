@@ -12,7 +12,6 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
-import rcms.fm.fw.parameter.type.ParameterType;
 
 import rcms.util.logger.RCMSLogger;
 
