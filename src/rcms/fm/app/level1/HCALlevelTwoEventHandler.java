@@ -30,7 +30,6 @@ import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 import rcms.util.logger.RCMSLogger;
 import rcms.xdaqctl.XDAQParameter;
-import rcms.utilities.runinfo.RunNumberData;
 
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
