@@ -226,7 +226,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
       try{
         initXDAQ();
       }catch(UserActionException e){
@@ -234,10 +233,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.goToError(errMessage,e);
         return;
       }
-
-
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
+      
+      // Halt the LPM Controller via LPMsupervisor 
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        if (!functionManager.containerhcalSupervisor.isEmpty()) {
+          try{
+            functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
+          }catch (QualifiedResourceContainerException e) {
+            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Cannot haltLPM ";
+            functionManager.goToError(errMessage,e);
+          }
+        }
+        else{
+          String errMessage = "[HCAL LV2 "+functionManager.FMname+"] Error! Cannot find LPMsupervisor in TCDSLPM FM";
+          functionManager.goToError(errMessage);
+        }
+      }
 
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
@@ -319,11 +332,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
 
+
+      // KKH: TODO xDAQ should implement resetAction which should bring the apps to "halted"(Uninitialized) state
+      // When that is done, FM should simply ask all xdaqs to do reset and do not need to perform destroy/init+haltLPM cycle.
+
       // kill all XDAQ executives
       functionManager.destroyXDAQ();
 
       // init all XDAQ executives
-      // also halt all LPM Controller inside here
       try{
         initXDAQ();
       }catch(UserActionException e){
@@ -334,6 +350,22 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
+
+      // Halt LPM controllers with LPM supervisor
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        if (!functionManager.containerhcalSupervisor.isEmpty()) {
+          try{
+            functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
+          }catch (QualifiedResourceContainerException e) {
+            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Cannot haltLPM in initXDAQ()";
+            functionManager.goToError(errMessage,e);
+          }
+        }
+        else{
+          String errMessage = "[HCAL LV2 "+functionManager.FMname+"] Error! Cannot find LPMsupervisor in TCDSLPM FM";
+          functionManager.goToError(errMessage);
+        }
+      }
 
       //Reset all EmptyFMs as we are going to halted
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
@@ -1300,10 +1332,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
-      //  Halt LPM with LPM FM. 
-      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltTCDSControllers(false);
-      }
+      // LPM is halt by LPMsupervisor during Supervisor RESET
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
