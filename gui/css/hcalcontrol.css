@@ -363,6 +363,9 @@ body {
   top: 5px;
   left: -1px;
 }
+.partitionSelection {
+  display: none;
+}
 .partitionSelection input{
   z-index: 11;
   opacity: 0;
