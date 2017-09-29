@@ -231,7 +231,9 @@ public class HCALMasker {
               allMaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
-                allMaskedResources.add(new StringT(level2resource.getName()));
+                if (!allMaskedResources.contains(new StringT(level2resource.getName()))){
+                  allMaskedResources.add(new StringT(level2resource.getName()));
+                }
               }
             }
           }
@@ -265,7 +267,10 @@ public class HCALMasker {
               if (resourceName.contains(EvmTrigName)) {
                 //Mask all EvmTrig apps except for the ones we picked
                 if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
-                  allMaskedResources.add(new StringT(resourceName));
+                  // All maskedFM resources are already added before,no need to double add.
+                  if( !allMaskedResources.contains(new StringT(resourceName))){
+                    allMaskedResources.add(new StringT(resourceName));
+                  }
                 }
               }
             }
