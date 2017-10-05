@@ -214,11 +214,11 @@ public class HCALMasker {
         if (allMaskedResources.size() > 0) {
           logger.info("[HCAL " + functionManager.FMname + "]: Got Masked resources " + allMaskedResources.toString());
           StringT[] MaskedResourceArray = allMaskedResources.toArray(new StringT[allMaskedResources.size()]);
+          //Loop over masked LV2 FMs and add all there children resources to allMaskedResources
           for (StringT MaskedFM : MaskedResourceArray) {
-            logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM.getString());
-            logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Checking this QR:  " +qr.getName());
             if (qr.getName().equals(MaskedFM.getString())) {
-              logger.info("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
+              logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM.getString());
+              logger.info("[HCAL " + functionManager.FMname + "]: HCALMasker: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
               StringT thisMaskedFM = new StringT(qr.getName());
               if (!Arrays.asList(maskedFMsVector.toArray()).contains(thisMaskedFM)) {
@@ -234,6 +234,10 @@ public class HCALMasker {
                 if (!allMaskedResources.contains(new StringT(level2resource.getName()))){
                   allMaskedResources.add(new StringT(level2resource.getName()));
                 }
+              }
+              // If TCDSLPM FM is masked, add LPM controller to allMaskedResources
+              if (qr.getResource().getRole().equals("Level2_TCDSLPM")){
+                  allMaskedResources.add(new StringT("tcds::lpm::LPMController_0"));
               }
             }
           }
