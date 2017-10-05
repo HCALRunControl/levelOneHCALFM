@@ -990,6 +990,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
 
       // set actions
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("AUTOCONFIGURE",new BooleanT(false)));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
 
