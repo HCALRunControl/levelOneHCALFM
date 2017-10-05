@@ -437,20 +437,18 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopTTCciWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
+    // xdaq::reset all supervisors before destroy to release the TCDS leases 
+    if (!containerhcalSupervisor.isEmpty()) {
+      try{
+        containerhcalSupervisor.execute(HCALInputs.RESET);
+      }catch (QualifiedResourceContainerException e) {
+        String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot reset supervisor, exception:"+e.getMessage();
+        logger.error(errMessage);
+      }
+    }
+
     try{
       destroyXDAQ();
-      if (containerTCDSControllers !=null){
-        if (!containerTCDSControllers.isEmpty()){
-          try{
-            logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            haltTCDSControllers(false);
-          }
-          catch (UserActionException e) {
-            String errMessage = "[HCAL LVL2 " + FMname + "] DestroyAction: "+e.getMessage();
-            logger.warn(errMessage);
-          }
-        }
-      }
     }
     catch (UserActionException e){
       String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";
