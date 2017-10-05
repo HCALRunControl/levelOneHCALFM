@@ -105,8 +105,10 @@ function updatePage() {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted" && $.fingerprint() == $('#DRIVER_IDENTIFIER').val()) { $('#Destroy').click(); }
-      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+      driving = ($.fingerprint() == $('#DRIVER_IDENTIFIER').val());
+      if ($('#EXIT').val() == "true" && currentState=="Halted" && driving) { $('#Destroy').click(); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving) { onClickCommandButton('Initialize'); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Halted" && driving) { onClickCommandButton('Configure'); }
     }, 750);
 
 
@@ -190,8 +192,20 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); makeAutoconfigureButton();";
     $('#dropdown').attr("onchange", onchanges);
+}
+
+function setAutoconfigure() {
+  $("#newAUTOCONFIGUREcheckbox :checkbox").click();
+  $("#AUTOCONFIGURE").val("true");
+  
+}
+
+function makeAutoconfigureButton() {
+    var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
+    var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
+    $(autoconfigureButton).insertAfter("#setGlobalParametersButton");
 }
 
 function fillMask() {
@@ -326,7 +340,7 @@ function setupMaskingPanels() {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
-       	 $('#singlePartitionSelection :input').prop('checked', false);
+         $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
@@ -438,6 +452,8 @@ function hcalOnLoad() {
     makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
     copyContents(DRIVER_IDENTIFIER, newDRIVER_IDENTIFIER);
     makecheckbox('newDRIVER_IDENTIFIERcheckbox', 'DRIVER_IDENTIFIER');
+    copyContents(AUTOCONFIGURE, newAUTOCONFIGURE);
+    makecheckbox('newAUTOCONFIGUREcheckbox', 'AUTOCONFIGURE');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
