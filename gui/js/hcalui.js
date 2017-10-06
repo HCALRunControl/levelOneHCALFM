@@ -63,8 +63,6 @@ function updatePage() {
       }
     }
     var cachedState = $('#currentState').text();
-    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-
 
     setInterval(function () {
 
@@ -100,13 +98,11 @@ function updatePage() {
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
-      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
       cachedRunNo = $('#RUN_NUMBER').val();
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
 	    if ($('#EXIT').val() == "true" && currentState=="Halted" && $.fingerprint() == $('#DRIVER_IDENTIFIER').val()) { $('#Destroy').click(); }
-      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
 

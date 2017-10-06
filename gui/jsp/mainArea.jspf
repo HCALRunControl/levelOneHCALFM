@@ -1,5 +1,27 @@
 <!-- First section begin -->
-<%@include file="./controlConsole.jspf"%>
+<div id="controls">
+  <div id="stateDisplay">
+    <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
+  </div>
+  <div id="fullPath">
+    <rcms.control:configurationPathRenderer titleClass="control_label1" label="Full Path:&nbsp;" contentClass="control_label2" indentation="10"/>
+    <rcms.control:configurationNameRenderer titleClass="control_label1" label="Group Name:&nbsp;" contentClass="control_label2" indentation="10"/>
+  </div>
+  <div id="externalCommandButtons">
+    <rcms.control:createButtonRenderer cssClass="button1" onClickFunction="onCreateButton()" name="Create" indentation="10"/>
+    <rcms.control:attachButtonRenderer cssClass="button1" onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
+    <rcms.control:detachButtonRenderer cssClass="button1" onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
+    <rcms.control:destroyButtonRenderer cssClass="button1" onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
+  </div>
+  <div id="refreshAndStatusButtons">
+    <rcms.control:refreshButtonRenderer cssClass="button1" onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
+    <rcms.control:showTreeButtonRenderer cssClass="button1" onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/>
+    <rcms.control:showStatusTableButtonRenderer cssClass="button1" onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
+  </div>
+  <div id="commandSection">
+    <rcms.control:commandButtonsRenderer cssClass="button1" indentation="11"/>
+  </div>
+</div>
 <div id="maintable" class="tbl">
   <table>
     <tr>
@@ -195,7 +217,10 @@
     <tbody id="parameterTableSection">
     <tr>
       <td colspan="2">
-        <table id="Blork" class="tbl">
+        <div id="commandParameterCheckBoxSection" class="control_label1">
+          <input id="commandParameterCheckBox" type="checkbox" onclick="onClickCommandParameterCheckBox(); toggle_visibility('commandParameterTable');" value="" name="commandParameterCheckBox ">  &nbsp; Show Command Parameter Section
+        </div>
+        <table id="commandParameterTable" class="tbl">
           <tr>
             <td>
               <br />

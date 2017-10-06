@@ -250,32 +250,9 @@ table {
   border: 0px solid black;
   display: inline!important;
 }
-#middle {
-  display: inline-flex;
-}
-#center {
-  display: inline-flex;
-}
 #hcalmaintable > input { 
   width: 450px;
 }
-#sidebar {
-  background-color: #283948;
-  font-family: "Open Sans",sans-serif;
-  padding-right: 8px;
-}
-.menuLinkEnabled > a {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-  text-decoration: none;
-  padding-left: 10px;
-} 
-#sidebar > a {
-  color: rgba(255, 255, 255, 0.7);
-}
-.menuLinkDisabled{
-  display: none;
-} 
 .header {
   background-color: #3a5165;
   color: #DDDDDD;
@@ -316,16 +293,30 @@ a {
 }
 #hcaltitle {
   font-size: 28px;
-  padding-left: 120px;
+  margin: auto;
+  padding-top: 16px;
 }
 body {
   display: inline;
   background-color: #3a5165;
 }
+#logospot {
+  float: left;
+}
 #logospot img {
-  width: 90px;
+  width: 80px;
   padding-top: 8px;
   padding-bottom: 3px;
+  display: block;
+  margin: auto;
+}
+#logospot a {
+  display: block;
+  margin: auto;
+}
+#logospot div {
+  display: block;
+  margin: auto;
 }
 .maskModes {
   display: inline;
@@ -389,9 +380,38 @@ body {
   top: -3px;
 }
 #header{
-  display: -moz-inline-grid;
   width: 100%;
 }
 #wrapper{
   width: 100%;
+  display: grid;
+  position:absolute;
+  top:0;
+  background-color: #3a5165;
+}
+#frameworkLinks {
+  background-color: #283948;
+  font-family: "Open Sans",sans-serif;
+  padding-right: 8px;
+}
+#frameworkLinks p {
+  display: inline-flex;
+}
+.menuLinkEnabled > a {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  text-decoration: none;
+  padding-left: 10px;
+} 
+#frameworkLinks > a {
+  color: rgba(255, 255, 255, 0.7);
+}
+.menuLinkDisabled{
+  display: none !important;
+} 
+#versionInfo {
+  float: right;
+}
+#versionInfo p {
+  margin: 4px;
 }
