@@ -250,15 +250,20 @@ table {
   border: 0px solid black;
   display: inline!important;
 }
+#middle {
+  display: inline-flex;
+}
+#center {
+  display: inline-flex;
+}
 #hcalmaintable > input { 
   width: 450px;
 }
 #sidebar {
-  width: 13%;
   background-color: #283948;
   font-family: "Open Sans",sans-serif;
+  padding-right: 8px;
 }
-
 .menuLinkEnabled > a {
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
@@ -382,4 +387,11 @@ body {
   position: relative;
   left: -1px;
   top: -3px;
+}
+#header{
+  display: -moz-inline-grid;
+  width: 100%;
+}
+#wrapper{
+  width: 100%;
 }

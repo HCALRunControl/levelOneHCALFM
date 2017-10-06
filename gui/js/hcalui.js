@@ -411,8 +411,11 @@ function makeIcons() {
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
-    activate_relevant_table('AllParamTables');
+    console.log("Step 1");
+    activate_relevant_table('maintable');
+    console.log("Step 1.1");
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
+    console.log("Step 1.2");
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
     removeduplicatecheckbox('MASK_SUMMARY');
@@ -420,10 +423,12 @@ function hcalOnLoad() {
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
     removeduplicatecheckbox('SINGLEPARTITION_MODE');
+    console.log("Step 2");
     copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
+    console.log("Step 3");
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(MASK_SUMMARY, newMASK_SUMMARY);
