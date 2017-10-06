@@ -317,7 +317,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
 
       // KKH: TODO xDAQ should implement resetAction which should bring the apps to "halted"(Uninitialized) state
-      // When that is done, FM should simply ask all xdaqs to do reset and do not need to perform destroy/init+haltLPM cycle.
+      // When that is done, we should use xdaq::reset() for resetting the xdaq apps by asking all xdaqs (via supervisor) to do reset 
+      // In resetAction, we can keep the more invasive destroy/init+haltLPM cycle.
 
       // xdaq::reset all supervisors before destroy to release the TCDS leases 
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
