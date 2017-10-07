@@ -124,15 +124,12 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
         <input type="hidden" id="globalParameterValue1" name="globalParameterValue1" value="" />
         <input type="hidden" id="globalParameterType1"  name="globalParameterType1" value="" />
         <input type="hidden" id="NO_RESPONSE" name="NO_RESPONSE" value="" />
-        <!-- Working area begin -->
         <%@ include file="./mainArea.jspf"%>
-        <!-- Working area end -->
       </form>
     </div>
-    <!-- Custom dynamic content end -->
-  </div>
-  <div id="bottom">
-    <%@ include file="./footer.jspf"%>
+    <div id="bottom">
+      <%@ include file="./footer.jspf"%>
+    </div>
   </div>
 </div>
 

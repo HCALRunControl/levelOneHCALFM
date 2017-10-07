@@ -259,22 +259,6 @@ table {
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
 }
-a.header {
-  text-decoration: none;
-  color: #DDDDDD;
-  font-family: "Open Sans", sans-serif;
-  font-size: 12px;
-}
-td {
-  border: 0px solid black;
-}
-td.header {
-  padding-right: 20px;
-}
-td.header > p {
-  padding: 0;
-  margin: 3;
-}
 #footer {
   background-color: #3a5165;
   color: #DDDDDD;
@@ -292,9 +276,10 @@ a {
   font-size: 8px;
 }
 #hcaltitle {
-  font-size: 28px;
+  font-size: 32px;
   margin: auto;
-  padding-top: 16px;
+  padding-top: 30px;
+  text-align: center;
 }
 body {
   display: inline;
@@ -302,20 +287,23 @@ body {
 }
 #logospot {
   float: left;
+  text-align: center;
+  padding-left: 24px;
 }
 #logospot img {
   width: 80px;
   padding-top: 8px;
   padding-bottom: 3px;
-  display: block;
+  display: inline;
   margin: auto;
 }
 #logospot a {
-  display: block;
+  display: inline;
   margin: auto;
+  padding-bottom: 8px;
 }
 #logospot div {
-  display: block;
+  display: inline;
   margin: auto;
 }
 .maskModes {
@@ -393,9 +381,12 @@ body {
   background-color: #283948;
   font-family: "Open Sans",sans-serif;
   padding-right: 8px;
+  height: 18px;
+  text-align: center;
 }
 #frameworkLinks p {
-  display: inline-flex;
+  display: inline;
+  padding-top:3px;
 }
 .menuLinkEnabled > a {
   color: rgba(255, 255, 255, 0.7);
@@ -411,7 +402,28 @@ body {
 } 
 #versionInfo {
   float: right;
+  padding-right:24px;
+  padding-top:8px;
+}
+#center {
+  padding-left:24px;
 }
 #versionInfo p {
-  margin: 4px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+.controlSection > div {
+  display: inline;
+}
+#runControlSection {
+  float: left;
+}
+#rcmsControlSection {
+  float: right;
+}
+#rcmsControlSection input {
+  float: right;
+  width: 100px;
+  margin-right: 5px;
+  margin-left: 5px;
 }
