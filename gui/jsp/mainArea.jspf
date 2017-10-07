@@ -3,8 +3,10 @@
   <div id="stateSection" class="controlSection">
     <br>
     <div id="runControlSection">
-        <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
-        <span id="commandSection"><rcms.control:commandButtonsRenderer cssClass="button1" indentation="11"/></span>
+          <div id="stateDisplay">
+            <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/><br>
+          </div>
+        <div id="commandSection"><rcms.control:commandButtonsRenderer cssClass="button1" indentation="11"/></div>
     </div>
     <div id="rcmsControlSection">
       <rcms.control:configurationNameRenderer titleClass="control_label1" label="Group Name:&nbsp;" contentClass="control_label2" indentation="10"/>
@@ -20,13 +22,33 @@
     </div>
   </div>
 </div>
+            <!--Progress bar-->
+            <div class="label_center_black">
+              <div class="container"><div class="progressbar"></div></div>
+            </div>
+<div id="statusSection">
+  <div id="supervisorRow" style="display:none">
+    <!--Supervisor error box-->
+    <div id="supervisorCell" class="label_center_black" colspan="3">
+      <div id="supervisorError" class="hcal_control_Supervisor"></div>
+    </div>
+  </div>
+</div>
 <div id="infoSection">
+  <!--eLog info for quick copy/pasting-->
+  <div class="label_center_black" colspan="3">
+    <div>
+      <strong>Quick Info</strong>
+      <br />
+      <div id="elogInfo"></div>
+    </div>
+  </div>
   <div id="maintable" class="tbl">
     <table>
       <tr>
         <td align="center" valign="top">
           <!--New main table-->
-          <table id="hcalmaintable" width="720" border="0" cellpadding="10" cellspacing="0">
+          <table id="hcalmaintable" border="0" cellpadding="3" cellspacing="0">
             <tr>
               <td class="title_center_black_yellow_bg" width="60">
                 Modify
@@ -140,47 +162,6 @@
               <td id ="newACTION_MSG" class="label_center_black">
               </td>
             </tr>
-            <tr>
-              <!--Progress bar-->
-              <td class="label_center_black" colspan="3">
-                <div class="container"><div class="progressbar"></div></div>
-              </td>
-            </tr>
-            <tr id="supervisorRow" style="display:none">
-              <!--Supervisor error box-->
-              <td id="supervisorCell" class="label_center_black" colspan="3">
-                <div id="supervisorError" class="hcal_control_Supervisor"></div>
-              </td>
-            </tr>
-            <tr>
-              <!--Area for masking checkboxes-->
-              <td class="label_center_black" colspan="3" id="masked_resourses_td">
-                <div>
-                  <div>
-                    <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
-                    <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
-                  </div>
-                  <br />
-                  <div>
-                    Masked FMs: <span id="maskTest"></span>
-                    <div>
-                      <div id="multiPartitionSelection" class="partitionSelection"></div>
-                      <div id="singlePartitionSelection" class="partitionSelection"></div>
-                    </div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <!--eLog info for quick copy/pasting-->
-              <td class="label_center_black" colspan="3">
-                <div>
-                  <strong>Quick Info</strong>
-                  <br />
-                  <div id="elogInfo"></div>
-                </div>
-              </td>
-            </tr>
           </table>
           <br />
           <br />
@@ -199,6 +180,23 @@
   
   
     </table>
+    <!--Area for masking checkboxes-->
+    <div class="label_center_black" colspan="3" id="masked_resourses_td">
+      <div>
+        <div>
+          <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
+          <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
+        </div>
+        <br />
+        <div>
+          Masked FMs: <span id="maskTest"></span>
+          <div>
+            <div id="multiPartitionSelection" class="partitionSelection"></div>
+            <div id="singlePartitionSelection" class="partitionSelection"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="globalParameters">
   

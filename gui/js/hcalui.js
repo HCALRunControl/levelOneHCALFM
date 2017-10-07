@@ -3,12 +3,12 @@ function turn_off_visibility(tbid) {
 }
 
 function turn_on_visibility(tbid) {
-    document.getElementById(tbid).style.display = "table";
+    document.getElementById(tbid).style.display = "grid";
 }
 
 function toggle_visibility(tbid) {
-    if (document.getElementById(tbid).style.display != "table") {
-        document.getElementById(tbid).style.display = "table";
+    if (document.getElementById(tbid).style.display != "grid") {
+        document.getElementById(tbid).style.display = "grid";
     }
     else {
         document.getElementById(tbid).style.display = "none";

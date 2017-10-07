@@ -175,7 +175,7 @@
 }
 
 .control_label2 {
-	font-family: "Open Sans", sans-serif;
+	font-family: monospace;
 	color : #666666;
 	font-size : small;
 	text-align : left;
@@ -251,7 +251,7 @@ table {
   display: inline!important;
 }
 #hcalmaintable > input { 
-  width: 450px;
+  width:100%;
 }
 .header {
   background-color: #3a5165;
@@ -284,6 +284,7 @@ a {
 body {
   display: inline;
   background-color: #3a5165;
+  font-family: "Open Sans", sans-serif;
 }
 #logospot {
   float: left;
@@ -415,8 +416,21 @@ body {
 .controlSection > div {
   display: inline;
 }
-#runControlSection {
+#runControlSection  {
   float: left;
+  padding-left:24px;
+}
+#stateDisplay  {
+  float: left;
+  padding-left: 12px;
+}
+#runControlSection div {
+    display: inline-block;
+    column-count: 2;
+    column-width: 95px;
+}
+#runControlSection input {
+  width: 100px;
 }
 #rcmsControlSection {
   float: right;
@@ -426,4 +440,16 @@ body {
   width: 100px;
   margin-right: 5px;
   margin-left: 5px;
+}
+#controls {
+  display: grid;
+  column-width: 400px;
+}
+#controls div {
+  -webkit-column-break-inside: avoid;
+            page-break-inside: avoid;
+                 break-inside: avoid;
+}
+#commandSection {
+    padding-left: 120px;
 }
