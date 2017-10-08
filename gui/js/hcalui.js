@@ -107,6 +107,7 @@ function updatePage() {
 
 
     $('#dropdowndiv').on('change', 'select', function () {
+        $('#setRunkeyButton').show();
         $('#masked_resourses_td').show();
     });
 }
@@ -249,12 +250,12 @@ function picksinglepartition(option) {
 function hidecheckboxes() {
     var currentState = $('#currentState').text();
     if (currentState == "Initial") {
-        $('#dropdowndiv').show();
+        $('#runkeySelection').show();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
     }
     else {
-        $('#dropdowndiv').hide();
+        $('#runkeySelection').hide();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
     }

@@ -250,7 +250,7 @@ table {
   border: 0px solid black;
   display: inline!important;
 }
-#hcalmaintable > input { 
+#hcalmaintable input { 
   width:100%;
 }
 .header {
@@ -416,40 +416,42 @@ body {
 .controlSection > div {
   display: inline;
 }
-#runControlSection  {
-  float: left;
-  padding-left:24px;
-}
 #stateDisplay  {
-  float: left;
   padding-left: 12px;
 }
-#runControlSection div {
-    display: inline-block;
-    column-count: 2;
-    column-width: 95px;
+#stateAndProgress {
+  display: grid;
 }
 #runControlSection input {
   width: 100px;
 }
-#rcmsControlSection {
-  float: right;
+#rcmsControlSection > table {
+    white-space: nowrap;
 }
 #rcmsControlSection input {
-  float: right;
   width: 100px;
   margin-right: 5px;
   margin-left: 5px;
 }
 #controls {
-  display: grid;
-  column-width: 400px;
+  display: block;
+  column-width: 450px;
 }
 #controls div {
   -webkit-column-break-inside: avoid;
             page-break-inside: avoid;
                  break-inside: avoid;
 }
+#runControlSection {
+  display: inline-flex;
+}
 #commandSection {
-    padding-left: 120px;
+    column-count: 2;
+    column-width: 100px;
+}
+#UpdatedRefresh {
+  width: unset !important;
+}
+#MASK_SUMMARY {
+  width: 100%;
 }
