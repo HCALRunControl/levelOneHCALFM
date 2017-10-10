@@ -1,38 +1,38 @@
 
-.hcal_control_state { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_state { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 }
 
-.hcal_control_Initial { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Initial { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #2E2EFE;
 	font-weight:bold;
 }
 
-.hcal_control_Initializing { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Initializing { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #CC2EFA;
 	font-weight:bold;
 }
 
-.hcal_control_Halting { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Halting { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #9E29C1;
 	font-weight:bold;
 }
 
-.hcal_control_Exiting { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Exiting { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #666666;
 	font-weight:bold;
 }
 
-.hcal_control_Halted { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Halted { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #772390;
@@ -40,21 +40,21 @@
 }
 
 
-.hcal_control_Uninitialized { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Uninitialized { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #707070;
 	font-weight:bold;
 }
 
-.hcal_control_Stopping { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Stopping { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #8719AC;
 	font-weight:bold;
 }
 
-.hcal_control_Configuring { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Configuring { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #31D5D8;
@@ -62,7 +62,7 @@
 }
 
 
-.hcal_control_Configured { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Configured { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #1FBFA5;
@@ -70,7 +70,7 @@
 }
 
 
-.hcal_control_Ready { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Ready { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #6CC19C;
@@ -78,7 +78,7 @@
 }
 
 
-.hcal_control_Starting { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Starting { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #7FCE24;
@@ -86,7 +86,7 @@
 }
 
 
-.hcal_control_Resuming { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Resuming { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #7FCE24;
@@ -94,21 +94,21 @@
 }
 
 
-.hcal_control_Running { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Running { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #00BF10;
 	font-weight:bold;
 }
 
-.hcal_control_RunningDegraded { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_RunningDegraded { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #ff9900;
 	font-weight:bold;
 }
 
-.hcal_control_Active { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Active { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #9BBF52;
@@ -116,7 +116,7 @@
 }
 
 
-.hcal_control_Enabled { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Enabled { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #9BBF52;
@@ -124,7 +124,7 @@
 }
 
 
-.hcal_control_Pausing { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Pausing { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #FF9E00;
@@ -132,35 +132,35 @@
 }
 
 
-.hcal_control_Paused { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Paused { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #FF8000;
 	font-weight:bold;
 }
 
-.hcal_control_Recovering { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Recovering { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #9F8D00;
 	font-weight:bold;
 }
 
-.hcal_control_Resetting { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Resetting { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #9800E4;
 	font-weight:bold;
 }
 
-.hcal_control_Error { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Error { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
 	color: #F51D00;
 	font-weight:bold;
 }
 
-.hcal_control_Supervisor { font-family : Verdana, Verdana, sans-serif;
+.hcal_control_Supervisor { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : large;
 	text-align : center;
 	color: #F51D00;
@@ -253,32 +253,34 @@ table {
 #hcalmaintable input { 
   width:100%;
 }
-.header {
-  background-color: #3a5165;
-  color: #DDDDDD;
-  font-family: "Open Sans",sans-serif;
-  font-size: 12px;
-}
-#footer {
-  background-color: #3a5165;
-  color: #DDDDDD;
-  font-family: "Open Sans",sans-serif;
-  font-size: 12px;
-  padding-left: 10px;
-}
 a {
   text-decoration: none;
   color: #DDDDDD;
   font-family: "Open Sans", sans-serif;
   font-size: 12px;
 }
+.header {
+  color: #DDDDDD;
+  font-family: "Open Sans",sans-serif;
+  font-size: 12px;
+}
+#footer {
+  font-family: "Open Sans",sans-serif;
+  font-size: 12px;
+  max-width: 1350px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+}
+#footer a {
+  color: #0000cc;
+} 
 #hostport {
   font-size: 8px;
 }
 #hcaltitle {
   font-size: 32px;
   margin: auto;
-  padding-top: 30px;
   text-align: center;
 }
 body {
@@ -287,23 +289,12 @@ body {
   font-family: "Open Sans", sans-serif;
 }
 #logospot {
-  float: left;
   text-align: center;
-  padding-left: 24px;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 #logospot img {
-  width: 80px;
-  padding-top: 8px;
-  padding-bottom: 3px;
-  display: inline;
-  margin: auto;
-}
-#logospot a {
-  display: inline;
-  margin: auto;
-  padding-bottom: 8px;
-}
-#logospot div {
+  width: 65px;
   display: inline;
   margin: auto;
 }
@@ -371,17 +362,20 @@ body {
 #header{
   width: 100%;
 }
+#headerWrapper{
+  display: flex;
+  max-width: 1350px;
+  margin: auto;
+}
 #wrapper{
   width: 100%;
   display: grid;
   position:absolute;
   top:0;
-  background-color: #3a5165;
 }
 #frameworkLinks {
   background-color: #283948;
   font-family: "Open Sans",sans-serif;
-  padding-right: 8px;
   height: 18px;
   text-align: center;
 }
@@ -401,23 +395,23 @@ body {
 .menuLinkDisabled{
   display: none !important;
 } 
-#versionInfo {
-  float: right;
-  padding-right:24px;
-  padding-top:8px;
+#middle {
+  background-color: #fdfdfd;
 }
 #center {
-  padding-left:24px;
+  background-color: #fdfdfd;
+  margin: auto;
+  max-width: 1350px;
 }
 #versionInfo p {
-  margin-top: 3px;
-  margin-bottom: 3px;
+  margin-top: 0px;
+  margin-bottom: 1px;
 }
 .controlSection > div {
   display: inline;
 }
-#stateDisplay  {
-  padding-left: 12px;
+#stateSection {
+  display: inline-block;
 }
 #stateAndProgress {
   display: grid;
@@ -443,7 +437,7 @@ body {
                  break-inside: avoid;
 }
 #runControlSection {
-  display: inline-flex;
+  display: flex;
 }
 #commandSection {
     column-count: 2;
@@ -454,4 +448,8 @@ body {
 }
 #MASK_SUMMARY {
   width: 100%;
+}
+#bottom {
+    background-color: #fafafa;
+    border-top: 1px solid #dddddd;
 }

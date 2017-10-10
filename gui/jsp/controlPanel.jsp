@@ -77,43 +77,40 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   </div>
   <div id="header"> 
     <!-- Logo-->
+    <div id="headerWrapper">
     <div id="logoSpot" class="header">
       <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
-      <br>
-      <a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
-      </a>
-      <br>
-      <div id="hostport">
-        <%=request.getLocalName()%>:<%=request.getLocalPort()%>
-      </div>
-    </div>
-
-    <!-- Version info -->
-    <div id="versionInfo" class="header">
-      Tag : <b><%=getServletContext().getAttribute("version")%></b>
-      </p>
-      <!-- Tag begin -->
-      <%if (request.getRemoteUser() != null) {%>
-      User : &nbsp;
-      <b><%= request.getRemoteUser()%></b>
-      <%}%>
-      <p id="versionSpot"></p>
-      <p>
-      <!-- Bug-report link begin -->
-      <a href="https://github.com/HCALRunControl/levelOneHCALFM/issues"> File a bug report </a>
-      </p>
     </div>
 
     <!-- Title  -->
     <div id="hcaltitle" class="header">
       HCAL Run Control
     </div>
+
+    <!-- Version info -->
+    <div id="versionInfo" class="header">
+      <p id="versionSpot"></p>
+      <p>RCMS version: <%=getServletContext().getAttribute("version")%></p>
+      <!-- Tag begin -->
+      <p>
+      <%if (request.getRemoteUser() != null) {%>
+      User: &nbsp;
+      <%= request.getRemoteUser()%>
+      <%}%>
+      </p>
+      <p>
+      Host: &nbsp;
+      <%=request.getLocalName()%>:<%=request.getLocalPort()%>
+      </p>
+    </div>
+
+  </div>
   </div>
 
   <div id="middle"> 
     <!-- Menu end -->
     <!-- Custom dynamic content begin -->
-    <div id="center" height="259" valign="top" colspan="2" style="background-color:#fdfdfd">
+    <div id="center">
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>

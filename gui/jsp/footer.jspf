@@ -1,7 +1,5 @@
-<!-- T1_Row4 begin -->
-<tr>
-  <!-- References begin -->
-  <td id="footer" align="left" valign="top">
+<div id="footer">
+  <div id="footerLeft">
     HCAL Online Software 
     <br>
     CERN 2017
@@ -9,10 +7,11 @@
     <a href="mailto:cms-hcal-onlinesw@cern.ch ">
       cms-hcal-onlinesw@cern.ch 
     </a>
+  </div>
+  <div id="footerRight">
+    <a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation</a>
     <br>
-  </td>
-  <!-- References end -->
-  <td colspan="2" valign="bottom">&nbsp;</td>
-</tr>
-<!-- T1_Row4 end -->
-<div id='hcalfmVersion'>HCALFM version: 10-06-17_v16</div>
+    <a href="https://github.com/HCALRunControl/levelOneHCALFM/issues"> File a bug report </a>
+  </div>
+</div>
+<div id='hcalfmVersion'>HCALFM version: 10-10-17_v19</div>
