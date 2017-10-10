@@ -108,7 +108,7 @@ function updatePage() {
 
     $('#dropdowndiv').on('change', 'select', function () {
         $('#setRunkeyButton').show();
-        $('#masked_resourses_td').show();
+        $('#masked_resources_area').show();
     });
 }
 
@@ -282,10 +282,6 @@ function hidelocalparams() {
 }
 
 function moveversionnumber() {
-
-    $('#hcalfmVersion').css('font-size', '12');
-    $('#hcalfmVersion').css('color', '#dddddd');
-    $('#hcalfmVersion').css('font-family', 'Open Sans, sans-serif');
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
@@ -405,6 +401,7 @@ function makeIcons() {
   $('#singlePartitionSelection input:checked ~ .radio_wrapper > .radio__indicator > span').html("<img src='" + $('#greenCheck').val() + "' />");
   $('#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator > span').html("<img src='" + $('#redX').val() + "' />");
 }
+
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached

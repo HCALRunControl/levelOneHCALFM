@@ -235,14 +235,23 @@ ul {
 #newMASKED_RESOURCEScheckbox input[type=checkbox]{
 	visibility: hidden;
 }
-#masked_resourses_td{
+#masked_resources_area{
+  padding-top: 12px;
 	display: none;
+  margin: auto;
+  text-align: center;
 }
 table {
-  background-color: fdfdfd;
+  background-color: #fdfdfd;
+}
+select {
+  font-family: inherit;
+}
+input {
+  font-family: inherit;
 }
 #hcalmaintable {
-  background-color: fdfdfd;
+  background-color: #fdfdfd;
   border: 0px solid black;
 }
 #FMPilotForm {
@@ -252,22 +261,26 @@ table {
 }
 #hcalmaintable input { 
   width:100%;
+  font-family: monospace;
 }
 a {
   text-decoration: none;
-  color: #DDDDDD;
+  color: #0000cc;
   font-family: "Open Sans", sans-serif;
   font-size: 12px;
 }
 .header {
-  color: #DDDDDD;
+  color: #283948;
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
+}
+#versionInfo {
+  text-align: left;
 }
 #footer {
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
-  max-width: 1350px;
+  max-width: 1080px;
   margin: auto;
   display: flex;
   justify-content: space-between;
@@ -285,8 +298,9 @@ a {
 }
 body {
   display: inline;
-  background-color: #3a5165;
+  background-color: #f8f8f8;
   font-family: "Open Sans", sans-serif;
+  min-width: 565px;
 }
 #logospot {
   text-align: center;
@@ -360,12 +374,19 @@ body {
   top: -3px;
 }
 #header{
+  padding-top: 1px;
+  padding-bottom: 1px;
   width: 100%;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #dddddd;
+  box-shadow: 0px 0px 4px #dfdfdf;
+  z-index: 0;
 }
 #headerWrapper{
   display: flex;
-  max-width: 1350px;
+  max-width: 1080px;
   margin: auto;
+  width: 95%;
 }
 #wrapper{
   width: 100%;
@@ -378,6 +399,8 @@ body {
   font-family: "Open Sans",sans-serif;
   height: 18px;
   text-align: center;
+  z-index: 1;
+  overflow: hidden;
 }
 #frameworkLinks p {
   display: inline;
@@ -401,7 +424,8 @@ body {
 #center {
   background-color: #fdfdfd;
   margin: auto;
-  max-width: 1350px;
+  width: 95%;
+  max-width: 1080px;
 }
 #versionInfo p {
   margin-top: 0px;
@@ -421,6 +445,7 @@ body {
 }
 #rcmsControlSection > table {
     white-space: nowrap;
+    margin-left: 24px;
 }
 #rcmsControlSection input {
   width: 100px;
@@ -430,6 +455,8 @@ body {
 #controls {
   display: block;
   column-width: 450px;
+  padding-top: 35px;
+  min-height:138px;
 }
 #controls div {
   -webkit-column-break-inside: avoid;
@@ -444,6 +471,7 @@ body {
     column-width: 100px;
 }
 #UpdatedRefresh {
+  font-family: unset !important;
   width: unset !important;
 }
 #MASK_SUMMARY {
@@ -452,4 +480,16 @@ body {
 #bottom {
     background-color: #fafafa;
     border-top: 1px solid #dddddd;
+}
+#runkeySelection {
+  display: inline-block;
+}
+#elogInfo {
+  display: inline;
+  font-family: monospace;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.openSansButton {
+  font-family: "Open Sans", sans-serif;
 }
