@@ -1,0 +1,167 @@
+.hcal_control_state { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+}
+
+.hcal_control_Initial { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #2E2EFE;
+	font-weight:bold;
+}
+
+.hcal_control_Initializing { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #CC2EFA;
+	font-weight:bold;
+}
+
+.hcal_control_Halting { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9E29C1;
+	font-weight:bold;
+}
+
+.hcal_control_Exiting { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #666666;
+	font-weight:bold;
+}
+
+.hcal_control_Halted { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #772390;
+	font-weight:bold;
+}
+
+
+.hcal_control_Uninitialized { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #707070;
+	font-weight:bold;
+}
+
+.hcal_control_Stopping { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #8719AC;
+	font-weight:bold;
+}
+
+.hcal_control_Configuring { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #31D5D8;
+	font-weight:bold;
+}
+
+
+.hcal_control_Configured { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #1FBFA5;
+	font-weight:bold;
+}
+
+
+.hcal_control_Ready { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #6CC19C;
+	font-weight:bold;
+}
+
+
+.hcal_control_Starting { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #7FCE24;
+	font-weight:bold;
+}
+
+
+.hcal_control_Resuming { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #7FCE24;
+	font-weight:bold;
+}
+
+
+.hcal_control_Running { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #00BF10;
+	font-weight:bold;
+}
+
+.hcal_control_RunningDegraded { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #ff9900;
+	font-weight:bold;
+}
+
+.hcal_control_Active { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9BBF52;
+	font-weight:bold;
+}
+
+
+.hcal_control_Enabled { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9BBF52;
+	font-weight:bold;
+}
+
+
+.hcal_control_Pausing { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #FF9E00;
+	font-weight:bold;
+}
+
+
+.hcal_control_Paused { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #FF8000;
+	font-weight:bold;
+}
+
+.hcal_control_Recovering { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9F8D00;
+	font-weight:bold;
+}
+
+.hcal_control_Resetting { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9800E4;
+	font-weight:bold;
+}
+
+.hcal_control_Error { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #F51D00;
+	font-weight:bold;
+}
+
+.hcal_control_Supervisor { font-family : "Open Sans", "Open Sans", sans-serif;
+	font-size : large;
+	text-align : center;
+	color: #F51D00;
+	font-weight:bold;
+}

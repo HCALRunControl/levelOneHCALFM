@@ -177,7 +177,12 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
         singlePartitionFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
+        if (localRunKeysArray[i] != $("#CFGSNIPPET_KEY_SELECTED").val()) {
         dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' >" + localRunKeysArray[i] + "</option>";
+        }
+        else {
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' selected='selected'>" + localRunKeysArray[i] + "</option>";
+        }
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -333,7 +338,7 @@ function spectatorMode(onOff) {
     $('input').not("#FMPilotForm > input").attr("disabled", true);
     $('#dropdown').css("pointer-events: none;");
     $('#dropdown').attr("disabled", true);
-    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "globalParametersCheckbox", "showFullMasks", "drive"];
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "runParametersCheckbox", "globalParametersCheckbox", "showFullMasks", "drive"];
     $.each(spectatorAllowed, function(index, id) {
       $('#' + id).css("pointer events: default;");
       $('#' + id).attr("disabled", false);
@@ -406,7 +411,6 @@ function makeIcons() {
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     console.log("Step 1");
-    activate_relevant_table('maintable');
     console.log("Step 1.1");
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     console.log("Step 1.2");

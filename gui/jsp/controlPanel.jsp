@@ -34,6 +34,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <title>Run Control and Monitoring System</title>
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
+  <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalStateColors.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/md5.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.browser-fingerprint-1.1.js" />
@@ -53,7 +54,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   
   <!-- Custom javascript section begin -->
   <script>
-    <rcms.control:onLoadJSRenderer reloadOnStateChange="false" commandButtonCssClass="button1" commandParameterCheckBoxTitle="&nbsp;Show Command Parameter Section" commandParameterCssClass="label_left_black" indentation="2"/>
+    <rcms.control:onLoadJSRenderer reloadOnStateChange="false" commandButtonCssClass="openSansButton" commandParameterCheckBoxTitle="&nbsp;Show Command Parameter Section" commandParameterCssClass="label_left_black" indentation="2"/>
     <rcms.control:buttonsJSRenderer indentation="2"/>
     <rcms.notification:jSRenderer indentation="2"/>
     <rcms.globalParameter:jSRenderer indentation="2"/>
@@ -78,8 +79,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <div id="header"> 
     <!-- Logo-->
     <div id="headerWrapper">
-    <div id="logoSpot" class="header">
-      <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
+    <div id="logoSpot">
+      &gt;&lt;)))'&gt;
     </div>
 
     <!-- Title  -->

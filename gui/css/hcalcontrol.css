@@ -1,172 +1,4 @@
 
-.hcal_control_state { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-}
-
-.hcal_control_Initial { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #2E2EFE;
-	font-weight:bold;
-}
-
-.hcal_control_Initializing { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #CC2EFA;
-	font-weight:bold;
-}
-
-.hcal_control_Halting { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #9E29C1;
-	font-weight:bold;
-}
-
-.hcal_control_Exiting { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #666666;
-	font-weight:bold;
-}
-
-.hcal_control_Halted { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #772390;
-	font-weight:bold;
-}
-
-
-.hcal_control_Uninitialized { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #707070;
-	font-weight:bold;
-}
-
-.hcal_control_Stopping { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #8719AC;
-	font-weight:bold;
-}
-
-.hcal_control_Configuring { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #31D5D8;
-	font-weight:bold;
-}
-
-
-.hcal_control_Configured { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #1FBFA5;
-	font-weight:bold;
-}
-
-
-.hcal_control_Ready { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #6CC19C;
-	font-weight:bold;
-}
-
-
-.hcal_control_Starting { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #7FCE24;
-	font-weight:bold;
-}
-
-
-.hcal_control_Resuming { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #7FCE24;
-	font-weight:bold;
-}
-
-
-.hcal_control_Running { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #00BF10;
-	font-weight:bold;
-}
-
-.hcal_control_RunningDegraded { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #ff9900;
-	font-weight:bold;
-}
-
-.hcal_control_Active { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #9BBF52;
-	font-weight:bold;
-}
-
-
-.hcal_control_Enabled { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #9BBF52;
-	font-weight:bold;
-}
-
-
-.hcal_control_Pausing { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #FF9E00;
-	font-weight:bold;
-}
-
-
-.hcal_control_Paused { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #FF8000;
-	font-weight:bold;
-}
-
-.hcal_control_Recovering { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #9F8D00;
-	font-weight:bold;
-}
-
-.hcal_control_Resetting { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #9800E4;
-	font-weight:bold;
-}
-
-.hcal_control_Error { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : x-large;
-	text-align : left;
-	color: #F51D00;
-	font-weight:bold;
-}
-
-.hcal_control_Supervisor { font-family : "Open Sans", "Open Sans", sans-serif;
-	font-size : large;
-	text-align : center;
-	color: #F51D00;
-	font-weight:bold;
-}
-
 .control_label1 {
 	font-family: "Open Sans", sans-serif;
 	color : black;
@@ -202,7 +34,6 @@
 	text-align : center;
 }
 
-
 .tbl {display:none;}
 
 .container{
@@ -223,11 +54,45 @@
   border-radius: 3px;
 }
 
+body {
+  display: inline;
+  background-color: #f0f0f0;
+  font-family: "Open Sans", sans-serif;
+  min-width: 565px;
+}
+
+select {
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+}
+
+input[type="button"] {
+  font-family: "Open Sans", sans-serif;
+  background-color: #f0f0f0;
+  border: 1px solid #dddddd;
+  border-radius: 3px;
+  
+}
+
+input[type="button"]:hover {
+  background-image: -webkit-linear-gradient(transparent, rgba(0, 0, 0, 0.08) 75%, rgba(0, 0, 0, 0));
+}
+
 ul {
   list-style-type: none;
   columns: 3;
   -webkit-columns: 3;
   -moz-columns: 3;
+}
+
+a {
+  text-decoration: none;
+  color: #0000cc;
+  font-family: "Open Sans", sans-serif;
+  font-size: 12px;
 }
 
 #newCFGSNIPPET_KEY_SELECTEDcheckbox input[type=checkbox],
@@ -240,15 +105,10 @@ ul {
 	display: none;
   margin: auto;
   text-align: center;
-}
-table {
-  background-color: #fdfdfd;
-}
-select {
-  font-family: inherit;
-}
-input {
-  font-family: inherit;
+  font-size: 12px;
+  max-width: 800px;
+  border: 1px solid lightgray;
+  border-radius: 4px;
 }
 #hcalmaintable {
   background-color: #fdfdfd;
@@ -263,20 +123,17 @@ input {
   width:100%;
   font-family: monospace;
 }
-a {
-  text-decoration: none;
-  color: #0000cc;
-  font-family: "Open Sans", sans-serif;
-  font-size: 12px;
-}
+
 .header {
-  color: #283948;
+  color: #304c90;
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
 }
+
 #versionInfo {
   text-align: left;
 }
+
 #footer {
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
@@ -285,33 +142,36 @@ a {
   display: flex;
   justify-content: space-between;
 }
+
 #footer a {
   color: #0000cc;
 } 
+
 #hostport {
   font-size: 8px;
 }
+
 #hcaltitle {
   font-size: 32px;
   margin: auto;
   text-align: center;
 }
-body {
-  display: inline;
-  background-color: #f8f8f8;
-  font-family: "Open Sans", sans-serif;
-  min-width: 565px;
-}
+
 #logospot {
   text-align: center;
   margin-top: auto;
   margin-bottom: auto;
+  font: 28px Helvetica;
+  color: #f0f0f0;
+  border: 1px #a2a6cc solid;
+  padding-top: 18px;
+  border-radius: 22px;
+  background-color: #304c90;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-bottom: 18px;
 }
-#logospot img {
-  width: 65px;
-  display: inline;
-  margin: auto;
-}
+
 .maskModes {
   display: inline;
   padding-left: 15px;
@@ -319,12 +179,14 @@ body {
   border-style: solid;
   border-radius: 5px;
 }
+
 .control_wrapper {
   position: relative;
   left: -15px;
   display: flex;
   pointer-events: none;
 }
+
 .control__indicator {
   width: 11px;
   height: 11px;
@@ -336,12 +198,14 @@ body {
   top: 5px;
   left: -1px;
 }
+
 .radio_wrapper {
   position: relative;
   left: -15px;
   display: flex;
   pointer-events: none;
 }
+
 .radio__indicator {
   width: 11px;
   height: 11px;
@@ -353,143 +217,207 @@ body {
   top: 5px;
   left: -1px;
 }
+
 .partitionSelection {
   display: none;
 }
+
 .partitionSelection input{
   z-index: 11;
   opacity: 0;
   float: left;
 }
+
 .partitionSelection li {
   display: table;
 }
+
 .partitionSelection img {
   width: 14px;
 }
+
 .partitionSelection span {
   width: 14px;
   position: relative;
   left: -1px;
   top: -3px;
 }
+
 #header{
   padding-top: 1px;
   padding-bottom: 1px;
   width: 100%;
-  background-color: #f8f8f8;
+  background-color: #f0f0f0;
   border-bottom: 1px solid #dddddd;
   box-shadow: 0px 0px 4px #dfdfdf;
   z-index: 0;
 }
+
 #headerWrapper{
   display: flex;
   max-width: 1080px;
   margin: auto;
   width: 95%;
 }
+
 #wrapper{
   width: 100%;
   display: grid;
   position:absolute;
   top:0;
 }
+
 #frameworkLinks {
-  background-color: #283948;
+  background-color: #304c90;
   font-family: "Open Sans",sans-serif;
   height: 18px;
   text-align: center;
   z-index: 1;
   overflow: hidden;
 }
+
 #frameworkLinks p {
   display: inline;
   padding-top:3px;
 }
+
 .menuLinkEnabled > a {
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   text-decoration: none;
   padding-left: 10px;
 } 
+
 #frameworkLinks > a {
   color: rgba(255, 255, 255, 0.7);
 }
+
 .menuLinkDisabled{
   display: none !important;
 } 
+
 #middle {
-  background-color: #fdfdfd;
+  background-color: #fbfbfb;
 }
+
 #center {
-  background-color: #fdfdfd;
+  background-color: #fbfbfb;
   margin: auto;
   width: 95%;
   max-width: 1080px;
 }
+
 #versionInfo p {
   margin-top: 0px;
   margin-bottom: 1px;
 }
+
 .controlSection > div {
   display: inline;
 }
+
 #stateSection {
   display: inline-block;
 }
+
 #stateAndProgress {
   display: grid;
 }
+
 #runControlSection input {
   width: 100px;
+  margin-bottom: 1px;
 }
+
 #rcmsControlSection > table {
     white-space: nowrap;
     margin-left: 24px;
 }
+
 #rcmsControlSection input {
   width: 100px;
   margin-right: 5px;
   margin-left: 5px;
 }
+
 #controls {
   display: block;
   column-width: 450px;
   padding-top: 35px;
-  min-height:138px;
+  min-height: 70px;
 }
+
 #controls div {
   -webkit-column-break-inside: avoid;
             page-break-inside: avoid;
                  break-inside: avoid;
 }
+
 #runControlSection {
   display: flex;
 }
+
 #commandSection {
     column-count: 2;
     column-width: 100px;
 }
+
 #UpdatedRefresh {
   font-family: unset !important;
   width: unset !important;
 }
+
 #MASK_SUMMARY {
   width: 100%;
 }
+
 #bottom {
-    background-color: #fafafa;
+    background-color: #f0f0f0;
     border-top: 1px solid #dddddd;
 }
+
 #runkeySelection {
   display: inline-block;
 }
+
 #elogInfo {
   display: inline;
   font-family: monospace;
   padding-left: 12px;
   padding-right: 12px;
 }
-.openSansButton {
-  font-family: "Open Sans", sans-serif;
+
+#eventsAndActionMessage {
+  border-bottom: 1px solid lightgray;
+}
+#eventsAndActionMessage div {
+  display: inline-block;
+}
+
+#eventsAndActionMessage ul {
+  columns: 1;
+  -webkit-columns: 1;
+  -moz-columns: 1;
+  padding-left: 0;
+}
+.parameterName {
+    width: 130px;
+    margin: auto;
+}
+.hcalfmParameter > input {
+    border: none;
+    background-color: inherit;
+    font-family: monospace;
+    width: 700px;
+    font-size: 13px;
+
+}
+#customizationsSection {
+  border-bottom: 1px solid lightgray;
+  padding-bottom: 10px;
+}
+#quickInfo {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid lightgray;
 }
