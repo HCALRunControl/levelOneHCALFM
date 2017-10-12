@@ -77,7 +77,7 @@ input[type="button"] {
   
 }
 
-input[type="button"]:hover {
+input[type="button"]:hover:enabled {
   background-image: -webkit-linear-gradient(transparent, rgba(0, 0, 0, 0.08) 75%, rgba(0, 0, 0, 0));
 }
 
