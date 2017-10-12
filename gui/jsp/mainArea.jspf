@@ -10,11 +10,13 @@
           <div class="container"><div class="progressbar"></div></div>
         </div>
       </div>
-        <div id="commandSection">
-          <rcms.control:commandButtonsRenderer indentation="11"/>
+        <div id="runkeysAndCommands">
           <div id="runkeySelection">
             <strong>Select Local Run Key</strong><br><div id="dropdowndiv"></div>
+          </div>
+          <div id="commandSection">
             <input id="setRunkeyButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
+            <rcms.control:commandButtonsRenderer indentation="11"/>
           </div>
         </div>
     </div>
@@ -63,6 +65,7 @@
     Number of Events
   <div id="newNUMBER_OF_EVENTS" class="label_center_black" style="display: inline-block; padding-right:18px;";></div>
   Modify? <div id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" style="display:inline-block;"></div>
+  <input id="setEventsButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
   <!--Area for masking checkboxes-->
   <div class="label_center_black" colspan="3" id="masked_resources_area">
     <div>
@@ -95,7 +98,7 @@
     <input id="spectate" type="button" onclick="spectatorMode(true);" value="Spectate">
     <input id="drive" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
   </center>
-  <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> <strong>&nbsp; View Run Parameters</strong>
+  <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> &nbsp; View Run Parameters
   <div id="maintable" class="tbl">
     <span id="mainTableTitle"> <strong>Parameters: </strong></span>
     <table>
@@ -151,7 +154,7 @@
               <td id ="newMASKED_RESOURCES" class="label_center_black">
               </td>
             </tr>
-            <tr id="singlePartitionField" >
+            <tr id="singlePartitionField" style="display:none;">
               <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
               </td>
               <td class="label_left_black">
@@ -205,7 +208,7 @@
   </div>
   <div id="globalParameters">
 
-    <input id="globalParametersCheckbox" type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
+    <input id="globalParametersCheckbox" type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> &nbsp; View Global Parameters
     <br /><br />
     <table id="GlobalParamsTable" class="tbl">
       <tr>

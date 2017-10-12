@@ -115,11 +115,15 @@ a {
   border: 0px solid black;
 }
 #FMPilotForm {
-  background-color: fdfdfd;
+  background-color: #fdfdfd;
   border: 0px solid black;
   display: inline!important;
 }
-#hcalmaintable input { 
+#hcalmaintable textarea { 
+  width:100%;
+  font-family: monospace;
+}
+#hcalmaintable .parameterInputField { 
   width:100%;
   font-family: monospace;
 }
@@ -318,10 +322,12 @@ a {
 
 #stateSection {
   display: inline-block;
+  vertical-align: middle;
 }
 
 #stateAndProgress {
-  display: grid;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 #runControlSection input {
@@ -329,9 +335,13 @@ a {
   margin-bottom: 1px;
 }
 
+#rcmsControlSection {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 #rcmsControlSection > table {
     white-space: nowrap;
-    margin-left: 24px;
 }
 
 #rcmsControlSection input {
@@ -341,8 +351,8 @@ a {
 }
 
 #controls {
-  display: block;
-  column-width: 450px;
+  display: inline-block;
+  vertical-align: middle;
   padding-top: 35px;
   min-height: 70px;
 }
@@ -354,12 +364,18 @@ a {
 }
 
 #runControlSection {
-  display: flex;
+  display: inline-block;
+  vertical-align: middle;
 }
 
+#runkeysAndCommands {
+  display: inline-block;
+}
 #commandSection {
-    column-count: 2;
-    column-width: 100px;
+  display: block;
+  vertical-align: middle;
+  column-width: 95px;
+  column-count: 2;
 }
 
 #UpdatedRefresh {
@@ -377,7 +393,8 @@ a {
 }
 
 #runkeySelection {
-  display: inline-block;
+  display: block;
+  vertical-align: middle;
 }
 
 #elogInfo {
@@ -420,4 +437,7 @@ a {
     padding-top: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid lightgray;
+}
+#ACTION_MSG {
+  font-family: Helvetica;
 }
