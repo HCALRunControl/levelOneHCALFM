@@ -431,6 +431,7 @@ function giveEventCheckboxOnclick() {
 }
 
 function hcalOnLoad() {
+  moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
@@ -474,7 +475,6 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
-    moveversionnumber();
     makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
@@ -484,5 +484,10 @@ function hcalOnLoad() {
     checkSpectator();
     makeIcons();
     $('#setRunkeyButton').hide();
+  }
+  else {
+    $('#FMPilotForm > div').hide();
+    $('#stateSection').hide();
+    $('#controls').show();
   }
 }
