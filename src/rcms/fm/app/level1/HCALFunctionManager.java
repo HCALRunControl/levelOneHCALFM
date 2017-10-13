@@ -41,6 +41,7 @@ import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.utilities.runinfo.RunInfo;
 
 import rcms.util.logsession.LogSessionException;
+import rcms.xdaqctl.XDAQParameter;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -53,8 +54,10 @@ import java.net.MalformedURLException;
 
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.VectorT;
 
 import net.hep.cms.xdaqctl.WSESubscription;
+import net.hep.cms.xdaqctl.XDAQException;
 
 /**
  * Function Machine base class for HCAL Function Managers
@@ -310,6 +313,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     logger.info("[HCAL " + FMname + "] This is the HCALFM.jar version message.\nThis package is compiled against RCMS_4_2_2.");
 
+
     // get the User Function Manager setup details 
     RunSetupDetails = "\nThe used setup is: " + FMfullpath;
     RunSetupDetails += "\nFM named: " + FMname;
@@ -438,14 +442,36 @@ public class HCALFunctionManager extends UserFunctionManager {
     theStateNotificationHandler.setTimeoutThread(false);
 
     // xdaq::reset all supervisors before destroy to release the TCDS leases 
-    if (!containerhcalSupervisor.isEmpty()) {
-      try{
-        containerhcalSupervisor.execute(HCALInputs.RESET);
-      }catch (QualifiedResourceContainerException e) {
-        String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot reset supervisor, exception:"+e.getMessage();
-        logger.error(errMessage);
-      }
-    }
+    //VectorT<StringT> EmptyFMs  = (VectorT<StringT>)getParameterSet().get("EMPTY_FMS").getValue();
+    //if (!containerhcalSupervisor.isEmpty() && !EmptyFMs.contains(new StringT(FMname))) {
+    //  logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Sending halt to supervisor");
+    //  
+    //  try{
+    //    containerhcalSupervisor.execute(HCALInputs.RESET);
+    //    XDAQParameter pam = null;
+    //    String stateName = "undefined";
+    //    int iCount       = 0;
+    //    try{
+    //      while (!stateName.equals("Uninitialized") &&  iCount <=5){
+    //        for (QualifiedResource qr : containerhcalSupervisor.getApplications() ){
+    //          pam =((XdaqApplication)qr).getXDAQParameter();
+    //          pam.select(new String[] {"stateName"});
+    //          stateName = pam.getValue("stateName");
+    //          logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Waiting for supervisor to be halted. StateName is "+stateName+" after "+iCount+" second");
+    //        }
+    //        try { Thread.sleep(1000); } 
+    //        catch (Exception ignored) { return; }
+    //        iCount++;
+    //      }
+    //    }catch (XDAQException e){
+    //      String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot poll supervisor state, XdaqException:"+e.getMessage();
+    //      logger.error(errMessage);
+    //    }
+    //  }catch (QualifiedResourceContainerException e) {
+    //    String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot reset supervisor, exception(s): "+e.getCommandExceptionMap().toString();
+    //    logger.error(errMessage);
+    //  }
+    //}
 
     try{
       destroyXDAQ();
