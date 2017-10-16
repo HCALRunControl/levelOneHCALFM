@@ -19,6 +19,7 @@ import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.ResourceException;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.statemachine.definition.Input;
@@ -913,6 +914,25 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(errInput); ErrorState = true; }
   }
 
+  public void haltTCDSControllersWithURLs() throws UserActionException{
+      String tcdsURI = "http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=301";
+      String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
+      String tcdsname="tcds::ici::ICIController_0";
+      int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+      try{
+        XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
+        XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
+        tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),null);
+      }
+      catch (CommandException e) {
+        String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
+        throw new UserActionException(errMessage);
+      }
+      catch (ResourceException e){
+        String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
+        throw new UserActionException(errMessage);
+      }
+  }
   /**----------------------------------------------------------------------
    * halt the TCDS controllers 
    */
