@@ -270,8 +270,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
-
-      
+        
       //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
       //
@@ -319,16 +318,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // KKH: TODO xDAQ should implement resetAction which should bring the apps to "halted"(Uninitialized) state
       // When that is done, we should use xdaq::reset() for resetting the xdaq apps by asking all xdaqs (via supervisor) to do reset 
       // In resetAction, we can keep the more invasive destroy/init+haltLPM cycle.
-
-      // xdaq::reset all supervisors before destroy to release the TCDS leases 
-      if (!functionManager.containerhcalSupervisor.isEmpty()) {
-        try{
-          functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
-        }catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! ResetAction: Cannot reset supervisor";
-          functionManager.goToError(errMessage,e);
-        }
-      }
 
       // kill all XDAQ executives
       functionManager.destroyXDAQ();
