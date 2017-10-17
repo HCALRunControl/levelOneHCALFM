@@ -1259,7 +1259,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           //Bring supervisor from RunningToConfigured (stop)
           SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
           //Bring supervisor from ConfiguredToHalted (reset)
-          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
+          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALASYNCRESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
           LV2haltTaskSeq.addLast(SupervisorStopTask);
           LV2haltTaskSeq.addLast(SupervisorResetTask);
         }
