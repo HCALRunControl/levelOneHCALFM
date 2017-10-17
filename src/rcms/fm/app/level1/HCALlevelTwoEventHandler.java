@@ -1459,12 +1459,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
-            {
-              String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
-              logger.debug(debugMessage);
-            }
-
             try {
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: send HCALDISABLE to TriggerAdapter");
               functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
             }
             catch (QualifiedResourceContainerException e) {
@@ -1473,6 +1469,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
             waitforTriggerAdapter(10);
 
           }
@@ -1498,6 +1495,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           // define stop time
           StopTime = new Date();
 
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]  Sending AsyncDisable to supervisor");
           functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCDISABLE);
         }
         catch (QualifiedResourceContainerException e) {
