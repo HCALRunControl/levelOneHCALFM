@@ -104,6 +104,7 @@ a {
   padding-top: 12px;
 	display: none;
   margin: auto;
+  margin-top: 12px;
   text-align: center;
   font-size: 12px;
   max-width: 800px;
@@ -129,7 +130,7 @@ a {
 }
 
 .header {
-  color: #304c90;
+  color: #1a3262f0;
   font-family: "Open Sans",sans-serif;
   font-size: 12px;
 }
@@ -159,6 +160,8 @@ a {
   font-size: 32px;
   margin: auto;
   text-align: center;
+  font-weight:600;
+  color: #1a3262cc;
 }
 
 #logospot {
@@ -170,7 +173,7 @@ a {
   border: 1px #a2a6cc solid;
   padding-top: 18px;
   border-radius: 22px;
-  background-color: #304c90;
+  background-color: #1a3262cc;
   padding-left: 4px;
   padding-right: 4px;
   padding-bottom: 18px;
@@ -272,7 +275,7 @@ a {
 }
 
 #frameworkLinks {
-  background-color: #304c90;
+  background-color: #1a3262cc;
   font-family: "Open Sans",sans-serif;
   height: 18px;
   text-align: center;
@@ -286,14 +289,14 @@ a {
 }
 
 .menuLinkEnabled > a {
-  color: rgba(255, 255, 255, 0.7);
+  color: #f0f0f0;
   font-size: 12px;
   text-decoration: none;
   padding-left: 10px;
 } 
 
 #frameworkLinks > a {
-  color: rgba(255, 255, 255, 0.7);
+  color: #f0f0f0;
 }
 
 .menuLinkDisabled{
@@ -331,13 +334,13 @@ a {
 }
 
 #runControlSection input {
-  width: 100px;
+  width: 95px;
   margin-bottom: 1px;
 }
 
 #rcmsControlSection {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: text-bottom;
 }
 
 #rcmsControlSection > table {
@@ -345,7 +348,7 @@ a {
 }
 
 #rcmsControlSection input {
-  width: 100px;
+  width: 95px;
   margin-right: 5px;
   margin-left: 5px;
 }
@@ -440,4 +443,20 @@ a {
 }
 #ACTION_MSG {
   font-family: Helvetica;
+}
+#rsName {
+  display: inline-block;
+  max-width: 265px;
+  direction: rtl;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+#fmName {
+  display: inline-block;
+  max-width: 239px;
+  direction: rtl;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
