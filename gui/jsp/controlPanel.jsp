@@ -274,6 +274,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id ="newDRIVER_IDENTIFIER" class="label_center_black">
                                 </td>
                               </tr>
+                              <tr id="autoconfigureField" style="display: none;"> 
+                                <td id="newAUTOCONFIGUREcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>AUTOCONFIGURE</strong>
+                                </td>
+                                <td id ="newAUTOCONFIGURE" class="label_center_black">
+                                </td>
+                              </tr>
                               <tr>
                                 <td id="newNUMBER_OF_EVENTScheckbox" class="label_center_black">
                                 </td>
