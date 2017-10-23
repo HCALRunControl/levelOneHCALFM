@@ -4,27 +4,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.lang.Math;
 import java.lang.Integer;
 
-import java.io.StringReader; 
-import java.io.IOException;
-
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
@@ -38,13 +27,10 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
-import rcms.fm.fw.user.UserStateNotificationHandler;
-import rcms.resourceservice.db.resource.Resource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
-import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
@@ -207,6 +193,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           }
           if ( ((Element)nodes.item(i)).hasAttribute("singlePartitionFM")){
             RunKeySetting.put(new StringT("singlePartitionFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("singlePartitionFM").getNodeValue()));
+          }
+          if ( ((Element)nodes.item(i)).hasAttribute("eventsToTake")){
+            RunKeySetting.put(new StringT("eventsToTake")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("eventsToTake").getNodeValue()));
           }
 
           logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
@@ -779,17 +768,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.goToError(e.getMessage());
       }
 
-      //Check if the NUMBER_OF_EVENTS parameter is already set from GUI, if so, ignore settings from mastersnippet
-      boolean NeventIsSetFromGUI = !xmlHandler.hasDefaultValue("NUMBER_OF_EVENTS",1000);
-
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
           logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
+          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
       }
       //Parse and set HCAL parameters from MasterSnippet
       logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,NeventIsSetFromGUI);
+      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
       //Pring results from mastersnippet:
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippet(s): ");
@@ -973,25 +959,26 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
-        // now configure the rest in parallel
-        List<QualifiedResource> EvmAndLPMfmList = new ArrayList<QualifiedResource>();
-        EvmAndLPMfmList.addAll(functionManager.containerFMEvmTrig.getActiveQRList());
-        EvmAndLPMfmList.addAll(functionManager.containerFMTCDSLPM.getActiveQRList());
-        QualifiedResourceContainer containerEvmAndLPM = new QualifiedResourceContainer(EvmAndLPMfmList);
-        
-        // 1) Normal FMs
+        // 1) LPM FM
+        if (!functionManager.containerFMTCDSLPM.isEmpty()){
+          SimpleTask LPMFMTask   = new SimpleTask(functionManager.containerFMTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring LPM FM");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the LPM FM: ");
+          PrintQRnames(functionManager.containerFMTCDSLPM);
+          configureTaskSeq.addLast(LPMFMTask);
+        }
+        // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
           SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
           logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
           PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
           configureTaskSeq.addLast(fmChildrenTask);
         }
-        // 2) Need to configure LPM and EvmTrig FM in parallel 
+        // 3) configure EvmTrig FM last 
         // NOTE: Emptyness check is important to support global run
-        if (!containerEvmAndLPM.isEmpty()){
-          SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
-          PrintQRnames(containerEvmAndLPM);
+        if (!functionManager.containerFMEvmTrig.isEmpty()){
+          SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig FM : ");
+          PrintQRnames(functionManager.containerFMEvmTrig);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
         if(nEmptyFM>0){
@@ -1004,6 +991,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
 
       // set actions
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("AUTOCONFIGURE",new BooleanT(false)));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
 
