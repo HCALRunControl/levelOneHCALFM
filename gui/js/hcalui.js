@@ -35,9 +35,12 @@ function hideduplicatefield(parameter) {
 //function showsupervisorerror(errMessage) {
 function showsupervisorerror() {
     var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
+    document.getElementById("supervisorError").innerHTML = errMessage;
     if (errMessage != "not set" && errMessage != "") {
         document.getElementById("supervisorRow").style.display = "";
-        document.getElementById("supervisorError").innerHTML = errMessage;
+    }
+    else {
+        document.getElementById("supervisorRow").style.display = "none";
     }
 }
 

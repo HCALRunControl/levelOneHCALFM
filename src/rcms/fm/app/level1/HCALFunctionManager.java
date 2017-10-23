@@ -19,6 +19,7 @@ import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.ResourceException;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.statemachine.definition.Input;
@@ -41,6 +42,7 @@ import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.utilities.runinfo.RunInfo;
 
 import rcms.util.logsession.LogSessionException;
+import rcms.xdaqctl.XDAQParameter;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -53,8 +55,10 @@ import java.net.MalformedURLException;
 
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.VectorT;
 
 import net.hep.cms.xdaqctl.WSESubscription;
+import net.hep.cms.xdaqctl.XDAQException;
 
 /**
  * Function Machine base class for HCAL Function Managers
@@ -310,6 +314,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     logger.info("[HCAL " + FMname + "] This is the HCALFM.jar version message.\nThis package is compiled against RCMS_4_2_2.");
 
+
     // get the User Function Manager setup details 
     RunSetupDetails = "\nThe used setup is: " + FMfullpath;
     RunSetupDetails += "\nFM named: " + FMname;
@@ -437,27 +442,55 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopTTCciWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
+    // xdaq::reset all supervisors before destroy to release the TCDS leases 
+    //VectorT<StringT> EmptyFMs  = (VectorT<StringT>)getParameterSet().get("EMPTY_FMS").getValue();
+    //if (!containerhcalSupervisor.isEmpty() && !EmptyFMs.contains(new StringT(FMname))) {
+    //  logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Sending halt to supervisor");
+    //  
+    //  try{
+    //    containerhcalSupervisor.execute(HCALInputs.RESET);
+    //    XDAQParameter pam = null;
+    //    String stateName = "undefined";
+    //    int iCount       = 0;
+    //    try{
+    //      while (!stateName.equals("Uninitialized") &&  iCount <=5){
+    //        for (QualifiedResource qr : containerhcalSupervisor.getApplications() ){
+    //          pam =((XdaqApplication)qr).getXDAQParameter();
+    //          pam.select(new String[] {"stateName"});
+    //          stateName = pam.getValue("stateName");
+    //          logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Waiting for supervisor to be halted. StateName is "+stateName+" after "+iCount+" second");
+    //        }
+    //        try { Thread.sleep(1000); } 
+    //        catch (Exception ignored) { return; }
+    //        iCount++;
+    //      }
+    //    }catch (XDAQException e){
+    //      String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot poll supervisor state, XdaqException:"+e.getMessage();
+    //      logger.error(errMessage);
+    //    }
+    //  }catch (QualifiedResourceContainerException e) {
+    //    String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot reset supervisor, exception(s): "+e.getCommandExceptionMap().toString();
+    //    logger.error(errMessage);
+    //  }
+    //}
+
     try{
       destroyXDAQ();
-      if (containerTCDSControllers !=null){
-        if (!containerTCDSControllers.isEmpty()){
-          try{
-            logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            haltTCDSControllers(false);
-          }
-          catch (UserActionException e) {
-            String errMessage = "[HCAL LVL2 " + FMname + "] DestroyAction: "+e.getMessage();
-            logger.warn(errMessage);
-          }
-        }
-      }
     }
     catch (UserActionException e){
       String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";
       goToError(errMessage,e);
       throw e;
     }
+    
+    //Ask LV1 to send halt to All TCDS apps:
+    //TODO: LV2 should halt respective TCDS apps
+    if (!containerFMChildren.isEmpty()){
+      haltTCDSControllersWithURLs();
+    }
+
     destroyed = true;
+
 
     // Check if the session is closed finally
     if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {
@@ -889,6 +922,56 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(errInput); ErrorState = true; }
   }
 
+  // FIXME: TCDS apps are virtual in HCAL configurations for RCMS_464.
+  // We hard code the TCDS URLs here for now. Plan to move these URLs to supervisor infospace later.
+  // When we do, we should fill containers with these tcdsXDAQ apps so that each LV2 FM can halt their own TCDS apps.  
+  // Those containersshould not be used for sending RCMS state-transition commands.
+  public void haltTCDSControllersWithURLs() {
+      HashMap<String , String > TCDS_904urls = new HashMap<String, String>();
+      HashMap<String , String > TCDS_P5urls  = new HashMap<String, String>();
+      HashMap<String , String > loopMap      = null; 
+      TCDS_904urls.put("tcds::ici::ICIController_0","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=301");
+      TCDS_904urls.put("tcds::ici::ICIController_1","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=302");
+      TCDS_904urls.put("tcds::ici::ICIController_2","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=303");
+      TCDS_904urls.put("tcds::pi::PIController_0"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=501");
+      TCDS_904urls.put("tcds::pi::PIController_1"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=502");
+      TCDS_904urls.put("tcds::pi::PIController_2"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=503");
+      TCDS_904urls.put("tcds::lpm::LPMController_0","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=201");
+
+      TCDS_P5urls.put("tcds::ici::ICIController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=301");
+      TCDS_P5urls.put("tcds::ici::ICIController_1","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=302");
+      TCDS_P5urls.put("tcds::ici::ICIController_2","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=303");
+      TCDS_P5urls.put("tcds::pi::PIController_0"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=501");
+      TCDS_P5urls.put("tcds::pi::PIController_1"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=502");
+      TCDS_P5urls.put("tcds::pi::PIController_2"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=503");
+      TCDS_P5urls.put("tcds::lpm::LPMController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=201");
+
+      String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
+      int sessionId = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+      if (FMuri.contains(".cms904")){
+        loopMap  = TCDS_904urls;
+      }else{
+        loopMap  = TCDS_P5urls;
+      }
+      for (Map.Entry<String, String> urlmap : loopMap.entrySet()){ 
+        try{
+          String tcdsname = urlmap.getKey();
+          String tcdsURI  = urlmap.getValue();
+          XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
+          XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
+          logger.info("[HCAL " + FMname + "] Sending halt to "+tcdsname+" at URI:" +tcdsURI);
+          tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),null);
+        }
+        catch (CommandException e) {
+          String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
+          logger.error(errMessage);
+        }
+        catch (ResourceException e){
+          String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
+          logger.error(errMessage);
+        }
+      }
+  }
   /**----------------------------------------------------------------------
    * halt the TCDS controllers 
    */

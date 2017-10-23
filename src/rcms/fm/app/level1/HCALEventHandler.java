@@ -33,9 +33,7 @@ import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
-import org.w3c.dom.DOMException;
 
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.Parameter;
@@ -46,9 +44,7 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
-import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
-import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -68,7 +64,6 @@ import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
-import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.xdaqctl.XDAQMessage;
 import rcms.utilities.runinfo.RunInfo;
@@ -797,10 +792,6 @@ public class HCALEventHandler extends UserEventHandler {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
 
-    // Halt LPM controllers with LPM FM
-    if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-      functionManager.haltTCDSControllers(false);
-    }
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
@@ -858,13 +849,26 @@ public class HCALEventHandler extends UserEventHandler {
         }
         for(XdaqApplication xdaqApp : functionManager.containerhcalSupervisor.getApplications()){
           try{
-            XDAQParameter pam = xdaqApp.getXDAQParameter();
-            pam.select(new String[] {"SessionID", "HandleLPM"});
-            pam.setValue("HandleLPM"  ,"true");
-            pam.setValue("SessionID"  ,sid.toString());
-            logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+            if (functionManager.FMrole.equals("EvmTrig")){
+              XDAQParameter pam = xdaqApp.getXDAQParameter();
+              pam.select(new String[] {"SessionID"});
+              pam.setValue("SessionID"  ,sid.toString());
+              logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
 
-            pam.send();
+              pam.send();
+            }
+            // ignoreEnable LPM for non-EvmTrig supervisors (LPM should be enabled by TA in EvmTrig FM)
+            else{
+              XDAQParameter pam = xdaqApp.getXDAQParameter();
+              pam.select(new String[] {"SessionID","IgnoreForEnableVector"});
+              pam.setValue("SessionID"  ,sid.toString());
+              String [] appsToIgnoreAtEnable = {"tcds::lpm::LPMController"};
+              pam.setVector("IgnoreForEnableVector"  ,appsToIgnoreAtEnable);
+              logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreForEnableVector to supervisor: tcds::lpm::LPMController");
+
+              pam.send();
+            }
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQTimeoutException: when trying init HCAL supervisor infospace";

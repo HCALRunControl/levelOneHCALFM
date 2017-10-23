@@ -12,7 +12,6 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
-import rcms.fm.fw.parameter.type.ParameterType;
 
 import rcms.util.logger.RCMSLogger;
 
@@ -56,7 +55,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_MODE"                         ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Skeletor comment: "mode can be "Normal" or "Debug". Influences the behaviour of the top FM."
 		this.put( new FunctionManagerParameter<StringT>  ("ACTION_MSG"                       ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Action message (fishy zone), visible in level0 and local GUIs
 		this.put( new FunctionManagerParameter<StringT>  ("ERROR_MSG"                        ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Error message visible in red in level0 gui
-		this.put( new FunctionManagerParameter<StringT>  ("SUPERVISOR_ERROR"                 ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Error message received from hcalSupervisor
+		this.put( new FunctionManagerParameter<StringT>  ("SUPERVISOR_ERROR"                 ,  new StringT("not set")        ,  FunctionManagerParameter.Exported.READONLY) );  // Error message received from hcalSupervisor
 		this.put( new FunctionManagerParameter<StringT>  ("GLOBAL_CONF_KEY"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Global configuration key for current run
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_CFGSCRIPT"                   ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for supervisors
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_CFGCVSBASEPATH"              ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // CfgCVS basepath, i.e. where to look for snippets
