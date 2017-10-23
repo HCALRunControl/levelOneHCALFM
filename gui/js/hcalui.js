@@ -139,6 +139,10 @@ function mirrorSelection() {
     $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
     $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
     //$('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
+    if ($('#dropdown option:selected').attr("eventsToTake") != "default") {
+      $('#newNUMBER_OF_EVENTScheckbox :checkbox').click();
+      $('#NUMBER_OF_EVENTS').val($('#dropdown option:selected').attr("eventsToTake"));
+    }
 }
 
 function checkCheckboxes() {
@@ -180,7 +184,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
         singlePartitionFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' >" + localRunKeysArray[i] + "</option>";
+        eventsToTake = "default";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' eventsToTake='" + eventsToTake+ "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
