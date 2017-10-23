@@ -660,6 +660,11 @@ public class HCALxmlHandler {
           functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
       }
       if(TagName.equals("FMSettings")){
+          // Place holder to trying to set NumberOfEvents from Mastersnippet
+          String  StringNumberOfEvents      = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+          if( !StringNumberOfEvents.equals("")){
+            logger.warn("[HCAL "+functionManager.FMname+"] NumberOfEvents found in MasterSnippet! This feature has been deprecated. Use \'eventsToTake\' in runkey instead"); 
+          }
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
           if( !StringRunInfoPublish.equals("")){
