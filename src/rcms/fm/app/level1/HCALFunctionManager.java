@@ -485,14 +485,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     
     //Ask LV1 to send halt to All TCDS apps:
     //TODO: LV2 should halt respective TCDS apps
-    try{
-      if (!containerFMChildren.isEmpty()){
-        haltTCDSControllersWithURLs();
-      }
-    }
-    catch (UserActionException e){
-      String errMessage="[HCAL "+FMname+" ] DestroyAction: haltTCDSControllersWithURLs():";
-      logger.error(errMessage,e);
+    if (!containerFMChildren.isEmpty()){
+      haltTCDSControllersWithURLs();
     }
 
     destroyed = true;
@@ -932,7 +926,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   // We hard code the TCDS URLs here for now. Plan to move these URLs to supervisor infospace later.
   // When we do, we should fill containers with these tcdsXDAQ apps so that each LV2 FM can halt their own TCDS apps.  
   // Those containersshould not be used for sending RCMS state-transition commands.
-  public void haltTCDSControllersWithURLs() throws UserActionException{
+  public void haltTCDSControllersWithURLs() {
       HashMap<String , String > TCDS_904urls = new HashMap<String, String>();
       HashMap<String , String > TCDS_P5urls  = new HashMap<String, String>();
       HashMap<String , String > loopMap      = null; 
@@ -970,11 +964,11 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
         catch (CommandException e) {
           String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
-          throw new UserActionException(errMessage);
+          logger.error(errMessage);
         }
         catch (ResourceException e){
           String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
-          throw new UserActionException(errMessage);
+          logger.error(errMessage);
         }
       }
   }
