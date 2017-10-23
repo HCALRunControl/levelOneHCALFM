@@ -11,6 +11,8 @@ import rcms.util.logger.RCMSLogger;
 import rcms.common.db.DBConnectorException;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
@@ -233,6 +235,20 @@ public class HCALMasker {
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources.add(new StringT(level2resource.getName()));
+              }
+            }
+          }
+          //Add all the masked apps under a masked executive to allMaskedResources 
+          for (Resource level2resource : fullconfigList){
+            for(StringT MaskedApp : MaskedResourceArray){
+              if( level2resource.getName().equals(MaskedApp.getString()) && level2resource.getQualifiedResourceType().contains("XdaqExecutive") ){
+                XdaqExecutiveResource maskedExec = ((XdaqExecutiveResource)level2resource );
+                logger.info("[HCAL "+ functionManager.FMname+"]: Masking Executive "+MaskedApp.getString()+" and all its apps: "+maskedExec.getApplications().toString());
+                for( XdaqApplicationResource app : maskedExec.getApplications()){
+                  if (!allMaskedResources.contains(new StringT(app.getName()) ) ){
+                    allMaskedResources.add(new StringT(app.getName()));
+                  }
+                }
               }
             }
           }
