@@ -211,7 +211,9 @@ function setAutoconfigure() {
 function makeAutoconfigureButton() {
     var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
     var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
-    $(autoconfigureButton).insertAfter("#setGlobalParametersButton");
+    if (! $('#autoconfigureButton').length) {
+      $(autoconfigureButton).insertAfter("#setGlobalParametersButton");
+    }
 }
 
 function fillMask() {
