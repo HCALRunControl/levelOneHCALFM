@@ -942,10 +942,14 @@ public class HCALFunctionManager extends UserFunctionManager {
       TCDS_P5urls.put("tcds::ici::ICIController_1","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=302");
       TCDS_P5urls.put("tcds::ici::ICIController_2","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=303");
       TCDS_P5urls.put("tcds::ici::ICIController_3","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=304");
+      TCDS_P5urls.put("tcds::ici::ICIController_4","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=305");
+      TCDS_P5urls.put("tcds::ici::ICIController_5","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=306");
       TCDS_P5urls.put("tcds::pi::PIController_0"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=501");
       TCDS_P5urls.put("tcds::pi::PIController_1"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=502");
       TCDS_P5urls.put("tcds::pi::PIController_2"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=503");
       TCDS_P5urls.put("tcds::pi::PIController_3"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=504");
+      TCDS_P5urls.put("tcds::pi::PIController_4"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=505");
+      TCDS_P5urls.put("tcds::pi::PIController_5"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=506");
       TCDS_P5urls.put("tcds::lpm::LPMController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=201");
 
       String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
