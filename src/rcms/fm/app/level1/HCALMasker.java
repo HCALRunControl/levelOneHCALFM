@@ -104,8 +104,9 @@ public class HCALMasker {
   //Add all apps in a masked executives to maskapps list
   protected void ignoreMaskedExecutiveApps(List<Resource> level2Children){ 
       VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+      StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
       if (!maskedRss.isEmpty()){
-        for(StringT MaskedApp : maskedRss){
+        for(StringT MaskedApp : maskedRssArray){
           for(Resource level2resource: level2Children){
             if( level2resource.getName().equals(MaskedApp.getString()) && level2resource.getQualifiedResourceType().contains("XdaqExecutive") ){
               XdaqExecutiveResource maskedExec = ((XdaqExecutiveResource)level2resource );
