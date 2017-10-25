@@ -285,6 +285,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     FMfullpath = fmConf.getDirectory().getFullPath().toString();
     FMname = fmConf.getName();
+    FMpartition =FMname.substring(5);  // FMname = HCAL_X; 
     FMurl = fmConf.getSourceURL().toString();
     FMuri = fmConf.getURI().toString();
     FMrole = fmConf.getRole();
@@ -485,7 +486,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     
     //Ask LV1 to send halt to All TCDS apps:
     //TODO: LV2 should get its target of halt from supervisor respective TCDS apps
-    if (containerFMChildren.isEmpty()){
+    if (containerFMChildren !=null && containerFMChildren.isEmpty()){
       haltTCDSControllersWithURLs();
     }
 
