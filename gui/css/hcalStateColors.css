@@ -1,6 +1,8 @@
 .hcal_control_state { font-family : "Open Sans", "Open Sans", sans-serif;
 	font-size : x-large;
 	text-align : left;
+	color: #555555;
+	font-weight:bold;
 }
 
 .hcal_control_Initial { font-family : "Open Sans", "Open Sans", sans-serif;

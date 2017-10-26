@@ -3,8 +3,9 @@
   <div id="stateSection" class="controlSection">
     <div id="runControlSection">
       <div id="stateAndProgress">
-        <div id="stateDisplay">
-          <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
+        <div id="stateDisplay" style='font-family: "Open Sans", "Open Sans", sans-serif; font-size: x-large; font-weight:"600"; display:"block"; height="33.5px";'>
+          <span style='font-weight:"500";'>State:</span>
+          <rcms.control:stateRenderer titleClass="hcal_control_state" label="" indentation="10"/>
         </div>
         <div class="label_center_black">
           <div class="container"><div class="progressbar"></div></div>

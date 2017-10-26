@@ -45,6 +45,11 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
+//
+function setStateColors() {
+  $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
+}
+
 function updatePage() {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
@@ -69,7 +74,7 @@ function updatePage() {
       hidelocalparams();
       var currentState = $('#currentState').text();
       if (currentState != cachedState) {
-        $('#currentState').attr("class", "hcal_control_" + currentState);
+        setStateColors();
         if (currentState == "Initial") {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
         }
@@ -190,7 +195,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
         eventsToTake = "default";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
-          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ ";
+          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ "' ";
 
         if (localRunKeysArray[i] != $("#CFGSNIPPET_KEY_SELECTED").val()) {
           dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
@@ -221,7 +226,7 @@ function makeAutoconfigureButton() {
     var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
     var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
     if (! $('#autoconfigureButton').length) {
-      $(autoconfigureButton).insertAfter("#setGlobalParametersButton");
+      $(autoconfigureButton).insertAfter("#setRunkeyButton");
     }
 }
 
@@ -456,6 +461,7 @@ function giveEventCheckboxOnclick() {
 function hcalOnLoad() {
   moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
+    setStateColors();
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');

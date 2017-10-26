@@ -69,7 +69,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <!-- Custom javascript section end -->
 </head>
 
-<body style="display: none">
+<!--<body style="display: none">-->
+<body>
 <div id="wrapper" width="100%" border="0">
   <div id="frameworkLinks"  height="21" class="header">
     <!-- Framework links begin -->
@@ -138,7 +139,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   $(document).ready(function() {
     onLoad();
     hcalOnLoad(); 
-    $("body").show();
+    //$("body").show();
   });
 </script>
 </body>
