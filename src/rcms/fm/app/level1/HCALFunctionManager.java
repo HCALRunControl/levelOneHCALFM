@@ -990,11 +990,11 @@ public class HCALFunctionManager extends UserFunctionManager {
           }
           catch (CommandException e) {
             String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
-            logger.error(errMessage);
+            logger.warn(errMessage);
           }
           catch (ResourceException e){
             String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
-            logger.error(errMessage);
+            logger.warn(errMessage);
           }
         }
       }
