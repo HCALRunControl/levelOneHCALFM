@@ -151,6 +151,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+      List<QualifiedResource> xdaqExecutiveList   = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
       if (doMasking) {
         VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
@@ -165,6 +166,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
             if (qr.getName().equals(MaskedApplication.getString())) {
               //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list, calling setActive(false): " + qr.getName());
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
+              qr.setActive(false);
+            }
+          }
+          for (QualifiedResource qr : xdaqExecutiveList) {
+            if (qr.getName().equals(MaskedApplication.getString())) {
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
             }
@@ -225,7 +232,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
       try{
         initXDAQ();
       }catch(UserActionException e){
@@ -233,8 +239,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.goToError(errMessage,e);
         return;
       }
-
-
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
@@ -273,8 +277,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
-
-      
+        
       //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
       //
@@ -318,11 +321,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
 
+
+      // KKH: TODO xDAQ should implement resetAction which should bring the apps to "halted"(Uninitialized) state
+      // When that is done, we should use xdaq::reset() for resetting the xdaq apps by asking all xdaqs (via supervisor) to do reset 
+      // In resetAction, we can keep the more invasive destroy/init+haltLPM cycle.
+
       // kill all XDAQ executives
       functionManager.destroyXDAQ();
 
       // init all XDAQ executives
-      // also halt all LPM Controller inside here
       try{
         initXDAQ();
       }catch(UserActionException e){
@@ -334,6 +341,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
+
       //Reset all EmptyFMs as we are going to halted
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
@@ -343,8 +351,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         getTriggerAdapter();
       }
 
-      // go to Halted
-      if (!functionManager.ErrorState && !functionManager.FMrole.equals("Level2_TCDSLPM")) {
+      // go to Halted 
+      if (!functionManager.ErrorState) {
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
 
@@ -390,13 +398,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
         functionManager.goToError(errMessage);
-      }
-      // halt TCDS Controllers
-      try{
-        functionManager.haltTCDSControllers(false);
-      }catch(UserActionException e){
-        String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
-        functionManager.goToError(errMessage,e);
       }
 
       // set actions
@@ -569,7 +570,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if(isSinglePartition){
         //KKH: Set ICIControl from userXML if it is not empty
         if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath,false);
+          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath);
         }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
@@ -577,7 +578,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       else{
         //KKH: Set ICIControl from userXML if it is not empty
         if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath,false);
+          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath);
         }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
@@ -1265,7 +1266,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           //Bring supervisor from RunningToConfigured (stop)
           SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
           //Bring supervisor from ConfiguredToHalted (reset)
-          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
+          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALASYNCRESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
           LV2haltTaskSeq.addLast(SupervisorStopTask);
           LV2haltTaskSeq.addLast(SupervisorResetTask);
         }
@@ -1299,10 +1300,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
-      //  Halt LPM with LPM FM. 
-      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltTCDSControllers(false);
-      }
+      // LPM is halt by LPMsupervisor during Supervisor RESET
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
@@ -1468,12 +1466,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
-            {
-              String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
-              logger.debug(debugMessage);
-            }
-
             try {
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: send HCALDISABLE to TriggerAdapter");
               functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
             }
             catch (QualifiedResourceContainerException e) {
@@ -1482,6 +1476,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
             waitforTriggerAdapter(10);
 
           }
@@ -1507,6 +1502,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           // define stop time
           StopTime = new Date();
 
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]  Sending AsyncDisable to supervisor");
           functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCDISABLE);
         }
         catch (QualifiedResourceContainerException e) {

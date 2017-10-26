@@ -3,12 +3,12 @@ function turn_off_visibility(tbid) {
 }
 
 function turn_on_visibility(tbid) {
-    document.getElementById(tbid).style.display = "grid";
+    document.getElementById(tbid).style.display = "table";
 }
 
 function toggle_visibility(tbid) {
-    if (document.getElementById(tbid).style.display != "grid") {
-        document.getElementById(tbid).style.display = "grid";
+    if (document.getElementById(tbid).style.display != "table") {
+        document.getElementById(tbid).style.display = "table";
     }
     else {
         document.getElementById(tbid).style.display = "none";
@@ -102,12 +102,15 @@ function updatePage() {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted" && $.fingerprint() == $('#DRIVER_IDENTIFIER').val()) { $('#Destroy').click(); }
+      driving = ($.fingerprint() == $('#DRIVER_IDENTIFIER').val());
+      if ($('#EXIT').val() == "true" && currentState=="Halted" && driving) { $('#Destroy').click(); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving) { onClickCommandButton('Initialize'); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Halted" && driving) { onClickCommandButton('Configure'); }
     }, 750);
 
     $('#dropdowndiv').on('change', function () {
       if (cachedState == "Initial") {
-        console.log("cachedstate was " + cachedState);
+        //console.log("cachedstate was " + cachedState);
         $('#setRunkeyButton').show();
         $('#masked_resources_area').show();
       }
@@ -138,6 +141,10 @@ function mirrorSelection() {
     $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
     $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
     //$('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
+    if ($('#dropdown option:selected').attr("eventsToTake") != "default") {
+      $('#newNUMBER_OF_EVENTScheckbox :checkbox').click();
+      $('#NUMBER_OF_EVENTS').val($('#dropdown option:selected').attr("eventsToTake"));
+    }
 }
 
 function checkCheckboxes() {
@@ -181,7 +188,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
         singlePartitionFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM;
+        eventsToTake = "default";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
+          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ ";
 
         if (localRunKeysArray[i] != $("#CFGSNIPPET_KEY_SELECTED").val()) {
           dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
@@ -198,8 +207,22 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); displaySetButtonForEvents('runkey');";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); makeAutoconfigureButton(); displaySetButtonForEvents('runkey');";
     $('#dropdown').attr("onchange", onchanges);
+}
+
+function setAutoconfigure() {
+  $("#newAUTOCONFIGUREcheckbox :checkbox").click();
+  $("#AUTOCONFIGURE").val("true");
+  
+}
+
+function makeAutoconfigureButton() {
+    var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
+    var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
+    if (! $('#autoconfigureButton').length) {
+      $(autoconfigureButton).insertAfter("#setGlobalParametersButton");
+    }
 }
 
 function fillMask() {
@@ -330,7 +353,7 @@ function setupMaskingPanels() {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
-       	 $('#singlePartitionSelection :input').prop('checked', false);
+         $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
@@ -459,6 +482,8 @@ function hcalOnLoad() {
     makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
     copyContents(DRIVER_IDENTIFIER, newDRIVER_IDENTIFIER);
     makecheckbox('newDRIVER_IDENTIFIERcheckbox', 'DRIVER_IDENTIFIER');
+    copyContents(AUTOCONFIGURE, newAUTOCONFIGURE);
+    makecheckbox('newAUTOCONFIGUREcheckbox', 'AUTOCONFIGURE');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
