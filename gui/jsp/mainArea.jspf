@@ -1,0 +1,264 @@
+<!-- First section begin -->
+<div id="controls">
+  <div id="stateSection" class="controlSection">
+    <div id="runControlSection">
+      <div id="stateAndProgress">
+        <div id="stateDisplay">
+          <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
+        </div>
+        <div class="label_center_black">
+          <div class="container"><div class="progressbar"></div></div>
+        </div>
+      </div>
+        <div id="runkeysAndCommands">
+          <div id="runkeySelection">
+            <strong>Select Local Run Key</strong><br><div id="dropdowndiv"></div>
+          </div>
+          <div id="commandSection">
+            <input id="setRunkeyButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
+            <rcms.control:commandButtonsRenderer indentation="11"/>
+          </div>
+        </div>
+    </div>
+  </div>
+  <div id="rcmsControlSection">
+    <table>
+      <tr>
+        <td> <label class="control_label1"> Group Name: </label> <div id="fmName"><rcms.control:configurationNameRenderer titleClass="control_label1" label="" contentClass="control_label2" indentation="10"/></div> </td>
+        <td> <rcms.control:showTreeButtonRenderer onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/> </td>
+        <td> <rcms.control:showStatusTableButtonRenderer onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/> </td>
+      </tr>
+      <tr>
+        <td id="fullPath"> <label class="control_label1"> Full Path: </label><div id="rsName"><rcms.control:configurationPathRenderer titleClass="control_label1" label="" contentClass="control_label2" indentation="10"/></div></td>
+        <td>
+          <rcms.control:createButtonRenderer onClickFunction="onCreateButton()" name="Create" indentation="10"/>
+          <rcms.control:destroyButtonRenderer onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
+        </td>
+        <td>
+          <rcms.control:detachButtonRenderer onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
+          <rcms.control:attachButtonRenderer onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
+        </td>
+      <tr>
+    </table>
+  </div>
+</div>
+<!--Progress bar-->
+<div id="statusSection">
+  <div id="supervisorRow" style="display:none">
+    <!--Supervisor error box-->
+    <div id="supervisorCell" class="label_center_black" colspan="3">
+      <div id="supervisorError" class="hcal_control_Supervisor"></div>
+    </div>
+  </div>
+</div>
+<div id="eventsAndActionMessage">
+  <ul>
+    <li><div class="parameterName">Events Taken</div>
+        <div id ="newHCAL_EVENTSTAKEN" class="hcalfmParameter"></div> </li>
+    <li><div class="parameterName">Action Message</div>
+        <div id ="newACTION_MSG" class="hcalfmParameter"></div>       </li>
+  </ul>
+</div>
+
+<div id="customizationsSection">
+  <p><strong>Run customization</strong></p>
+    Number of Events
+  <div id="newNUMBER_OF_EVENTS" class="label_center_black" style="display: inline-block; padding-right:18px;";></div>
+  Modify? <div id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" style="display:inline-block;"></div>
+  <input id="setEventsButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
+  <!--Area for masking checkboxes-->
+  <div class="label_center_black" colspan="3" id="masked_resources_area">
+    <div>
+      <div>
+        <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
+        <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
+      </div>
+      <br />
+      <div>
+        Masked FMs: <span id="maskTest"></span>
+        <div>
+          <div id="multiPartitionSelection" class="partitionSelection"></div>
+          <div id="singlePartitionSelection" class="partitionSelection"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="infoSection">
+  <!--eLog info for quick copy/pasting-->
+  <div class="label_center_black" colspan="3">
+    <div id="quickInfo">
+      <strong>Quick Info: </strong>
+      <div id="elogInfo"></div>
+    </div>
+  </div>
+  <br>
+  <center>
+    <input id="spectate" type="button" onclick="spectatorMode(true);" value="Spectate">
+    <input id="drive" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
+  </center>
+  <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> &nbsp; View Run Parameters
+  <div id="maintable" class="tbl">
+    <span id="mainTableTitle"> <strong>Parameters: </strong></span>
+    <table>
+      <tr>
+        <td valign="top">
+          <!--New main table-->
+          <table id="hcalmaintable" border="0" cellpadding="3" cellspacing="0" width="90%">
+            <tr>
+              <td class="title_center_black_yellow_bg" width="10%">
+                Modify
+              </td>
+              <td class="title_center_black_yellow_bg" >
+                Parameter
+              </td>
+              <td class="title_center_black_yellow_bg" width="50%">
+                Value
+                <rcms.control:refreshButtonRenderer onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
+              </td>
+            </tr>
+            <tr>
+              <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Local Run Key</strong>
+              </td>
+              <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black">
+              </td>
+            </tr>
+            <tr>
+              <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Mastersnippet</strong>
+              </td>
+              <td id ="newRUN_CONFIG_SELECTED" class="label_center_black">
+              </td>
+            </tr>
+            <tr>
+              <td id="newMASK_SUMMARYcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle(); $('#singlePartitionField').toggle();" />Show full masks
+              </td>
+              <td id ="newMASK_SUMMARY" class="label_center_black">
+              </td>
+            </tr>
+            <tr id="maskedResourcesField" style="display: none;">
+              <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Masked Resources</strong>
+              </td>
+              <td id ="newMASKED_RESOURCES" class="label_center_black">
+              </td>
+            </tr>
+            <tr id="singlePartitionField" style="display:none;">
+              <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Singlepartition</strong>
+              </td>
+              <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
+              </td>
+            </tr>
+            <tr id="driverIdField" style="display: none;"> 
+              <td id="newDRIVER_IDENTIFIERcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Driver Identifier</strong>
+              </td>
+              <td id ="newDRIVER_IDENTIFIER" class="label_center_black">
+              </td>
+            </tr>
+            <tr>
+              <td id="newRUN_NUMBERcheckbox" class="label_center_black">
+              </td>
+              <td class="label_left_black">
+                <strong>Run Number</strong>
+              </td>
+              <td id ="newRUN_NUMBER" class="label_center_black">
+              </td>
+            </tr>
+            <tr>
+              <td class="label_center_black">
+                &nbsp;
+              </td>
+              <td class="label_left_black">
+                <strong>FM Start Time</strong>
+              </td>
+              <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black">
+              </td>
+            </tr>
+          </table>
+          <br />
+          <br />
+          <!--Buttons for main table -->
+          <br>
+          <center>
+            <input id="setGlobalParametersButton" type="button" onclick="onClickSetGlobalParameters()" value="Set Enabled Parameters" name="setGlobalParametersButton">
+            <input id="refreshGlobalParametersButton" type="button" onclick="onClickRefreshGlobalParameter()" value="Refresh Parameters" name="refreshGlobalParametersButton">
+          </center>
+        </td>
+      </tr>
+
+
+    </table>
+  </div>
+  <div id="globalParameters">
+
+    <input id="globalParametersCheckbox" type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> &nbsp; View Global Parameters
+    <br /><br />
+    <table id="GlobalParamsTable" class="tbl">
+      <tr>
+        <td align="center">
+          <rcms.globalParameter:tableRenderer indentation="7" title="Global Parameters" titleClass="control_label4" headerClass="title_center_black_yellow_bg" nameClass="label_left_black" valueMaxLenght="800" buttonClass="openSansButton" setButtonLabel="Set Global Parameters" refreshButtonLabel="Refresh Global Parameters"/>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="commandParameterTable">
+    <table>
+      <tbody id="parameterTableSection">
+      <tr>
+        <td colspan="2">
+          <div id="commandParameterCheckBoxSection" class="control_label1">
+            <input id="commandParameterCheckBox" type="checkbox" onclick="onClickCommandParameterCheckBox(); toggle_visibility('commandParameterTable');" value="" name="commandParameterCheckBox ">  &nbsp; Show Command Parameter Section
+          </div>
+          <table id="commandParameterTable" class="tbl">
+            <tr>
+              <td>
+                <br />
+                <table  border="1" cellpadding="10" cellspacing="0">
+                  <tr>
+                    <td class="title_center_black_yellow_bg">
+                      Command
+                    </td>
+                    <td class="title_center_black_yellow_bg">
+                      Enabled
+                    </td>
+                    <td class="title_center_black_yellow_bg">
+                      Name
+                    </td>
+                    <td class="title_center_black_yellow_bg">
+                      Value
+                    </td>
+                    <td class="title_center_black_yellow_bg">
+                      Type
+                    </td>
+                  </tr>
+                  <tbody id="commandParameterSection">
+                  <rcms.control:commandParametersRenderer tdClass="label_left_black" indentation="8"/>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- First section end -->

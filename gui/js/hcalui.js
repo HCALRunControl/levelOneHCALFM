@@ -63,8 +63,6 @@ function updatePage() {
       }
     }
     var cachedState = $('#currentState').text();
-    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-
 
     setInterval(function () {
 
@@ -100,7 +98,6 @@ function updatePage() {
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
-      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
       cachedRunNo = $('#RUN_NUMBER').val();
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
@@ -111,9 +108,12 @@ function updatePage() {
       if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Halted" && driving) { onClickCommandButton('Configure'); }
     }, 750);
 
-
-    $('#dropdowndiv').on('change', 'select', function () {
-        $('#masked_resourses_td').show();
+    $('#dropdowndiv').on('change', function () {
+      if (cachedState == "Initial") {
+        //console.log("cachedstate was " + cachedState);
+        $('#setRunkeyButton').show();
+        $('#masked_resources_area').show();
+      }
     });
 }
 
@@ -173,6 +173,8 @@ function preclickFMs() {
 }
 
 function makedropdown(availableRunConfigs, availableLocalRunKeys) {
+
+    if( $('#currentState').text() != "Initial" ) {return;}
     //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
     //var array = availableRunConfigs.split(';');
     var localRunKeysArray = JSON.parse(availableLocalRunKeys);
@@ -188,7 +190,14 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
         eventsToTake = "default";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' eventsToTake='" + eventsToTake+ "' >" + localRunKeysArray[i] + "</option>";
+          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ ";
+
+        if (localRunKeysArray[i] != $("#CFGSNIPPET_KEY_SELECTED").val()) {
+          dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
+        }
+        else {
+          dropdownoption = dropdownoption + "' selected='selected'>" + localRunKeysArray[i] + "</option>";
+        }
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -198,7 +207,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); makeAutoconfigureButton();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); makeAutoconfigureButton(); displaySetButtonForEvents('runkey');";
     $('#dropdown').attr("onchange", onchanges);
 }
 
@@ -275,12 +284,12 @@ function picksinglepartition(option) {
 function hidecheckboxes() {
     var currentState = $('#currentState').text();
     if (currentState == "Initial") {
-        $('#dropdowndiv').show();
+        $('#runkeySelection').show();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
     }
     else {
-        $('#dropdowndiv').hide();
+        $('#runkeySelection').hide();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
     }
@@ -307,10 +316,6 @@ function hidelocalparams() {
 }
 
 function moveversionnumber() {
-
-    $('#hcalfmVersion').css('font-size', '12');
-    $('#hcalfmVersion').css('color', '#dddddd');
-    $('#hcalfmVersion').css('font-family', 'Open Sans, sans-serif');
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
@@ -323,7 +328,7 @@ function moveversionnumber() {
       maskSummary = maskSummary.replace("\]","");
       maskSummary = maskSummary.replace(/,/g, ", ");
       if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#rsName").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
     }
 
 function setupMaskingPanels() {
@@ -362,7 +367,7 @@ function spectatorMode(onOff) {
     $('input').not("#FMPilotForm > input").attr("disabled", true);
     $('#dropdown').css("pointer-events: none;");
     $('#dropdown').attr("disabled", true);
-    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "globalParametersCheckbox", "showFullMasks", "drive"];
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "runParametersCheckbox", "globalParametersCheckbox", "showFullMasks", "drive"];
     $.each(spectatorAllowed, function(index, id) {
       $('#' + id).css("pointer events: default;");
       $('#' + id).attr("disabled", false);
@@ -431,9 +436,26 @@ function makeIcons() {
   $('#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator > span').html("<img src='" + $('#redX').val() + "' />");
 }
 
+function displaySetButtonForEvents(runkeyOrCheckbox) {
+  if($("#newCFGSNIPPET_KEY_SELECTEDcheckbox > input").is(":checked")) {
+    $("#setEventsButton").val("Set number of events and local run key");
+  }
+  if (runkeyOrCheckbox == "runkey") {
+    if($("#setEventsButton").is(":checked")) {$("#setEventsButton").show();}
+  }
+  else {
+    $("#setEventsButton").toggle();
+  }
+}
+
+function giveEventCheckboxOnclick() {
+  var enableCheckbox = $("#newNUMBER_OF_EVENTScheckbox > input");
+  enableCheckbox.attr("onclick", enableCheckbox.attr("onclick")+";displaySetButtonForEvents('checkbox');");
+}
+
 function hcalOnLoad() {
+  moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
-    activate_relevant_table('AllParamTables');
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
@@ -478,13 +500,19 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
-    moveversionnumber();
     makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
+    giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
     setupMaskingPanels();
     makecheckboxes();
     updatePage();
     checkSpectator();
     makeIcons();
+    $('#setRunkeyButton').hide();
+  }
+  else {
+    $('#FMPilotForm > div').hide();
+    $('#stateSection').hide();
+    $('#controls').show();
   }
 }
