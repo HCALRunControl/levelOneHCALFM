@@ -285,6 +285,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     FMfullpath = fmConf.getDirectory().getFullPath().toString();
     FMname = fmConf.getName();
+    FMpartition =FMname.substring(5);  // FMname = HCAL_X; 
     FMurl = fmConf.getSourceURL().toString();
     FMuri = fmConf.getURI().toString();
     FMrole = fmConf.getRole();
@@ -484,8 +485,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
     
     //Ask LV1 to send halt to All TCDS apps:
-    //TODO: LV2 should halt respective TCDS apps
-    if (!containerFMChildren.isEmpty()){
+    //TODO: LV2 should get its target of halt from supervisor respective TCDS apps
+    if (containerFMChildren !=null && containerFMChildren.isEmpty()){
       haltTCDSControllersWithURLs();
     }
 
@@ -927,54 +928,74 @@ public class HCALFunctionManager extends UserFunctionManager {
   // When we do, we should fill containers with these tcdsXDAQ apps so that each LV2 FM can halt their own TCDS apps.  
   // Those containersshould not be used for sending RCMS state-transition commands.
   public void haltTCDSControllersWithURLs() {
-      HashMap<String , String > TCDS_904urls = new HashMap<String, String>();
-      HashMap<String , String > TCDS_P5urls  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_Laser904 = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HBHE904  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HF904    = new HashMap<String, String>();
+      HashMap<String , String > TCDS_LPM904   = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HBHEa  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HBHEb  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HBHEc  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HO     = new HashMap<String, String>();
+      HashMap<String , String > TCDS_HF     = new HashMap<String, String>();
+      HashMap<String , String > TCDS_Laser  = new HashMap<String, String>();
+      HashMap<String , String > TCDS_LPM    = new HashMap<String, String>();
       HashMap<String , String > loopMap      = null; 
-      TCDS_904urls.put("tcds::ici::ICIController_0","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=301");
-      TCDS_904urls.put("tcds::ici::ICIController_1","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=302");
-      TCDS_904urls.put("tcds::ici::ICIController_2","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=303");
-      TCDS_904urls.put("tcds::pi::PIController_0"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=501");
-      TCDS_904urls.put("tcds::pi::PIController_1"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=502");
-      TCDS_904urls.put("tcds::pi::PIController_2"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=503");
-      TCDS_904urls.put("tcds::lpm::LPMController_0","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=201");
+      TCDS_Laser904.put("tcds::ici::ICIController_0","http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=301");
+      TCDS_Laser904.put("tcds::pi::PIController_0"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=501");
+      TCDS_HF904.put("tcds::ici::ICIController_1"   ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=302");
+      TCDS_HF904.put("tcds::pi::PIController_1"     ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=502");
+      TCDS_HBHE904.put("tcds::ici::ICIController_2" ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=303");
+      TCDS_HBHE904.put("tcds::pi::PIController_2"   ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=503");
+      TCDS_LPM904.put("tcds::lpm::LPMController_0"  ,"http://tcds-control-904.cms904:2101/urn:xdaq-application:lid=201");
 
-      TCDS_P5urls.put("tcds::ici::ICIController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=301");
-      TCDS_P5urls.put("tcds::ici::ICIController_1","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=302");
-      TCDS_P5urls.put("tcds::ici::ICIController_2","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=303");
-      TCDS_P5urls.put("tcds::ici::ICIController_3","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=304");
-      TCDS_P5urls.put("tcds::ici::ICIController_4","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=305");
-      TCDS_P5urls.put("tcds::ici::ICIController_5","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=306");
-      TCDS_P5urls.put("tcds::pi::PIController_0"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=501");
-      TCDS_P5urls.put("tcds::pi::PIController_1"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=502");
-      TCDS_P5urls.put("tcds::pi::PIController_2"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=503");
-      TCDS_P5urls.put("tcds::pi::PIController_3"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=504");
-      TCDS_P5urls.put("tcds::pi::PIController_4"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=505");
-      TCDS_P5urls.put("tcds::pi::PIController_5"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=506");
-      TCDS_P5urls.put("tcds::lpm::LPMController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=201");
+      TCDS_HBHEa.put("tcds::ici::ICIController_0","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=301");
+      TCDS_HBHEa.put("tcds::pi::PIController_0"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=501");
+      TCDS_HBHEb.put("tcds::ici::ICIController_1","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=302");
+      TCDS_HBHEb.put("tcds::pi::PIController_1"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=502");
+      TCDS_HBHEc.put("tcds::ici::ICIController_2","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=303");
+      TCDS_HBHEc.put("tcds::pi::PIController_2"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=503");
+      TCDS_HO.put("tcds::ici::ICIController_3"   ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=304");
+      TCDS_HO.put("tcds::pi::PIController_3"     ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=504");
+      TCDS_HF.put("tcds::ici::ICIController_4"   ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=305");
+      TCDS_HF.put("tcds::pi::PIController_4"     ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=505");
+      TCDS_Laser.put("tcds::ici::ICIController_5","http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=306");
+      TCDS_Laser.put("tcds::pi::PIController_5"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=506");
+      TCDS_LPM.put("tcds::lpm::LPMController_0"  ,"http://tcds-control-hcal-pri.cms:2108/urn:xdaq-application:lid=201");
 
       String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
       int sessionId = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       if (FMuri.contains(".cms904")){
-        loopMap  = TCDS_904urls;
+        if (FMpartition.contains("Laser904")) {          loopMap  = TCDS_Laser904;        }
+        if (FMpartition.contains("HBHE904"))  {          loopMap  = TCDS_HBHE904;         }
+        if (FMpartition.contains("HF904"))    {          loopMap  = TCDS_HF904;           }
+        if (FMrole.contains("Level2_TCDSLPM")){          loopMap  = TCDS_LPM904;          }
       }else{
-        loopMap  = TCDS_P5urls;
+        if (FMpartition.contains("HBHEa"))  {          loopMap  = TCDS_HBHEa;        }
+        if (FMpartition.contains("HBHEb"))  {          loopMap  = TCDS_HBHEb;        }
+        if (FMpartition.contains("HBHEc"))  {          loopMap  = TCDS_HBHEc;        }
+        if (FMpartition.contains("HO"))     {          loopMap  = TCDS_HO;           }
+        if (FMpartition.contains("HF"))     {          loopMap  = TCDS_HF;           }
+        if (FMpartition.contains("Laser"))  {          loopMap  = TCDS_Laser;        }
+        if (FMrole.contains("Level2_TCDSLPM")){        loopMap  = TCDS_LPM;          }
       }
-      for (Map.Entry<String, String> urlmap : loopMap.entrySet()){ 
-        try{
-          String tcdsname = urlmap.getKey();
-          String tcdsURI  = urlmap.getValue();
-          XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
-          XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
-          logger.info("[HCAL " + FMname + "] Sending halt to "+tcdsname+" at URI:" +tcdsURI);
-          tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),null);
-        }
-        catch (CommandException e) {
-          String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
-          logger.error(errMessage);
-        }
-        catch (ResourceException e){
-          String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
-          logger.error(errMessage);
+      if (loopMap!=null){
+        for (Map.Entry<String, String> urlmap : loopMap.entrySet()){ 
+          try{
+            String tcdsname = urlmap.getKey();
+            String tcdsURI  = urlmap.getValue();
+            XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
+            XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
+            logger.info("[HCAL " + FMname + "] Sending halt to "+tcdsname+" at URI:" +tcdsURI);
+            tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),null);
+          }
+          catch (CommandException e) {
+            String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
+            logger.warn(errMessage);
+          }
+          catch (ResourceException e){
+            String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
+            logger.warn(errMessage);
+          }
         }
       }
   }
