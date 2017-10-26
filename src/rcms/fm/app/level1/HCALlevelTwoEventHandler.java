@@ -151,6 +151,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+      List<QualifiedResource> xdaqExecutiveList   = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
       if (doMasking) {
         VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
@@ -165,6 +166,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
             if (qr.getName().equals(MaskedApplication.getString())) {
               //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list, calling setActive(false): " + qr.getName());
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
+              qr.setActive(false);
+            }
+          }
+          for (QualifiedResource qr : xdaqExecutiveList) {
+            if (qr.getName().equals(MaskedApplication.getString())) {
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
             }
@@ -563,7 +570,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if(isSinglePartition){
         //KKH: Set ICIControl from userXML if it is not empty
         if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath,false);
+          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath);
         }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
@@ -571,7 +578,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       else{
         //KKH: Set ICIControl from userXML if it is not empty
         if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath,false);
+          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath);
         }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();

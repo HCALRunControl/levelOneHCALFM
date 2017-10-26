@@ -97,6 +97,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
+		this.put( new FunctionManagerParameter<BooleanT> ("AUTOCONFIGURE"                    ,  new BooleanT(false)       ) );  // Switch for triggering automatic initialize+configure
 		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for triggering a halt+destroy
 		this.put( new FunctionManagerParameter<BooleanT> ("SINGLEPARTITION_MODE"             ,  new BooleanT(false)       ) );  // Switch for toggling singlepartition mode based on user selection
 
