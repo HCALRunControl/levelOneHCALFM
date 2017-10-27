@@ -116,6 +116,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
         <div id="runNumArea"     > Run #:   <div class="bigInfo" id="runNumber">  </div> </div>
         <div id="configNameArea" > Config:  <div class="bigInfo" id="configName"><rcms.control:configurationPathRenderer titleClass="control_label1" label="" contentClass="bigInfo" indentation="10"/> </div> </div>
         <div id="runKeyArea"     > Run Key: <div class="bigInfo" id="runKey">     </div> </div>
+        <span class="stretch"></span>
       </div>
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">

@@ -51,6 +51,7 @@ function setStateColors() {
 }
 
 function updatePage() {
+    $('#Destroy').css("color", "red");
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
@@ -61,6 +62,7 @@ function updatePage() {
       $('#Destroy').hide();
       if ($('input[value="Halt+Destroy"]').size() == 0) {
         $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+        $('#commandSection :input[value="Halt+Destroy"]').css("color", "red");
         $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
       }
       else {
@@ -72,6 +74,7 @@ function updatePage() {
     setInterval(function () {
 
       hidelocalparams();
+      $('#Destroy').css("color", "red");
       var currentState = $('#currentState').text();
       if (currentState != cachedState) {
         setStateColors();
@@ -85,6 +88,7 @@ function updatePage() {
           $('#Destroy').hide();
           if ($('input[value="Halt+Destroy"]').size() == 0) {
             $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+            $('#commandSection :input[value="Halt+Destroy"]').css("color", "red");
             $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
           }
         }
@@ -521,6 +525,12 @@ function hcalOnLoad() {
   else {
     $('#FMPilotForm > div').hide();
     $('#stateSection').hide();
-    $('#controls').show();
+    $('#runNumArea').hide();
+    $('#runKeyArea').hide();
+    $('#Attach').insertAfter($('#configNameArea'));
+    $('#configNameArea').css("padding-right", "8px");
+    $('#Attach').css("height", "30px");
+    $('#Attach').css("vertical-align", "top");
+
   }
 }

@@ -13,30 +13,29 @@
       </div>
         <div id="runkeysAndCommands">
           <div id="runkeySelection">
-            <strong>Select Local Run Key</strong><br><div id="dropdowndiv"></div>
+            <strong>Select Local Run Key</strong><br><div id="dropdowndiv">
+            </div>
           </div>
           <div id="commandSection">
             <input id="setRunkeyButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
             <rcms.control:commandButtonsRenderer indentation="11"/>
           </div>
+          <div id="statusButtons"> 
+            <rcms.control:showTreeButtonRenderer onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/> 
+            <rcms.control:showStatusTableButtonRenderer onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
+          </div>
         </div>
     </div>
   </div>
-  <div id="rcmsControlSection">
-    <table>
-      <tr>
-        <td> <label class="control_label1"> Group Name: </label> <div id="fmName"><rcms.control:configurationNameRenderer titleClass="control_label1" label="" contentClass="bigInfo" indentation="10"/></div> </td>
-        <td> <rcms.control:showTreeButtonRenderer onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/> </td>
-        <td> <rcms.control:showStatusTableButtonRenderer onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/> </td>
-      </tr>
-    </table>
-  </div>
 </div>
 <div id="externalCommands">
-  <rcms.control:createButtonRenderer onClickFunction="onCreateButton()" name="Create" indentation="10"/>
-  <rcms.control:destroyButtonRenderer onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
+  <rcms.control:refreshButtonRenderer onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
   <rcms.control:detachButtonRenderer onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
   <rcms.control:attachButtonRenderer onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
+  <input id="spectate" type="button" onclick="spectatorMode(true);" value="Spectate">
+  <input id="drive" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
+  <rcms.control:createButtonRenderer onClickFunction="onCreateButton()" name="Create" indentation="10"/>
+  <rcms.control:destroyButtonRenderer onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
 </div>
 <div id="statusSection">
   <div id="supervisorRow" style="display:none">
@@ -89,10 +88,6 @@
     </div>
   </div>
   <br>
-  <center>
-    <input id="spectate" type="button" onclick="spectatorMode(true);" value="Spectate">
-    <input id="drive" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
-  </center>
   <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> &nbsp; View Run Parameters
   <div id="maintable" class="tbl">
     <span id="mainTableTitle"> <strong>Parameters: </strong></span>
@@ -110,7 +105,6 @@
               </td>
               <td class="title_center_black_yellow_bg" width="50%">
                 Value
-                <rcms.control:refreshButtonRenderer onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
               </td>
             </tr>
             <tr>

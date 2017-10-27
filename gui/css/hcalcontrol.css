@@ -275,24 +275,26 @@ a {
 #frameworkLinks {
   background-color: #1a3262cc;
   font-family: "Open Sans",sans-serif;
-  height: 18px;
+  height: 24px;
   text-align: center;
   z-index: 1;
   overflow: hidden;
   box-shadow: 0px 0px 4px #aaaaaa;
   z-index: 0;
+  display: block;
 }
 
 #frameworkLinks p {
-  display: inline;
-  padding-top:3px;
+  display: inline-block;
+  margin-top: 3px;
 }
 
 .menuLinkEnabled > a {
   color: #f0f0f0;
   font-size: 12px;
   text-decoration: none;
-  padding-left: 10px;
+  padding-left: 5px;
+  padding-right: 5px;
 } 
 
 #frameworkLinks > a {
@@ -330,7 +332,7 @@ a {
 
 #stateAndProgress {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 #runControlSection input {
@@ -356,7 +358,7 @@ a {
 #controls {
   display: inline-block;
   vertical-align: middle;
-  padding-top: 35px;
+  padding-top: 12px;
   min-height: 70px;
 }
 
@@ -375,10 +377,11 @@ a {
   display: inline-block;
 }
 #commandSection {
-  display: block;
-  vertical-align: middle;
-  column-width: 95px;
-  column-count: 2;
+  display: inline-block;
+  min-height: 24px;
+  padding-bottom: 8px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid lightgray;
 }
 
 #UpdatedRefresh {
@@ -396,7 +399,7 @@ a {
 }
 
 #runkeySelection {
-  display: block;
+  display: inline-block;
   vertical-align: middle;
 }
 
@@ -460,16 +463,23 @@ a {
   text-overflow: ellipsis;
   vertical-align: middle;
 }
+
 #importantInfo {
-  text-align: justify;
   width: 100%;
   margin: auto;
   padding-top: 10px;
+  display: inline-block;
+  text-align: justify;
+  -ms-text-justify: distribute-all-lines;
+  text-justify: distribute-all-lines;
+  padding-bottom: 6px;
+  border-bottom: 1px solid lightgray;
 }
-#importantInfo::after {
-    content: "";
-    width: 100%;
-    display: inline-block;
+.stretch{
+  width:100%;
+  display: inline-block;
+  font-size: 0;
+  line-height:0;
 }
 #importantInfo > div {
   display: inline-block;
@@ -484,7 +494,7 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: bottom;
-  display: inline-block;
+  display: block;
   color: gray;
 }
 #runNumArea {
@@ -492,7 +502,7 @@ a {
 }
 #runNumber {
   width:80px;
-  text-align: right;
+  text-align: left;
 }
 
 #configNameArea{
