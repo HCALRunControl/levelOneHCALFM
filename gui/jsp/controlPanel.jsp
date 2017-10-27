@@ -72,55 +72,60 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 <!--<body style="display: none">-->
 <body>
 <div id="wrapper" width="100%" border="0">
-  <div id="frameworkLinks"  height="21" class="header">
-    <!-- Framework links begin -->
-    <rcms.menu:menuRenderer indentation="3"/>
-  </div>
   <div id="header"> 
     <!-- Logo-->
     <div id="headerWrapper">
-    <div id="logoSpot">
-      &gt;&lt;)))'&gt;
-    </div>
+      <div id="logoSpot">
+        &gt;&lt;)))'&gt;
+      </div>
 
-    <!-- Title  -->
-    <div id="hcaltitle" class="header">
-      HCAL Run Control
-    </div>
+      <!-- Title  -->
+      <div id="hcaltitle" class="header">
+        HCAL Run Control
+      </div>
 
-    <!-- Version info -->
-    <div id="versionInfo" class="header">
-      <p id="versionSpot"></p>
-      <p>RCMS version: <%=getServletContext().getAttribute("version")%></p>
-      <!-- Tag begin -->
-      <p>
-      <%if (request.getRemoteUser() != null) {%>
-      User: &nbsp;
-      <%= request.getRemoteUser()%>
-      <%}%>
-      </p>
-      <p>
-      Host: &nbsp;
-      <%=request.getLocalName()%>:<%=request.getLocalPort()%>
-      </p>
+      <!-- Version info -->
+      <div id="versionInfo" class="header">
+        <p id="versionSpot"></p>
+        <p>RCMS version: <%=getServletContext().getAttribute("version")%></p>
+        <!-- Tag begin -->
+        <p>
+        <%if (request.getRemoteUser() != null) {%>
+        User: &nbsp;
+        <%= request.getRemoteUser()%>
+        <%}%>
+        </p>
+        <p>
+        Host: &nbsp;
+        <%=request.getLocalName()%>:<%=request.getLocalPort()%>
+        </p>
+      </div>
     </div>
-
   </div>
+
+  <div id="frameworkLinks"  height="21" class="header">
+    <!-- Framework links begin -->
+    <rcms.menu:menuRenderer indentation="3"/>
   </div>
 
   <div id="middle"> 
     <!-- Menu end -->
     <!-- Custom dynamic content begin -->
     <div id="center">
+      <div id="importantInfo">
+        <div id="runNumArea"     > Run #:   <div class="bigInfo" id="runNumber">  </div> </div>
+        <div id="configNameArea" > Config:  <div class="bigInfo" id="configName"><rcms.control:configurationPathRenderer titleClass="control_label1" label="" contentClass="bigInfo" indentation="10"/> </div> </div>
+        <div id="runKeyArea"     > Run Key: <div class="bigInfo" id="runKey">     </div> </div>
+      </div>
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
-        <rcms.control:actionHiddenInputRenderer indentation="4"/>
-        <rcms.control:commandHiddenInputRenderer indentation="4"/>
-        <rcms.notification:hiddenInputRenderer indentation="4"/>
+        <rcms.control:actionHiddenInputRenderer  />
+        <rcms.control:commandHiddenInputRenderer />
+        <rcms.notification:hiddenInputRenderer   />
         <rcms.control:configurationKeyRenderer titleClass="control_label1" label="Configuration Keys:&nbsp;" contentClass="control_label2" indentation="10"/>
-        <input type="hidden" id="globalParameterName1"  name="globalParameterName1" value="" />
+        <input type="hidden" id="globalParameterName1"  name="globalParameterName1"  value="" />
         <input type="hidden" id="globalParameterValue1" name="globalParameterValue1" value="" />
-        <input type="hidden" id="globalParameterType1"  name="globalParameterType1" value="" />
+        <input type="hidden" id="globalParameterType1"  name="globalParameterType1"  value="" />
         <input type="hidden" id="NO_RESPONSE" name="NO_RESPONSE" value="" />
         <%@ include file="./mainArea.jspf"%>
       </form>

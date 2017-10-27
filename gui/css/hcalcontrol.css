@@ -255,9 +255,7 @@ a {
   padding-bottom: 1px;
   width: 100%;
   background-color: #f0f0f0;
-  border-bottom: 1px solid #dddddd;
-  box-shadow: 0px 0px 4px #dfdfdf;
-  z-index: 0;
+  z-index: 1;
 }
 
 #headerWrapper{
@@ -281,6 +279,8 @@ a {
   text-align: center;
   z-index: 1;
   overflow: hidden;
+  box-shadow: 0px 0px 4px #aaaaaa;
+  z-index: 0;
 }
 
 #frameworkLinks p {
@@ -459,4 +459,52 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
+}
+#importantInfo {
+  text-align: justify;
+  width: 100%;
+  margin: auto;
+  padding-top: 10px;
+}
+#importantInfo::after {
+    content: "";
+    width: 100%;
+    display: inline-block;
+}
+#importantInfo > div {
+  display: inline-block;
+  font-size: larger;
+}
+#importantInfo > div > div{
+  display: inline-block;
+}
+.bigInfo {
+  white-space: nowrap;
+  direction: rtl;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  display: inline-block;
+  color: gray;
+}
+#runNumArea {
+   display: inline-block;
+}
+#runNumber {
+  width:80px;
+  text-align: right;
+}
+
+#configNameArea{
+  display:inline-block;
+}
+#configName{
+  max-width:380px;
+}
+
+#runKeyArea {
+  display: inline-block;
+}
+#runKey {
+  max-width: 380px;
 }
