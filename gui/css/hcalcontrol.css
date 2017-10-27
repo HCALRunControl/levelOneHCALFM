@@ -38,11 +38,11 @@
 
 .container{
   width: 300px;
-  border: 1px solid #ddd;
+  border: 1px solid lightgray;
   border-radius: 5px;
   overflow: hidden;
   display:inline-block;
-  margin:0px 10px 5px 5px;
+  margin:16px 10px 5px 5px;
   vertical-align:top;
 }
 .progressbar {
@@ -340,21 +340,6 @@ a {
   margin-bottom: 1px;
 }
 
-#rcmsControlSection {
-  display: inline-block;
-  vertical-align: text-bottom;
-}
-
-#rcmsControlSection > table {
-    white-space: nowrap;
-}
-
-#rcmsControlSection input {
-  width: 95px;
-  margin-right: 5px;
-  margin-left: 5px;
-}
-
 #controls {
   display: inline-block;
   vertical-align: middle;
@@ -384,11 +369,6 @@ a {
   border-bottom: 1px solid lightgray;
 }
 
-#UpdatedRefresh {
-  font-family: unset !important;
-  width: unset !important;
-}
-
 #MASK_SUMMARY {
   width: 100%;
 }
@@ -400,7 +380,7 @@ a {
 
 #runkeySelection {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 #elogInfo {
