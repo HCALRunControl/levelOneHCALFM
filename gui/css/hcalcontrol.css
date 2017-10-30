@@ -408,6 +408,9 @@ a {
   -moz-columns: 1;
   padding-left: 0;
 }
+#eventsAndActionMessage li {
+  white-space: nowrap;
+}
 .parameterName {
     width: 130px;
     margin: auto;
@@ -416,7 +419,7 @@ a {
     border: none;
     background-color: inherit;
     font-family: monospace;
-    width: 700px;
+    max-width: 300px;
     font-size: 13px;
 
 }
@@ -508,3 +511,27 @@ a {
   padding: 4px;
   white-space: nowrap;
 }
+
+#HCAL_EVENTSTAKEN{
+    border: 0px solid black;
+    background-color: unset;
+    font-family: unset;
+    font-size: unset;
+    width:72px;
+    text-align: right;
+}
+
+#newNUMBER_OF_EVENTS input[type="text"]:disabled {
+    border: 0px solid black;
+    background-color: unset;
+    font-family: unset;
+    font-size: unset;
+}
+
+#newACTION_MSG {
+  min-width:620px;
+}
+#ACTION_MSG {
+  width:100%;
+}
+

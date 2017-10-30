@@ -49,7 +49,12 @@
 <div id="eventsAndActionMessage">
   <ul>
     <li><div class="parameterName">Events Taken</div>
-        <div id ="newHCAL_EVENTSTAKEN" class="hcalfmParameter"></div> </li>
+        <div id ="newHCAL_EVENTSTAKEN" class="hcalfmParameter"></div> 
+        /
+        <div id="newNUMBER_OF_EVENTS" class="label_center_black" style="display: inline-block; padding-right:18px;";></div>
+        Modify Events Requested? <div id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" style="display:inline-block;"></div>
+        <input id="setEventsButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
+    </li>
     <li><div class="parameterName">Action Message</div>
         <div id ="newACTION_MSG" class="hcalfmParameter"></div>       </li>
   </ul>
@@ -57,10 +62,6 @@
 
 <div id="customizationsSection">
   <p><strong>Run customization</strong></p>
-    Number of Events
-  <div id="newNUMBER_OF_EVENTS" class="label_center_black" style="display: inline-block; padding-right:18px;";></div>
-  Modify? <div id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" style="display:inline-block;"></div>
-  <input id="setEventsButton" style="display:none;" type="button" onclick="onClickSetGlobalParameters()" value="Set" name="setGlobalParametersButton">
   <!--Area for masking checkboxes-->
   <div class="label_center_black" colspan="3" id="masked_resources_area">
     <div>
