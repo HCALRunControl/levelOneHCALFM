@@ -37,6 +37,7 @@
     </div>
   </div>
 </div>
+<div id="spectatorInfo">You are in <strong>spectator mode</strong></div>
 <div id="statusSection">
   <div id="supervisorRow" style="display:none">
     <!--Supervisor error box-->
@@ -95,7 +96,7 @@
       <tr>
         <td valign="top">
           <!--New main table-->
-          <table id="hcalmaintable" border="0" cellpadding="3" cellspacing="0" width="90%">
+          <table id="hcalmaintable" border="0" cellpadding="3" cellspacing="0">
             <tr>
               <td class="title_center_black_yellow_bg" width="10%">
                 Modify
@@ -103,7 +104,7 @@
               <td class="title_center_black_yellow_bg" >
                 Parameter
               </td>
-              <td class="title_center_black_yellow_bg" width="50%">
+              <td class="title_center_black_yellow_bg" width="70%">
                 Value
               </td>
             </tr>

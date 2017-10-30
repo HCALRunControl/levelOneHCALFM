@@ -111,7 +111,12 @@ a {
   border: 1px solid lightgray;
   border-radius: 4px;
 }
-#hcalmaintable {
+#maintable {
+  width: 100%;
+}
+
+#maintable table {
+  width: 100%;
   background-color: #fdfdfd;
   border: 0px solid black;
 }
@@ -446,24 +451,18 @@ a {
 
 #importantInfo {
   width: 100%;
-  margin: auto;
   padding-top: 10px;
   display: inline-block;
-  text-align: justify;
+  text-align: left;
   -ms-text-justify: distribute-all-lines;
   text-justify: distribute-all-lines;
   padding-bottom: 6px;
   border-bottom: 1px solid lightgray;
 }
-.stretch{
-  width:100%;
-  display: inline-block;
-  font-size: 0;
-  line-height:0;
-}
 #importantInfo > div {
   display: inline-block;
   font-size: larger;
+  margin-left: 12px;
 }
 #importantInfo > div > div{
   display: inline-block;
@@ -481,7 +480,7 @@ a {
    display: inline-block;
 }
 #runNumber {
-  width:80px;
+  max-width: 80px;
   text-align: left;
 }
 
@@ -497,4 +496,15 @@ a {
 }
 #runKey {
   max-width: 380px;
+}
+#spectatorInfo {
+  display: none;
+  margin-left: 20px;
+  margin-top: 4px;
+  border: 1px solid lightgray;
+  color: #273d73;
+  border-radius: 4px;
+  background: #ffff99;
+  padding: 4px;
+  white-space: nowrap;
 }

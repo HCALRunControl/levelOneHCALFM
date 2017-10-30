@@ -51,7 +51,6 @@ function setStateColors() {
 }
 
 function updatePage() {
-    $('#Destroy').css("color", "red");
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
@@ -62,19 +61,29 @@ function updatePage() {
       $('#Destroy').hide();
       if ($('input[value="Halt+Destroy"]').size() == 0) {
         $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-        $('#commandSection :input[value="Halt+Destroy"]').css("color", "red");
         $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
       }
       else {
         $('input[value="Halt+Destroy"]').remove();
       }
     }
+    if (driving() || $('#currentState').text() == "Initial") {
+      if ($('#externalCommands :input[value="Destroy"]').length) {
+        $('#externalCommands :input[value="Destroy"]').css("color", "red");
+      }
+      if ($('#externalCommands :input[value="Halt+Destroy"]').length) {
+        $('#externalCommands :input[value="Halt+Destroy"]').css("color", "red");
+      }
+    }
+    else {
+      setSpectatorDisplay();
+    }
     var cachedState = $('#currentState').text();
 
     setInterval(function () {
 
       hidelocalparams();
-      $('#Destroy').css("color", "red");
+      hidecheckboxes();
       var currentState = $('#currentState').text();
       if (currentState != cachedState) {
         setStateColors();
@@ -88,7 +97,6 @@ function updatePage() {
           $('#Destroy').hide();
           if ($('input[value="Halt+Destroy"]').size() == 0) {
             $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-            $('#commandSection :input[value="Halt+Destroy"]').css("color", "red");
             $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
           }
         }
@@ -104,6 +112,17 @@ function updatePage() {
           $('#Destroy').show();
         }
       }
+      if (driving() || $('#currentState').text() == "Initial") {
+        if ($('#externalCommands :input[value="Destroy"]').length) {
+          $('#externalCommands :input[value="Destroy"]').css("color", "red");
+        }
+        if ($('#externalCommands :input[value="Halt+Destroy"]').length) {
+          $('#externalCommands :input[value="Halt+Destroy"]').css("color", "red");
+        }
+      }
+      else {
+        setSpectatorDisplay();
+      }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
@@ -111,10 +130,9 @@ function updatePage() {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-      driving = ($.fingerprint() == $('#DRIVER_IDENTIFIER').val());
-      if ($('#EXIT').val() == "true" && currentState=="Halted" && driving) { $('#Destroy').click(); }
-      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving) { onClickCommandButton('Initialize'); }
-      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Halted" && driving) { onClickCommandButton('Configure'); }
+      if ($('#EXIT').val() == "true" && currentState=="Halted" && driving()) { $('#Destroy').click(); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving()) { onClickCommandButton('Initialize'); }
+      if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Halted" && driving()) { onClickCommandButton('Configure'); }
     }, 750);
 
     $('#dropdowndiv').on('change', function () {
@@ -371,7 +389,15 @@ function setupMaskingPanels() {
        fillMask();
     });
 }
-
+function setSpectatorDisplay() {
+  $('#spectatorInfo').css("display", "inline-block")
+  if ($('#externalCommands :input[value="Destroy"]').length) {
+    $('#externalCommands :input[value="Destroy"]').css("color", "gray");
+  }
+  if ($('#externalCommands :input[value="Halt+Destroy"]').length) {
+    $('#externalCommands :input[value="Halt+Destroy"]').css("color", "gray");
+  }
+}
 function spectatorMode(onOff) {
   if (onOff) {
     $('input').css("pointer-events: none;");
@@ -385,6 +411,10 @@ function spectatorMode(onOff) {
     });
     $("#spectate").hide();
     $("#drive").show();
+    if (driving()) {
+      abandonDriving();
+    }
+    setSpectatorDisplay();
   }
   else {
     $('input').css("pointer-events: default;");
@@ -393,12 +423,16 @@ function spectatorMode(onOff) {
     $('#dropdown').attr("disabled", false);
     $('#spectate').show();
     $('#drive').hide();
-    if ( !($('#DRIVER_IDENTIFIER').val() == "not set" ||  $.fingerprint() == $('#DRIVER_IDENTIFIER').val())) $('#drive').show();
+    if ( !($('#DRIVER_IDENTIFIER').val() == "not set" ||  driving())) $('#drive').show();
   }
 }
 
 function fillDriverID() {
   $('#DRIVER_IDENTIFIER').val($.fingerprint());
+}
+
+function driving() {
+  return ($.fingerprint() == $('#DRIVER_IDENTIFIER').val());
 }
 
 function takeOverDriving() {
@@ -407,6 +441,12 @@ function takeOverDriving() {
   $('#setGlobalParametersButton').click();
 }
 
+function abandonDriving() {
+  $('#newDRIVER_IDENTIFIERcheckbox :checkbox').removeAttr("disabled");
+  $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
+  $('#DRIVER_IDENTIFIER').val("null");
+  $('#setGlobalParametersButton').click();
+}
 
 function automateSinglePartition() {
   var singlePartitionFM = $('#dropdown option:selected').attr("singlePartitionFM");
@@ -427,11 +467,10 @@ function automateSinglePartition() {
 }
 function checkSpectator() {
     if ($('#DRIVER_IDENTIFIER').val() != "not set") {
-      if ($.fingerprint() != $('#DRIVER_IDENTIFIER').val()) {
+      if (!driving()) {
         $('#spectate').click(); 
-	      console.log("did not match fingerprint to driver identifier. fingerprint: " + $.fingerprint() + " ,  driver identifier: " + $('#DRIVER_IDENTIFIER').val());
       }
-      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) spectatorMode(false);
+      else if (driving()) spectatorMode(false);
       else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
     }
     else {
