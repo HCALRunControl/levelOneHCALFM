@@ -355,7 +355,7 @@ function moveversionnumber() {
       maskSummary = maskSummary.replace("\]","");
       maskSummary = maskSummary.replace(/,/g, ", ");
       if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#rsName").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
       $("#runNumber").text($("#RUN_NUMBER").val());
       $("#runKey").text($("#CFGSNIPPET_KEY_SELECTED").val());
     }
