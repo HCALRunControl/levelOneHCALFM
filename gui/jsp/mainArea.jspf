@@ -24,7 +24,7 @@
             <rcms.control:refreshButtonRenderer onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
             <rcms.control:detachButtonRenderer onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
             <rcms.control:attachButtonRenderer onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
-            <input id="spectate" type="button" onclick="spectatorMode(true);" value="Spectate">
+            <input id="spectate" type="button" onclick="abandonDriving(); spectatorMode(true);" value="Spectate">
             <input id="drive" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
             <rcms.control:createButtonRenderer onClickFunction="onCreateButton()" name="Create" indentation="10"/>
             <rcms.control:destroyButtonRenderer onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>

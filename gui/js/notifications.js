@@ -18,7 +18,7 @@ function myUpdateParameters(message) {
                     //if (pName == "SUPERVISOR_ERROR") { showsupervisorerror(pValue); }
                     //if (pName == "NUMBER_OF_EVENTS") { getfullpath(pValue); }
                     if (pName == "HCAL_EVENTSTAKEN" || pName == "PROGRESS") { setProgress(pName, pValue); }
-		    if (pName == "DRIVER_IDENTIFIER" && pValue != $.fingerprint()) { $('#spectate').click(); }
+		    if (pName == "DRIVER_IDENTIFIER" && pValue != $.fingerprint()) { spectatorMode(true); }
                 }
             }
         }

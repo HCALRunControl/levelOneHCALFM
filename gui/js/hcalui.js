@@ -411,9 +411,6 @@ function spectatorMode(onOff) {
     });
     $("#spectate").hide();
     $("#drive").show();
-    if (driving()) {
-      abandonDriving();
-    }
     setSpectatorDisplay();
   }
   else {
@@ -442,10 +439,12 @@ function takeOverDriving() {
 }
 
 function abandonDriving() {
-  $('#newDRIVER_IDENTIFIERcheckbox :checkbox').removeAttr("disabled");
-  $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
-  $('#DRIVER_IDENTIFIER').val("null");
-  $('#setGlobalParametersButton').click();
+  if (driving()) {
+    $('#newDRIVER_IDENTIFIERcheckbox :checkbox').removeAttr("disabled");
+    $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
+    $('#DRIVER_IDENTIFIER').val("null");
+    $('#setGlobalParametersButton').click();
+  }
 }
 
 function automateSinglePartition() {
@@ -468,7 +467,7 @@ function automateSinglePartition() {
 function checkSpectator() {
     if ($('#DRIVER_IDENTIFIER').val() != "not set") {
       if (!driving()) {
-        $('#spectate').click(); 
+        spectatorMode(true); 
       }
       else if (driving()) spectatorMode(false);
       else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
