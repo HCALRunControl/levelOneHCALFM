@@ -60,22 +60,20 @@
   </ul>
 </div>
 
-<div id="customizationsSection">
-  <p><strong>Run customization</strong></p>
   <!--Area for masking checkboxes-->
-  <div class="label_center_black" colspan="3" id="masked_resources_area">
+<div class="label_center_black" colspan="3" id="masked_resources_area">
+  <span style="font-size:18px; font-weight:700">Pick partitions:</span>
+  <div>
     <div>
+      <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
+      <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
+    </div>
+    <br />
+    <div>
+      Masked FMs: <span id="maskTest"></span>
       <div>
-        <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
-        <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
-      </div>
-      <br />
-      <div>
-        Masked FMs: <span id="maskTest"></span>
-        <div>
-          <div id="multiPartitionSelection" class="partitionSelection"></div>
-          <div id="singlePartitionSelection" class="partitionSelection"></div>
-        </div>
+        <div id="multiPartitionSelection" class="partitionSelection"></div>
+        <div id="singlePartitionSelection" class="partitionSelection"></div>
       </div>
     </div>
   </div>

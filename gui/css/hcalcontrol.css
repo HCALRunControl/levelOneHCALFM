@@ -101,7 +101,7 @@ a {
 	visibility: hidden;
 }
 #masked_resources_area{
-  padding-top: 12px;
+  padding-top: 8px;
 	display: none;
   margin: auto;
   margin-top: 12px;
@@ -185,7 +185,8 @@ a {
 }
 
 .maskModes {
-  display: inline;
+  display: inline-block;
+  margin-top: 8px;
   padding-left: 15px;
   padding-right: 15px;
   border-style: solid;
