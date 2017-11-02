@@ -478,7 +478,7 @@ a {
   text-overflow: ellipsis;
   vertical-align: bottom;
   display: block;
-  color: gray;
+  color: #284f99;
 }
 #runNumArea {
    display: inline-block;
@@ -535,4 +535,6 @@ a {
 #ACTION_MSG {
   width:100%;
 }
-
+#drive {
+  color: #ef8700;
+}
