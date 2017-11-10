@@ -435,6 +435,7 @@ a {
 }
 #ACTION_MSG {
   font-family: Helvetica;
+  max-width: unset;
 }
 #rsName {
   display: inline-block;
