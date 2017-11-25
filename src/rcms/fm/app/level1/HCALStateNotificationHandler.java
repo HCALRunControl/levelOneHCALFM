@@ -79,7 +79,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
-          DateFormat dateFormatter = new SimpleDateFormat("M/d/yy hh:mm:ss a");
+          DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
           dateFormatter.setTimeZone(TimeZone.getDefault());
           String TimeNow =  dateFormatter.format(new Date());
           errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
