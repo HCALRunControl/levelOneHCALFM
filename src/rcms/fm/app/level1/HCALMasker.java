@@ -184,9 +184,9 @@ public class HCALMasker {
               theresAcandidate = true;
               theresAdummyCandidate = true;
             }
-            //Consider replacing the candidate if this level2 is a crossPartitionFM 
-            if(theresAcandidate){
-              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource()) && isEvmTrigCandidate(level2Children).get("isAcandidate") ){
+            //Consider replacing the dummyCandidate if this level2 is a crossPartitionFM 
+            if(theresAdummyCandidate){
+              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource()) && isEvmTrigCandidate(level2Children).get("isAdummyCandidate") ){
                 logger.warn("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
                 candidates = getEvmTrigResources(level2Children);
                 candidates.put("EvmTrigFM", level2.getResource());
