@@ -137,7 +137,7 @@ public class HCALxmlHandler {
       return hcalUserXML.getDocumentElement();
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster snippet:" + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -296,58 +296,6 @@ public class HCALxmlHandler {
           }
         }
 
-        //Move the lpm application node into the context that holds the pi and ici
-        String  lpm = "tcds::lpm::LPMController";
-        //String  pi = "tcds::pi::PIController";
-        String  ici = "tcds::ici::ICIController";
-        String  ttcci = "ttc::TTCciControl";
-        Element lpmApplicationElement = null;
-        Element newLPMnodeContext = null;
-        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        NxcContexts = xcContextNodes.getLength();
-        for (int i=0; i < NxcContexts; i++) {
-          Element currentContextNode = (Element) xcContextNodes.item(i);
-          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
-          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
-            Node currentApplicationNode = xcApplicationNodes.item(j);
-            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
-            System.out.println("Item " + i + " has class " + xcApplicationClass + " and instance " + currentApplicationNode.getAttributes().getNamedItem("instance").getNodeValue());
-            if (xcApplicationClass.equals(lpm)){
-              lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
-              if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-            }
-            if (xcApplicationClass.equals(ttcci)){
-              //if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
-              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("TTCci")) {
-                currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-                logger.warn("[JohnLog3] " + functionManager.FMname + ": just removed the ttcci context in an executive.");
-              }
-            }
-            if (xcApplicationClass.equals(ici)){
-              newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
-            }
-          }
-        }
-        if (lpmApplicationElement!=null && functionManager.FMrole.equals("EvmTrig")){
-          if (newLPMnodeContext==null) {
-            logger.error("[HCAL " + functionManager.FMname + "]: Could not find a context in this executive that has a PI");
-          }
-          else {
-            newLPMnodeContext.appendChild(lpmApplicationElement);
-          }
-        }
-        
-        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        NxcContexts = xcContextNodes.getLength();
-        int removedLPMContexts = 0;
-        for (int i=0; i < NxcContexts; i++) {
-          Element currentContextNode = (Element) xcContextNodes.item(i-removedLPMContexts);
-          if ( currentContextNode!=null && currentContextNode.getElementsByTagName("*").getLength()==0) {
-               currentContextNode.getParentNode().removeChild(currentContextNode);
-               removedLPMContexts++;
-           }
-        } 
-
         DOMSource domSource = new DOMSource(execXML);
         StringWriter writer = new StringWriter();
         StreamResult result = new StreamResult(writer);
@@ -489,8 +437,8 @@ public class HCALxmlHandler {
     return tmpAttribute;
   }
 
-  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath, boolean NeventIsSetFromGUI) throws UserActionException {
-    logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet(" + selectedRun + ", " + CfgCVSBasePath + ", " + NeventIsSetFromGUI + ")");
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException {
+    logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet(" + selectedRun + ", " + CfgCVSBasePath + "  )");
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setXIncludeAware(true); // This is needed for xi:include to work
@@ -522,7 +470,7 @@ public class HCALxmlHandler {
 
       if (commonMasterSnippetFile != "") {
         logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
-        this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
+        this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath);
         logger.info("[HCAL " + functionManager.FMname + "]: Done parsing common master snippet.");
       }
 
@@ -837,7 +785,7 @@ public class HCALxmlHandler {
   }
 
 
-  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
     try{
       if(TagName.equals("ICIControlSingle")|| TagName.equals("ICIControlMulti") || TagName.equals("LPMControl")|| TagName.equals("PIControlSingle")||TagName.equals("PIControlMulti") || TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
@@ -845,16 +793,10 @@ public class HCALxmlHandler {
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
       }
       if(TagName.equals("FMSettings")){
-          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
-          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
-          if(NeventIsSetFromGUI){
-            logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
-          }
-          else{
-            if( !StringNumberOfEvents.equals("")){
-               Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
-               functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
-            }
+          // Place holder to trying to set NumberOfEvents from Mastersnippet
+          String  StringNumberOfEvents      = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+          if( !StringNumberOfEvents.equals("")){
+            logger.warn("[HCAL "+functionManager.FMname+"] NumberOfEvents found in MasterSnippet! This feature has been deprecated. Use \'eventsToTake\' in runkey instead"); 
           }
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");

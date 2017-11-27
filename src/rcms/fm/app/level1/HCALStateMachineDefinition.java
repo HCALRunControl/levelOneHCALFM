@@ -171,7 +171,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  hcalLPMControl                    =  new CommandParameter<StringT>  ("HCAL_LPMCONTROL"         ,  new StringT("")     );
     CommandParameter<StringT>  hcalPIControlSingle               =  new CommandParameter<StringT>  ("HCAL_PICONTROL_SINGLE"   ,  new StringT("")     );
     CommandParameter<StringT>  hcalPIControlMulti                =  new CommandParameter<StringT>  ("HCAL_PICONTROL_MULTI"    ,  new StringT("")     );
-    CommandParameter<StringT>  configureSUPERVISOR_ERROR         =  new CommandParameter<StringT>  ("SUPERVISOR_ERROR"        ,  new StringT("")     );
+    CommandParameter<StringT>  configureSUPERVISOR_ERROR         =  new CommandParameter<StringT>  ("SUPERVISOR_ERROR"        ,  new StringT("not set")     );
     CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
     CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
