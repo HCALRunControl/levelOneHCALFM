@@ -998,7 +998,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 				functionManager.goToError(errMessage);
       }
 
-      if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
+      if (functionManager.FMrole.contains("TTCci")) {
         functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
       } 
 
