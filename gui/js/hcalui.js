@@ -355,7 +355,8 @@ function moveversionnumber() {
       maskSummary = maskSummary.replace("\]","");
       maskSummary = maskSummary.replace(/,/g, ", ");
       if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+      $("#maskSummary").val(maskSummary);
+      $("#maskSummary").prop("disabled", true);
       $("#runNumber").text($("#RUN_NUMBER").val());
       $("#runKey").text($("#CFGSNIPPET_KEY_SELECTED").val());
     }
@@ -500,6 +501,15 @@ function displaySetButtonForEvents(runkeyOrCheckbox) {
 function giveEventCheckboxOnclick() {
   var enableCheckbox = $("#newNUMBER_OF_EVENTScheckbox > input");
   enableCheckbox.attr("onclick", enableCheckbox.attr("onclick")+";displaySetButtonForEvents('checkbox');");
+}
+
+function copyQuickInfo() {
+  var $quickInfo = $("<input>");
+  $("body").append($quickInfo);
+  var maskSummary = $("#maskSummary").val();
+  $quickInfo.val("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary).select();
+  document.execCommand("copy");
+  $quickInfo.remove();
 }
 
 function hcalOnLoad() {
