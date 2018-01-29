@@ -170,15 +170,17 @@ public class HCALMasker {
           
           //Add all masked Executive's app into MASKED_RESOURCES, so that they will not be considered as candidate
           ignoreMaskedExecutiveApps(level2Children);
-          logger.info("["+functionManager.FMname + "]: the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
+          Boolean isAcandidate      = isEvmTrigCandidate(level2Children).get("isAcandidate");
+          Boolean isAdummyCandidate = isEvmTrigCandidate(level2Children).get("isAdummyCandidate");
+          logger.debug("["+functionManager.FMname + "] For this LV2 "+ level2.getName() + "  isAcandidate= " + isAcandidate.toString() + " isAdummyCandidate = "+ isAdummyCandidate.toString() );
 
           try {
-            if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+            if (!theresAcandidate && isAcandidate) {
                 candidates = getEvmTrigResources(level2Children);
                 candidates.put("EvmTrigFM", level2.getResource());
                 theresAcandidate = true;
             }
-            if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
+            if (!theresAdummyCandidate && isAdummyCandidate) {
               candidates = getEvmTrigResources(level2Children);
               candidates.put("EvmTrigFM", level2.getResource());
               theresAcandidate = true;
@@ -188,7 +190,7 @@ public class HCALMasker {
             if(theresAdummyCandidate){
               if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource())){
                 //this crossPartitionFM is also a dummyCandidate, pick it. 
-                if( isEvmTrigCandidate(level2Children).get("isAdummyCandidate") ){
+                if( isAdummyCandidate ){
                   logger.info("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
                   candidates = getEvmTrigResources(level2Children);
                   candidates.put("EvmTrigFM", level2.getResource());
