@@ -131,7 +131,7 @@ public class HCALMasker {
     }else{
       for(ConfigProperty property : propertiesList){
         if(property.getName().equals("isCrossPartitionFM")) {
-          logger.debug("[HCAL "+level2FM.getName() +"] Found isCrossPartitionFM property with value="+property.getValue());
+          logger.info("[HCAL "+level2FM.getName() +"] Found isCrossPartitionFM property with value="+property.getValue());
           return Boolean.parseBoolean(property.getValue());
         }
       }
@@ -170,7 +170,7 @@ public class HCALMasker {
           
           //Add all masked Executive's app into MASKED_RESOURCES, so that they will not be considered as candidate
           ignoreMaskedExecutiveApps(level2Children);
-          logger.debug("["+functionManager.FMname + "]: the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
+          logger.info("["+functionManager.FMname + "]: the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
 
           try {
             if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
@@ -186,11 +186,18 @@ public class HCALMasker {
             }
             //Consider replacing the dummyCandidate if this level2 is a crossPartitionFM 
             if(theresAdummyCandidate){
-              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource()) && isEvmTrigCandidate(level2Children).get("isAdummyCandidate") ){
-                logger.warn("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
-                candidates = getEvmTrigResources(level2Children);
-                candidates.put("EvmTrigFM", level2.getResource());
-                theresCrossPartitionFM = true;
+              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource())){
+                //this crossPartitionFM is also a dummyCandidate, pick it. 
+                if( isEvmTrigCandidate(level2Children).get("isAdummyCandidate") ){
+                  logger.info("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
+                  candidates = getEvmTrigResources(level2Children);
+                  candidates.put("EvmTrigFM", level2.getResource());
+                  theresCrossPartitionFM = true;
+                }
+                else{
+                  //crossPartitionFM is not dummyCandidate, not expected. alert the user to check for human error
+                  logger.error("[HCAL "+functionManager.FMname +"] "+level2.getName()+" is a CrossPartitionFM but do not contain a DummyTriggerAdapter. Not picking it as EvmTrigFM, it will not be configured last.");
+                }
               }
             }
           }
@@ -242,6 +249,8 @@ public class HCALMasker {
       trivialFU = evmTrigResources.get("hcalTrivialFU").getName();
       triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
       EvmTrigFM = evmTrigResources.get("EvmTrigFM").getName();
+      logger.info("[HCAL "+ functionManager.FMname + "]: setMaskedFMs: EvmTrigFM is picked as "+EvmTrigFM);
+
     }
 
     VectorT<StringT> maskedFMsVector = new VectorT<StringT>();
