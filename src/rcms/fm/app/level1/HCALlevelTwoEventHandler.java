@@ -320,6 +320,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS",new DoubleT(0.0)));
 
 
       // KKH: TODO xDAQ should implement resetAction which should bring the apps to "halted"(Uninitialized) state

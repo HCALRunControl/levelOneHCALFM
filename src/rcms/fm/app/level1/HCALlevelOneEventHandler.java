@@ -485,6 +485,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
+      stopProgressThread = true;
+      progress = 0.0;
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
