@@ -512,6 +512,66 @@ function copyQuickInfo() {
   $quickInfo.remove();
 }
 
+function persistTooltip(tooltipId) {
+  var tooltip = $('#' + tooltipId);
+  if (tooltip.attr('persist') == "true") {
+    tooltip.attr('persist', "false");
+  }
+  else {
+    tooltip.attr('persist', "true");
+  }
+}
+
+function getContent(id) {
+  console.log("getting content for element with id " + id);
+  console.log("this element has tagName" + $("#" + id).prop("tagName"));
+  if ($("#" + id).prop("tagName").includes("INPUT")) {
+    console.log("identified this as a 'input' tag");
+    content=$('#'+id).val();
+  }
+  else { 
+    console.log("identified this as not an 'input' tag");
+    content = $('#'+id).text();
+  }
+  console.log("content was:");
+  return content;
+}
+
+function makeTooltips(className) {
+  var simpleClassName = className.split(' ');
+  simpleClassName = simpleClassName[simpleClassName.length - 1];
+  simpleClassName = simpleClassName.replace("." , "");
+  simpleClassName = simpleClassName.replace("#", "");
+  $(className).each( function(index) {
+    if ($(this).attr('id') ) {
+      var tooltipId = 'tooltip_' + simpleClassName + "_" + index;
+      var tooltipTextId = 'tooltip_text_' + simpleClassName + "_" + index;
+      var tooltip = "<div class='tooltip' id='" + tooltipId + "' persist='false'><div id='persistButton'><input type='checkbox' onclick=persistTooltip('" + tooltipId + "');>persist</div><div><textarea id='" + tooltipTextId +"'> </textarea></div></div>";
+      $(tooltip).insertAfter($(this));
+      $('#'+tooltipId).hide();
+
+
+      $(this).mouseenter( function(event) {
+        $('#'+tooltipId).show();
+        $('#'+tooltipId).css({
+            position: "absolute",
+            top: $(this).position().top + "px",
+            left: $(this).position().left + "px"
+        });
+        $('#'+tooltipTextId).text(getContent($(this).attr("id")));
+      });
+      $(this).parent().mouseleave( function(event) {
+        if ($('#'+tooltipId).attr("persist") == "false") {
+          $('#' + tooltipId).hide();
+        }
+      });
+    }
+    else {
+      console.log("tooltip will be skipped for an element that has id: " + $(this).attr("id"));
+    }
+  });
+}
+
 function hcalOnLoad() {
   moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
@@ -569,6 +629,8 @@ function hcalOnLoad() {
     checkSpectator();
     makeIcons();
     $('#setRunkeyButton').hide();
+    makeTooltips('.parameterInputField');
+    makeTooltips('.bigInfo');
   }
   else {
     $('#FMPilotForm > div').hide();
