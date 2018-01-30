@@ -2220,11 +2220,11 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
                 }
                 catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is dead.\nCheck the corresponding jobcontrol status ...\nHere is the exception: " +e;
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying supervisor's status. The hcalSupervisor may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
                   functionManager.goToError(errMessage);
                 }
                 catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is in a bad condition.\nCheck the corresponding jobcontrol status, etc. ...\nHere is the exception: " +e;
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Cannot query supervisor's status. The hcalSupervisor may have crashed, please look at the RCMS logs/JobControl logs for more information";
                   functionManager.goToError(errMessage);
                 }
 
