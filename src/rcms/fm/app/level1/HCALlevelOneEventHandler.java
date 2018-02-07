@@ -176,7 +176,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           
           MapT<StringT> RunKeySetting = new MapT<StringT>();
-          StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
+          StringT runkeyName          =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
+          NodeList CfgScriptNodes     = ((Element) nodes.item(i)).getElementsByTagName("CfgScript");
 
           if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
             RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
@@ -197,8 +198,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if ( ((Element)nodes.item(i)).hasAttribute("eventsToTake")){
             RunKeySetting.put(new StringT("eventsToTake")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("eventsToTake").getNodeValue()));
           }
+          if (CfgScriptNodes.getLength()>0){
+            logger.info("[HCAL " + functionManager.FMname + "]: Runkey with name "+runkeyName+" has "+CfgScriptNodes.getLength()+" CfgScript nodes");
+            if(CfgScriptNodes.getLength()==1){
+              RunKeySetting.put(new StringT("CfgScript")  ,new StringT(CfgScriptNodes.item(0).getTextContent()));
+            }
+          }
 
-          logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
+          logger.info("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
 
           LocalRunKeys.add(runkeyName);
           LocalRunKeyMap.put(runkeyName,RunKeySetting);
