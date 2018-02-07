@@ -2320,13 +2320,12 @@ public class HCALEventHandler extends UserEventHandler {
                     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
                   }
                   catch (XDAQTimeoutException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
-                    functionManager.goToError(errMessage,e);
-
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying TriggerAdapter's status. The TriggerAdapeter application may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
+                    functionManager.goToError(errMessage);
                   }
                   catch (XDAQException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
-                    functionManager.goToError(errMessage,e);
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Cannot query TriggerAdapter's status. The TriggerAdapter  may have crashed, please look at the RCMS logs/JobControl logs for more information";
+                    functionManager.goToError(errMessage);
                   }
                 }
 
