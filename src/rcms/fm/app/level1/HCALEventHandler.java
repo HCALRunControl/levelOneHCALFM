@@ -2320,7 +2320,7 @@ public class HCALEventHandler extends UserEventHandler {
                     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
                   }
                   catch (XDAQTimeoutException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying TriggerAdapter's status. The TriggerAdapeter application may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying TriggerAdapter's status. The TriggerAdapter application may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
                     functionManager.goToError(errMessage);
                   }
                   catch (XDAQException e) {
