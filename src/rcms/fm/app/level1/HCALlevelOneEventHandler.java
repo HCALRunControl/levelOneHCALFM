@@ -205,7 +205,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             }
           }
 
-          logger.info("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
+          logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
 
           LocalRunKeys.add(runkeyName);
           LocalRunKeyMap.put(runkeyName,RunKeySetting);
