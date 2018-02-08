@@ -177,7 +177,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           
           MapT<StringT> RunKeySetting = new MapT<StringT>();
           StringT runkeyName          =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
-          NodeList CfgScriptNodes     = ((Element) nodes.item(i)).getElementsByTagName("CfgScript");
+          NodeList CfgScriptNodes     = ((Element) nodes.item(i)).getElementsByTagName("CfgToAppend");
 
           if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
             RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
