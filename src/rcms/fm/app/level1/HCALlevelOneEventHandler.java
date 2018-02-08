@@ -201,7 +201,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if (CfgScriptNodes.getLength()>0){
             logger.info("[HCAL " + functionManager.FMname + "]: Runkey with name "+runkeyName+" has "+CfgScriptNodes.getLength()+" CfgScript nodes");
             if(CfgScriptNodes.getLength()==1){
-              RunKeySetting.put(new StringT("CfgScript")  ,new StringT(CfgScriptNodes.item(0).getTextContent()));
+              RunKeySetting.put(new StringT("CfgToAppend")  ,new StringT(CfgScriptNodes.item(0).getTextContent()));
             }
           }
 
@@ -788,9 +788,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
-      if (LocalRunKeyMap.get(runkeyName).get(new StringT("CfgScript"))!=null){
+      if (LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"))!=null){
         StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
-        StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgScript"));
+        StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
         
         logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ selectedRun+" and it looks like this "+RunkeyCfgScript);
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
