@@ -34,12 +34,24 @@ if [ "$1" = "release" ]; then
     echo "Fetching all HCALFM releases from github ..."
     git fetch $RC_remote --tags
     if [ "$2" = "major" ]; then
-      GITREV="${Year}.$((versionArr[1]+1)).0"
-      GITREV_fname="${Year}_$((versionArr[1]+1))_0"
+      # reset version number in a new year
+      if [ "${Year}" != ${versionArr[0]} ]; then
+        GITREV="${Year}.0.0"
+        GITREV_fname="${Year}_0_0"
+      else
+        GITREV="${Year}.$((versionArr[1]+1)).0"
+        GITREV_fname="${Year}_$((versionArr[1]+1))_0"
+      fi
       isValidRelease="false"
     elif [ "$2" = "minor" ]; then
-      GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
-      GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+      # reset version number in a new year
+      if [ "${Year}" != ${versionArr[0]} ]; then
+        GITREV="${Year}.0.0"
+        GITREV_fname="${Year}_0_0"
+      else
+        GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
+        GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+      fi
       isValidRelease="false"
     else
       #Check if input is a valid release tags
