@@ -25,14 +25,14 @@ if [ "$1" = "release" ]; then
   git diff-index --quiet HEAD
   if [ "$?" = "0" ]; then
     #get the latest tag version
-    release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | tail -1`
-    releaseTags=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n`
-    Year=`date  +%y`
-    versionArr=(${release//./ })
     remotes=`git remote -v | grep HCALRunControl | tail -1`
     RC_remote=(${remotes[0]})
     echo "Fetching all HCALFM releases from github ..."
     git fetch $RC_remote --tags
+    release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | sort --field-separator=. -k1 -n| tail -1`
+    releaseTags=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n| sort --field-separator=. -k1 -n`
+    Year=`date  +%y`
+    versionArr=(${release//./ })
     if [ "$2" = "major" ]; then
       # reset version number in a new year
       if [ "${Year}" != ${versionArr[0]} ]; then
