@@ -1015,7 +1015,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI", "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START", "DQM_TASK","RUN_CONFIG_SELECTED"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI", "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START", "DQM_TASK",""};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
 
     maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
@@ -1036,6 +1036,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
     globalRenamedParams.put(  "LOCAL_RUN_KEY"  ,                 "RUN_CONFIG_SELECTED"        );
+    globalRenamedParams.put(  "LOCAL_RUNKEY_NAME",               "CFGSNIPPET_KEY_SELECTED"    );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
 
