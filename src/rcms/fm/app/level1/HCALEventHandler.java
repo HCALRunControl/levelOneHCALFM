@@ -1036,6 +1036,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
     globalRenamedParams.put(  "LOCAL_RUN_KEY"  ,                 "RUN_CONFIG_SELECTED"        );
+    globalRenamedParams.put(  "LOCAL_RUNKEY_NAME",               "CFGSNIPPET_KEY_SELECTED"    );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
 

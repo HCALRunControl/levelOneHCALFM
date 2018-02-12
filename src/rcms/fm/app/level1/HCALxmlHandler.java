@@ -443,7 +443,8 @@ public class HCALxmlHandler {
         }
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: " + e.getMessage());
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: ";
+        functionManager.goToError(errMessage,e);
     }
   }
 
