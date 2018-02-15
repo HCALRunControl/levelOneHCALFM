@@ -1,5 +1,10 @@
 package rcms.fm.app.level1;
  
+import java.util.Date;
+import java.util.TimeZone;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.user.UserActionException;
@@ -47,8 +52,9 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
-      //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
+      //    "from this FM/app "+  notification.getIdentifier() +
+      //    "from this state: " + notification.getFromState()  +
+      //    " to this state: " + notification.getToState());
       
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
@@ -73,7 +79,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
-          errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received: " + notification.getReason();
+          DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
+          dateFormatter.setTimeZone(TimeZone.getDefault());
+          String TimeNow =  dateFormatter.format(new Date());
+          errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
           fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
         }
 
