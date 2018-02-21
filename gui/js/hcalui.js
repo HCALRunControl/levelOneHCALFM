@@ -75,7 +75,7 @@ function updatePage() {
         $('#externalCommands :input[value="Halt+Destroy"]').css("color", "red");
       }
     }
-    else {
+    else if ($('#AVAILABLE_LOCALRUNKEYS').text() != '[]') {
       setSpectatorDisplay();
     }
     var cachedState = $('#currentState').text();
@@ -120,7 +120,7 @@ function updatePage() {
           $('#externalCommands :input[value="Halt+Destroy"]').css("color", "red");
         }
       }
-      else {
+      else if ($('#AVAILABLE_LOCALRUNKEYS').text() != '[]') {
         setSpectatorDisplay();
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
