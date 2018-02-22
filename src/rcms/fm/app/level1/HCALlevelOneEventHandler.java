@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import java.lang.Math;
 import java.lang.Integer;
 
@@ -35,6 +39,7 @@ import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.SimpleTask;
+import rcms.utilities.fm.task.CompositeTask;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.statemachine.definition.Input;
@@ -987,10 +992,34 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
-          SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
-          PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
-          configureTaskSeq.addLast(fmChildrenTask);
+
+          //List of distinct list of configPriorities from LV2 properties
+          Map<Integer, ArrayList<String> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+
+          CompositeTask normalFMtasks = new CompositeTask();
+          for (Map.Entry<Integer, ArrayList<String> > entry: priorityFMmap.entrySet()){
+            Integer      thisPriority = entry.getKey();
+            ArrayList<String> FMnames = entry.getValue();
+          
+            //Add all FMs with thisPriority to a QRCcontainer
+            List<FunctionManager> thisPriorityFMs = new ArrayList<FunctionManager>();
+            for(QualifiedResource normalFMqr : functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.getQualifiedResourceList()){
+              if(FMnames.contains(normalFMqr.getName())){
+                FunctionManager normalFM = (FunctionManager) normalFMqr;
+                thisPriorityFMs.add(normalFM);
+              }
+            }
+            logger.info("[HCAL LVL1 " + functionManager.FMname +"] configPriority ="+thisPriority+" has the following FMs");
+            QualifiedResourceContainer thisPriorityFMContainer = new QualifiedResourceContainer(thisPriorityFMs);
+            PrintQRnames(thisPriorityFMContainer);
+            SimpleTask thisPriorityTask   = new SimpleTask(thisPriorityFMContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring normalFMs with priority"+thisPriority);
+            normalFMtasks.addTask(thisPriorityTask);
+          }
+          //SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
+          //logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
+          //PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+          //configureTaskSeq.addLast(fmChildrenTask);
+          configureTaskSeq.addLast(normalFMtasks);
         }
         // 3) configure EvmTrig FM last 
         // NOTE: Emptyness check is important to support global run
@@ -1755,6 +1784,39 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     return false;
   }
  }
+ 
+ //Get sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs
+ public Map<Integer, ArrayList<String> > getConfigPriorities(QualifiedResourceContainer LV2FMs){
+  //TreeMap by default sorts accending order with keys
+  Map<Integer, ArrayList<String> > configPriorityMap  = new TreeMap<Integer, ArrayList<String> >();
+  Set<Integer> configMapKeys = configPriorityMap.keySet();
+  Integer defaultPriority = 99;
+  configPriorityMap.put(defaultPriority,new ArrayList<String>());
+  for(QualifiedResource LV2FM : LV2FMs.getQualifiedResourceList()){
+    try{
+      Integer thisConfigPriority = Integer.parseInt(getProperty(LV2FM,"configPriority"));
+      if (!configMapKeys.contains(thisConfigPriority)){
+        //New configPriority,
+        ArrayList<String> FMnames = new ArrayList<String>();
+        FMnames.add(LV2FM.getName());
+        configPriorityMap.put(thisConfigPriority,FMnames);
+      }else{
+        //Existing configPriority, append FM name to this priority
+        ArrayList<String> FMnames = configPriorityMap.get(thisConfigPriority);
+        FMnames.add(LV2FM.getName());
+        configPriorityMap.put(thisConfigPriority,FMnames);
+      }
+    }
+    catch(Exception e){
+      ArrayList<String> FMnames = configPriorityMap.get(defaultPriority);
+      FMnames.add(LV2FM.getName());
+      configPriorityMap.put(defaultPriority,FMnames);
+    }
+  }
+  logger.info("[HCAL "+functionManager.FMname +"] Map of configPriorities="+configPriorityMap.toString());
+  return configPriorityMap;
+ }
+
 }
 
 
