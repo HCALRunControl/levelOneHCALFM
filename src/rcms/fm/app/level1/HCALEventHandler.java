@@ -59,6 +59,7 @@ import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
@@ -2750,5 +2751,25 @@ public class HCALEventHandler extends UserEventHandler {
         qr.setInitialized(true);
       }
     }
-  } 
+  }
+
+  // Get property from a QR
+  public String getProperty(QualifiedResource QR,  String name ) throws Exception {
+
+    List<ConfigProperty> propertiesList = QR.getResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+    ConfigProperty property = null;
+    Iterator<ConfigProperty> iter = propertiesList.iterator();
+    while(iter.hasNext()) {
+      property = iter.next();
+      if(property.getName().equals(name)) {
+        return property.getValue();
+      }
+    }
+    throw new Exception("Property "+name+" not found");
+  }
+
 }
