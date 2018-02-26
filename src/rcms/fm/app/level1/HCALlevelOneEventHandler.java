@@ -39,7 +39,6 @@ import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.SimpleTask;
-import rcms.utilities.fm.task.CompositeTask;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.statemachine.definition.Input;
@@ -996,7 +995,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           //List of distinct list of configPriorities from LV2 properties
           Map<Integer, ArrayList<String> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
 
-          CompositeTask normalFMtasks = new CompositeTask();
           for (Map.Entry<Integer, ArrayList<String> > entry: priorityFMmap.entrySet()){
             Integer      thisPriority = entry.getKey();
             ArrayList<String> FMnames = entry.getValue();
@@ -1013,13 +1011,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             QualifiedResourceContainer thisPriorityFMContainer = new QualifiedResourceContainer(thisPriorityFMs);
             PrintQRnames(thisPriorityFMContainer);
             SimpleTask thisPriorityTask   = new SimpleTask(thisPriorityFMContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring normalFMs with priority"+thisPriority);
-            normalFMtasks.addTask(thisPriorityTask);
+            configureTaskSeq.addLast(thisPriorityTask);
           }
           //SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
           //logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
           //PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
           //configureTaskSeq.addLast(fmChildrenTask);
-          configureTaskSeq.addLast(normalFMtasks);
         }
         // 3) configure EvmTrig FM last 
         // NOTE: Emptyness check is important to support global run
