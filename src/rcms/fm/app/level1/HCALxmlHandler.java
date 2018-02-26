@@ -635,7 +635,6 @@ public class HCALxmlHandler {
         String errMessage="[HCAL " + functionManager.FMname + "]: Got an error when parsing masterSnippet" ;
         functionManager.goToError(errMessage,e);
     }
-
   }
 
   public String getHCALParameterFromTagName(String TagName){

@@ -1036,6 +1036,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
     globalRenamedParams.put(  "LOCAL_RUN_KEY"  ,                 "RUN_CONFIG_SELECTED"        );
+    globalRenamedParams.put(  "LOCAL_RUNKEY_NAME",               "CFGSNIPPET_KEY_SELECTED"    );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
 
@@ -2220,11 +2221,11 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
                 }
                 catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is dead.\nCheck the corresponding jobcontrol status ...\nHere is the exception: " +e;
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying supervisor's status. The hcalSupervisor may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
                   functionManager.goToError(errMessage);
                 }
                 catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is in a bad condition.\nCheck the corresponding jobcontrol status, etc. ...\nHere is the exception: " +e;
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Cannot query supervisor's status. The hcalSupervisor may have crashed, please look at the RCMS logs/JobControl logs for more information";
                   functionManager.goToError(errMessage);
                 }
 
@@ -2313,20 +2314,19 @@ public class HCALEventHandler extends UserEventHandler {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the NextEventNumber when Running resulted in a NULL pointer - this is bad!";
                       functionManager.goToError(errMessage);
                     }
-
-                    logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
-
+                    //5s per log message in normal run. 
+                    if(icount %5==0){
+                      logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
+                    }
                     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
-
                   }
                   catch (XDAQTimeoutException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
-                    functionManager.goToError(errMessage,e);
-
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Timed out when querying TriggerAdapter's status. The TriggerAdapter application may have crashed, please look at the RCMS logs/JobControl logs for more information"; 
+                    functionManager.goToError(errMessage);
                   }
                   catch (XDAQException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
-                    functionManager.goToError(errMessage,e);
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Cannot query TriggerAdapter's status. The TriggerAdapter  may have crashed, please look at the RCMS logs/JobControl logs for more information";
+                    functionManager.goToError(errMessage);
                   }
                 }
 
