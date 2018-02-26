@@ -453,37 +453,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       else {
         // Determine the run type from the configure command
-        if (parameterSet.get("HCAL_RUN_TYPE") != null) {
-          RunType = ((StringT)parameterSet.get("HCAL_RUN_TYPE").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a run type ...\nThis is OK for e.g. CASTOR LVL2 FMs directly connected to the CDAQ LVL0 FM";
-          logger.warn(warnMessage);
-        }
+        CheckAndSetParameter(       parameterSet, "HCAL_RUN_TYPE" );
+        CheckAndSetTargetParameter( parameterSet, "HCAL_RUN_TYPE" ,"CONFIGURED_WITH_RUN_KEY",true);
 
-        // get the run key from the configure command
-        if (parameterSet.get("RUN_KEY") != null) {
-          RunKey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_KEY",new StringT(RunKey)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_RUN_KEY",new StringT(RunKey)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a run key.\nThis is probably OK for normal HCAL LVL2 operations ...";
-          logger.warn(warnMessage);
-        }
-
-        // get the tpg key from the configure command
-        if (parameterSet.get("TPG_KEY") != null) {
-          TpgKey = ((StringT)parameterSet.get("TPG_KEY").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_TPG_KEY",new StringT(TpgKey)));
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Received a L1 TPG key: " + TpgKey;
-          logger.warn(warnMessage);
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a L1 TPG key.\nThis is only OK for HCAL local run operations ...";
-          logger.warn(warnMessage);
-        }
+        // Check and receive TPG key
+        CheckAndSetParameter(       parameterSet, "TPG_KEY" );
+        CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
 
         // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
         ClockChanged = false;
@@ -503,36 +478,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         UseResetForRecover = true;
-        if (parameterSet.get("USE_RESET_FOR_RECOVER") != null) {
-          UseResetForRecover = ((BooleanT)parameterSet.get("USE_RESET_FOR_RECOVER").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_RESET_FOR_RECOVER", new BooleanT(UseResetForRecover)));
-        }
+        CheckAndSetParameter( parameterSet, "USE_RESET_FOR_RECOVER");
 
         UsePrimaryTCDS = true;
-        if (parameterSet.get("USE_PRIMARY_TCDS") != null) {
-          UsePrimaryTCDS=((BooleanT)parameterSet.get("USE_PRIMARY_TCDS").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
-        }
+        CheckAndSetParameter( parameterSet, "USE_PRIMARY_TCDS");
 
         // get the supervisor error from the lvl1 
         SupervisorError = "not set";
-        if (parameterSet.get("SUPERVISOR_ERROR") != null) {
-          SupervisorError = ((StringT)parameterSet.get("SUPERVISOR_ERROR").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
-        }
+        CheckAndSetParameter( parameterSet, "SUPERVISOR_ERROR");
 
         // get the FED list from the configure command in global run
-        if (parameterSet.get("FED_ENABLE_MASK") != null) {
-          FedEnableMask = ((StringT)parameterSet.get("FED_ENABLE_MASK").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
+        CheckAndSetParameter(       parameterSet, "FED_ENABLE_MASK");
+        CheckAndSetTargetParameter( parameterSet, "FED_ENABLE_MASK" ,"CONFIGURED_WITH_FED_ENABLE_MASK",true);
 
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction(). Here it is:\n "+ FedEnableMask);
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
-        }
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         try{
