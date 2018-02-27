@@ -498,16 +498,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
-          // Only set the parameter being used so that RunInfo will be clear
-          if(isSinglePartition){
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      ,false);
-          }
-          else{
-            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      ,false);
-          }
         }
         catch (UserActionException e){
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
@@ -528,16 +518,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
       }
       catch(UserActionException e){
-        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+        logger.error("[HCAL LVL2"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
         functionManager.goToError(e.getMessage());
       }
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
+          logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
           xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
       }
       //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
+      logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
@@ -546,7 +536,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
         StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
         
-        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
+        logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
       }
 
