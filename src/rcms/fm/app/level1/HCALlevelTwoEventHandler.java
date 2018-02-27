@@ -17,6 +17,7 @@ import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
@@ -494,14 +495,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         try{
-          CheckAndSetParameter( parameterSet , "HCAL_RUNINFOPUBLISH" );
           CheckAndSetParameter( parameterSet , "OFFICIAL_RUN_NUMBERS");
           CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
-          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      ,false);
-          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   ,false);
-          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     ,false);
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
-          CheckAndSetParameter( parameterSet , "DQM_TASK");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
           // Only set the parameter being used so that RunInfo will be clear
           if(isSinglePartition){
@@ -520,25 +516,52 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // Fill the local variable with the value received from LV1
+      // Parse the mastersnippet 
+      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      // Reset HCAL_CFGSCRIPT:
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
+      // Try to find a common masterSnippet from MasterSnippet
+      String CommonMasterSnippetFile ="";
+      try{
+        String TagName="CommonMasterSnippet";
+        String attribute="file";
+        CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+      }
+      catch(UserActionException e){
+        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+        functionManager.goToError(e.getMessage());
+      }
+      if(!CommonMasterSnippetFile.equals("")){    
+          //parse and set HCAL parameters from CommonMasterSnippet
+          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
+          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
+      }
+      //Parse and set HCAL parameters from MasterSnippet
+      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
+      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+      //Append CfgScript from runkey (if any)
+      StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+      if (LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"))!=null){
+        StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
+        StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
+        
+        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
+      }
+
+      //Put Mastersnippet results into local variables to be sent to supervisor
+      FullCfgScript               = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      FedEnableMask               = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK"    ).getValue()).getString();
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
       String LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       if(isSinglePartition){
-        //KKH: Set ICIControl from userXML if it is not empty
-        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath);
-        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
       }
       else{
-        //KKH: Set ICIControl from userXML if it is not empty
-        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath);
-        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
       }
