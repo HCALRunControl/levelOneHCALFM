@@ -270,7 +270,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Receive selected runkey name, mastersnippet file name, runkey map from LV1 
       CheckAndSetParameter( parameterSet, "RUN_CONFIG_SELECTED");
       CheckAndSetParameter( parameterSet, "CFGSNIPPET_KEY_SELECTED");
-      CheckAndSetParameter( parameterSet, "AVAILABLE_RUN_CONFIGS");
+      //TODO: Extend checkAndSetParameter for MapT<?>
+      if( parameterSet.get("AVAILABLE_RUN_CONFIGS") != null){
+        MapT<MapT<StringT>> localRunkeyMap = ((MapT<MapT<StringT>>)parameterSet.get("AVAILABLE_RUN_CONFIGS").getValue());
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received local runkey map: "+localRunkeyMap.toString());
+        functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS", localRunkeyMap));
+      }
+      else{
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive AVAILABLE_RUN_CONFIGS during initAction");
+      }
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
@@ -449,44 +457,39 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive any parameters during ConfigureAction! Check if LV1 sends any.");
       }
       else {
-        // Determine the run type from the configure command
-        CheckAndSetParameter(       parameterSet, "HCAL_RUN_TYPE" );
-        CheckAndSetTargetParameter( parameterSet, "HCAL_RUN_TYPE" ,"CONFIGURED_WITH_RUN_KEY",true);
+        try{
+          // Determine the run type from the configure command
+          CheckAndSetParameter(       parameterSet, "HCAL_RUN_TYPE" );
+          CheckAndSetTargetParameter( parameterSet, "HCAL_RUN_TYPE" ,"CONFIGURED_WITH_RUN_KEY",true);
 
-        // Check and receive TPG key
-        CheckAndSetParameter(       parameterSet, "TPG_KEY" );
-        CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
+          // Check and receive TPG key
+          CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
 
-        // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
-        ClockChanged = false;
-        if (parameterSet.get("CLOCK_CHANGED") != null) {
-          ClockChanged = ((BooleanT)parameterSet.get("CLOCK_CHANGED").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("CLOCK_CHANGED",new BooleanT(ClockChanged)));
+          // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
+          ClockChanged = false;
+          CheckAndSetParameter(       parameterSet, "CLOCK_CHANGED" );
+          ClockChanged = ((BooleanT)functionManager.getHCALparameterSet().get("CLOCK_CHANGED").getValue()).getBoolean();
           if (ClockChanged) {
-            logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did receive a request to perform special actions due to central CMS clock source change during the configureAction().\nThe ClockChange is: " + ClockChanged);
+            logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did receive a request to perform special actions due to central CMS clock source change during the configureAction().");
           }
-          else {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a request to perform special actions due to central CMS clock source change during the configureAction().\nThe ClockChange is: " + ClockChanged);
-          }
+          UseResetForRecover = true;
+          CheckAndSetParameter( parameterSet, "USE_RESET_FOR_RECOVER");
 
+          UsePrimaryTCDS = true;
+          CheckAndSetParameter( parameterSet, "USE_PRIMARY_TCDS");
+
+          // get the supervisor error from the lvl1 
+          SupervisorError = "not set";
+          CheckAndSetParameter( parameterSet, "SUPERVISOR_ERROR");
+
+          // get the FED list from the configure command in global run
+          CheckAndSetParameter(       parameterSet, "FED_ENABLE_MASK");
+          CheckAndSetTargetParameter( parameterSet, "FED_ENABLE_MASK" ,"CONFIGURED_WITH_FED_ENABLE_MASK",true);
         }
-        else {
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Did not receive any request to perform special actions due to a central CMS clock source change during the configureAction().\nThis is (probably) OK for HCAL local runs.\nFor CASTOR in global runs this might be a problem ...");
+        catch (UserActionException e){
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
+          logger.error(warnMessage);
         }
-
-        UseResetForRecover = true;
-        CheckAndSetParameter( parameterSet, "USE_RESET_FOR_RECOVER");
-
-        UsePrimaryTCDS = true;
-        CheckAndSetParameter( parameterSet, "USE_PRIMARY_TCDS");
-
-        // get the supervisor error from the lvl1 
-        SupervisorError = "not set";
-        CheckAndSetParameter( parameterSet, "SUPERVISOR_ERROR");
-
-        // get the FED list from the configure command in global run
-        CheckAndSetParameter(       parameterSet, "FED_ENABLE_MASK");
-        CheckAndSetTargetParameter( parameterSet, "FED_ENABLE_MASK" ,"CONFIGURED_WITH_FED_ENABLE_MASK",true);
 
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
