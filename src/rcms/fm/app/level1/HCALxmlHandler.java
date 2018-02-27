@@ -412,9 +412,13 @@ public class HCALxmlHandler {
     }
     return tmpAttribute;
   }
-
   // Fill parameters from MasterSnippet
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
+      parseMasterSnippet(selectedRun, CfgCVSBasePath, "") ;
+  }
+
+  // Fill parameters from MasterSnippet
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath,String PartitionName) throws UserActionException{
     try{
         // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -429,14 +433,28 @@ public class HCALxmlHandler {
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
             Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
-            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName = "+ iTagName );
-
+            
             if(isValidTag){
               if (iTagName == "FMParameter") {
                 SetHCALFMParameter(iElement);
               } else {
-                NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-                SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                //Parse all parameters if no PartitionName is specified
+                if(PartitionName==""){
+                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName );
+                  NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+                  SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                }
+                else{
+                  //Parse only the parameters matching to PartitionName 
+                  if(iElement.hasAttribute("Partition") && PartitionName == iElement.getAttributes().getNamedItem("Partition").getNodeValue()){
+                    logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName );
+                    NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+                    SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                  }
+                  else{
+                    logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: skipping TagName = "+ iTagName );
+                  }
+                }
               }
             }
           }
