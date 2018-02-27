@@ -529,6 +529,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Parse and set HCAL parameters from MasterSnippet
       logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+
+      if(!CommonMasterSnippetFile.equals("")){    
+          //parse and set HCAL parameters from CommonMasterSnippet
+          logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet(partition specific) : "+ CommonMasterSnippetFile);
+          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,functionManager.FMpartition);
+      }
+      logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse MasterSnippet(partition specific): "+ selectedRun);
+      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
+
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
