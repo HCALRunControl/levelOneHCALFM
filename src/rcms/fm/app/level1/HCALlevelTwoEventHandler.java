@@ -266,15 +266,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.parameterSender.start();
       }
 
-  
-      if (parameterSet.get("RUN_CONFIG_SELECTED") != null) {
-        String RunConfigSelected = ((StringT)parameterSet.get("RUN_CONFIG_SELECTED").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
-      }
-      else {
-        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive the user-selected CfgSnippet key.";
-        logger.warn(warnMessage);
-      }
+
+      //Receive selected runkey name, mastersnippet file name, runkey map from LV1 
+      CheckAndSetParameter( parameterSet, "RUN_CONFIG_SELECTED");
+      CheckAndSetParameter( parameterSet, "CFGSNIPPET_KEY_SELECTED");
+      CheckAndSetParameter( parameterSet, "AVAILABLE_RUN_CONFIGS");
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");

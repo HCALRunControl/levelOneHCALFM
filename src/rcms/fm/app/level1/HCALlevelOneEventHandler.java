@@ -266,7 +266,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("GLOBAL_CONF_KEY",new StringT(GlobalConfKey)));
 
-        // RUN_CONFIG_SELECTED = LocalRunKey; CFGSNIPPET_KEY_SELECTED = MasterSnippet file of LocalRunKey
+        // CFGSNIPPET_KEY_SELECTED = LocalRunKey;  RUN_CONFIG_SELECTED= MasterSnippet file of LocalRunKey
         RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
         CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
       }
@@ -421,8 +421,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
+      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
       pSet.put(new CommandParameter<StringT>("RUN_CONFIG_SELECTED", new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>("CFGSNIPPET_KEY_SELECTED", new StringT(CfgSnippetKeySelected)));
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS", LocalRunKeyMap));
+
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
 
