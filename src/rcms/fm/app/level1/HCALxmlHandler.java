@@ -431,6 +431,31 @@ public class HCALxmlHandler {
         for(int i =0;i< listOfTags.getLength();i++){
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
+            //Remove the partition attributed elements if we are parsing for all partition
+            if(PartitionName=="" && iElement.hasAttribute("Partition")){
+              iElement.getParentNode().removeChild(iElement);
+              logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is partition specific.");
+            }
+            if(PartitionName!=""){
+               //Remove the non-partition elements if we are parsing for some partition
+               if(!iElement.hasAttribute("Partition")){
+                  iElement.getParentNode().removeChild(iElement);
+                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is not partition specific.");
+               }
+               //Remove the partition elements that are for other partitions
+               if(iElement.hasAttribute("Partition") && !PartitionName.equals(iElement.getAttributes().getNamedItem("Partition").getNodeValue())){
+                  String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+                  iElement.getParentNode().removeChild(iElement);
+                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+PartitionName+" is not "+ElementPartition);
+               }
+            }
+          }
+        }
+        masterSnippet.getDocumentElement().normalize();
+
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
             Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
             
@@ -439,22 +464,14 @@ public class HCALxmlHandler {
                 SetHCALFMParameter(iElement);
               } else {
                 //Parse all parameters if no PartitionName is specified
-                if(PartitionName==""){
-                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName );
-                  NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-                  SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                if(!iElement.hasAttribute("Partition") ){
+                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with no partition attribute");
                 }
                 else{
-                  //Parse only the parameters matching to PartitionName 
-                  if(iElement.hasAttribute("Partition") && PartitionName == iElement.getAttributes().getNamedItem("Partition").getNodeValue()){
-                    logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName );
-                    NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-                    SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
-                  }
-                  else{
-                    logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: skipping TagName = "+ iTagName );
-                  }
+                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with partition= "+PartitionName);
                 }
+                  NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+                  SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
               }
             }
           }
