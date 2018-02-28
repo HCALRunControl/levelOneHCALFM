@@ -460,7 +460,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         try{
           // Determine the run type from the configure command
           CheckAndSetParameter(       parameterSet, "HCAL_RUN_TYPE" );
-          CheckAndSetTargetParameter( parameterSet, "HCAL_RUN_TYPE" ,"CONFIGURED_WITH_RUN_KEY",true);
+          CheckAndSetParameter(       parameterSet, "RUN_KEY");
+          CheckAndSetTargetParameter( parameterSet, "RUN_KEY" ,"CONFIGURED_WITH_RUN_KEY",true);
 
           // Check and receive TPG key
           CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
