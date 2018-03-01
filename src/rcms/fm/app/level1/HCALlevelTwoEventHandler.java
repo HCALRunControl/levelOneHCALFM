@@ -511,33 +511,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
-      // Try to find a common masterSnippet from MasterSnippet
-      String CommonMasterSnippetFile ="";
+      // Parse MasterSnippet
       try{
-        String TagName="CommonMasterSnippet";
-        String attribute="file";
-        CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+        //Parse common+main mastersnippet to pick up all-partition settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
+        //Parse common+main mastersnippet for partition specific settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
       }
       catch(UserActionException e){
-        logger.error("[HCAL LVL2"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
-        functionManager.goToError(e.getMessage());
+        String errMessage = "[HCAL LVL2"+functionManager.FMname+"]: Failed to parse mastersnippets:";
+        functionManager.goToError(errMessage,e);
+        return;
       }
-      if(!CommonMasterSnippetFile.equals("")){    
-          //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
-      }
-      //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
-
-      if(!CommonMasterSnippetFile.equals("")){    
-          //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet(partition specific) : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,functionManager.FMpartition);
-      }
-      logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Going to parse MasterSnippet(partition specific): "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
 
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();

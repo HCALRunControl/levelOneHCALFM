@@ -428,6 +428,27 @@ public class HCALxmlHandler {
         Element masterSnippetElement = masterSnippet.getDocumentElement();
 
         NodeList listOfTags = masterSnippetElement.getChildNodes();
+        String commonMasterSnippetFile = "";
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            if (listOfTags.item(i).getNodeName() == "CommonMasterSnippet") {
+              if (commonMasterSnippetFile != "") {
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Found multiple instances of CommonMasterSnippet. Only one is allowed.";
+                throw new UserActionException(errMessage);
+              }
+              commonMasterSnippetFile = ((Element)listOfTags.item(i)).getAttributes().getNamedItem("file").getNodeValue();
+            }
+          }
+        }
+        if (commonMasterSnippetFile != "") {
+          if(PartitionName==""){
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
+          }else{
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet for partition "+PartitionName+" from " + commonMasterSnippetFile + ".");
+          }
+          this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,PartitionName);
+        }
+
         for(int i =0;i< listOfTags.getLength();i++){
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
