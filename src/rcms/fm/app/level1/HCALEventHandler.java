@@ -2667,6 +2667,12 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException(errMessage);
     }
   }
+  // Print of the names of the QR in an arrayList
+  void PrintQRnames(List<QualifiedResource> qrlist){
+    QualifiedResourceContainer qrc = new QualifiedResourceContainer(qrlist);
+    PrintQRnames(qrc);
+  }
+
   // Print of the names of the QR in a QRContainer 
   void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
