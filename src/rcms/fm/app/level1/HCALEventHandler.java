@@ -688,6 +688,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    //Empty the container if LPM FM is masked
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(functionManager.containerFMTCDSLPM.getActiveQRList());
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
 
