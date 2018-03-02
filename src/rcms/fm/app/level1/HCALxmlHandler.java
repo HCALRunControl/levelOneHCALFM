@@ -466,10 +466,12 @@ public class HCALxmlHandler {
                   logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is not partition specific.");
                }
                //Remove the partition elements that are for other partitions
-               if(iElement.hasAttribute("Partition") && !PartitionName.equals(iElement.getAttributes().getNamedItem("Partition").getNodeValue())){
+               if(iElement.hasAttribute("Partition")){
                   String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
-                  iElement.getParentNode().removeChild(iElement);
-                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+PartitionName+" is not "+ElementPartition);
+                  if(!ElementPartition.contains(PartitionName)){
+                    iElement.getParentNode().removeChild(iElement);
+                    logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+ElementPartition+" do not contain "+PartitionName);
+                  }
                }
             }
           }
