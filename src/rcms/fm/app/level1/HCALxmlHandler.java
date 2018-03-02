@@ -420,6 +420,7 @@ public class HCALxmlHandler {
   // Fill parameters from MasterSnippet
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath,String PartitionName) throws UserActionException{
     try{
+        logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet. Mastersnippet file=" + selectedRun + "; PartitionName= "+PartitionName);
         // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
@@ -444,9 +445,10 @@ public class HCALxmlHandler {
           if(PartitionName==""){
             logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
           }else{
-            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet for partition "+PartitionName+" from " + commonMasterSnippetFile + ".");
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + " for Partition="+PartitionName+" .");
           }
           this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,PartitionName);
+          logger.info("[HCAL " + functionManager.FMname + "]: Done parsing the common mastersnippet. Continue to parse the main one.");
         }
 
         for(int i =0;i< listOfTags.getLength();i++){
