@@ -992,8 +992,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
 
-          //List of distinct list of configPriorities from LV2 properties
-          Map<Integer, ArrayList<FunctionManager> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+          //Sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs properties
+          TreeMap<Integer, ArrayList<FunctionManager> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
 
           for (Map.Entry<Integer, ArrayList<FunctionManager> > entry: priorityFMmap.entrySet()){
             Integer                        thisPriority = entry.getKey();
@@ -1770,13 +1770,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
  }
  
- //Get sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs
- public Map<Integer, ArrayList<FunctionManager> > getConfigPriorities(QualifiedResourceContainer LV2FMs){
+ //Get sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs. The QRC must contain LV2 FM QualifiedResource
+ public TreeMap<Integer, ArrayList<FunctionManager> > getConfigPriorities(QualifiedResourceContainer LV2FMs){
   //TreeMap by default sorts accending order with keys
-  Map<Integer, ArrayList<FunctionManager> > configPriorityMap  = new TreeMap<Integer, ArrayList<FunctionManager> >();
+  TreeMap<Integer, ArrayList<FunctionManager> > configPriorityMap  = new TreeMap<Integer, ArrayList<FunctionManager> >();
   Set<Integer> configMapKeys = configPriorityMap.keySet();
   Integer defaultPriority = 99;
-  configPriorityMap.put(defaultPriority,new ArrayList<FunctionManager>());
+  ArrayList<FunctionManager> defaultFMlist = new ArrayList<FunctionManager>();
+
   for(QualifiedResource LV2FM : LV2FMs.getQualifiedResourceList()){
     try{
       Integer thisConfigPriority = Integer.parseInt(getProperty(LV2FM,"configPriority"));
@@ -1793,12 +1794,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
     }
     catch(Exception e){
-      ArrayList<FunctionManager> FMlist = configPriorityMap.get(defaultPriority);
-      FMlist.add((FunctionManager) LV2FM);
-      configPriorityMap.put(defaultPriority,FMlist);
+      defaultFMlist.add((FunctionManager) LV2FM);
     }
   }
-  //logger.info("[HCAL "+functionManager.FMname +"] Map of configPriorities="+configPriorityMap.toString());
+  //Lump all FMs without ConfigPriority property into Last priority
+  if( !configPriorityMap.isEmpty()){
+    Integer lastPriority = configPriorityMap.lastKey();
+    ArrayList<FunctionManager> lastPriorityFMlist = configPriorityMap.get(lastPriority);
+    lastPriorityFMlist.addAll(defaultFMlist);
+    configPriorityMap.put(lastPriority, lastPriorityFMlist);
+  }
+  else{
+    //Lump all FMs without ConfigPriority property into default priority if no FM has configPriority
+    configPriorityMap.put(defaultPriority, defaultFMlist);
+  }
+
   return configPriorityMap;
  }
 
