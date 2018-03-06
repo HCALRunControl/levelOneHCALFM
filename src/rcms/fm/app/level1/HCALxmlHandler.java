@@ -474,9 +474,13 @@ public class HCALxmlHandler {
                 String[] ElementPartitionArray = ElementPartition.split(";");
                 for(String partitionName:ElementPartitionArray){
                   if(! ValidPartitionNames.contains(partitionName)){
-                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid PartitionName="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
+                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid Partition="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
                     functionManager.goToError(errMessage);
                   }
+                }
+                if(ElementName.equals("CfgScript")){
+                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found Partition attribute in CfgScript. This is not allowed. Please try to set the same partition-specific setting via snippet." ;
+                    functionManager.goToError(errMessage);
                 }
               }
             }
