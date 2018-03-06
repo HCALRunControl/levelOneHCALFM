@@ -462,6 +462,7 @@ public class HCALxmlHandler {
           for (QualifiedResource FMqr: allFMlists){
             // FM name = HCAL_PartitionName
             ValidPartitionNames.add(FMqr.getName().substring(5));
+            ValidPartitionNames.add(FMqr.getName());
           }
 
           for(int i =0;i< listOfTags.getLength();i++){
