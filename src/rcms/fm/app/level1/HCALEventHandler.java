@@ -681,6 +681,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Get list of childFMs from QG
     List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
     functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    functionManager.containerAllFMChildren = new QualifiedResourceContainer(childFMs);
     // Fill containerFMchildren with Active FMs only
     List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
     functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
