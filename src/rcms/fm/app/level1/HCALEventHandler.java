@@ -59,6 +59,7 @@ import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
@@ -687,6 +688,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    //Empty the container if LPM FM is masked
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(functionManager.containerFMTCDSLPM.getActiveQRList());
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
 
@@ -1224,7 +1227,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
-                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
                 functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
                 //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
@@ -1261,7 +1264,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
@@ -2664,6 +2667,12 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException(errMessage);
     }
   }
+  // Print of the names of the QR in an arrayList
+  void PrintQRnames(List<QualifiedResource> qrlist){
+    QualifiedResourceContainer qrc = new QualifiedResourceContainer(qrlist);
+    PrintQRnames(qrc);
+  }
+
   // Print of the names of the QR in a QRContainer 
   void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
@@ -2750,5 +2759,25 @@ public class HCALEventHandler extends UserEventHandler {
         qr.setInitialized(true);
       }
     }
-  } 
+  }
+
+  // Get property from a QR
+  public String getProperty(QualifiedResource QR,  String name ) throws Exception {
+
+    List<ConfigProperty> propertiesList = QR.getResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+    ConfigProperty property = null;
+    Iterator<ConfigProperty> iter = propertiesList.iterator();
+    while(iter.hasNext()) {
+      property = iter.next();
+      if(property.getName().equals(name)) {
+        return property.getValue();
+      }
+    }
+    throw new Exception("Property "+name+" not found");
+  }
+
 }

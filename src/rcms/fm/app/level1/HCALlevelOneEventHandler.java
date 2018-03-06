@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import java.lang.Math;
 import java.lang.Integer;
 
@@ -987,10 +991,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
-          SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
-          PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
-          configureTaskSeq.addLast(fmChildrenTask);
+
+          //Sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs properties
+          TreeMap<Integer, ArrayList<FunctionManager> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+
+          for (Map.Entry<Integer, ArrayList<FunctionManager> > entry: priorityFMmap.entrySet()){
+            Integer                        thisPriority = entry.getKey();
+            ArrayList<FunctionManager> thisPriorityFMs  = entry.getValue();
+          
+            logger.info("[HCAL LVL1 " + functionManager.FMname +"] configPriority ="+thisPriority+" has the following FMs");
+            QualifiedResourceContainer thisPriorityFMContainer = new QualifiedResourceContainer(thisPriorityFMs);
+            PrintQRnames(thisPriorityFMContainer);
+            SimpleTask thisPriorityTask   = new SimpleTask(thisPriorityFMContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring normalFMs with priority"+thisPriority);
+            configureTaskSeq.addLast(thisPriorityTask);
+          }
         }
         // 3) configure EvmTrig FM last 
         // NOTE: Emptyness check is important to support global run
@@ -1755,6 +1769,49 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     return false;
   }
  }
+ 
+ //Get sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs. The QRC must contain LV2 FM QualifiedResource
+ public TreeMap<Integer, ArrayList<FunctionManager> > getConfigPriorities(QualifiedResourceContainer LV2FMs){
+  //TreeMap by default sorts accending order with keys
+  TreeMap<Integer, ArrayList<FunctionManager> > configPriorityMap  = new TreeMap<Integer, ArrayList<FunctionManager> >();
+  Set<Integer> configMapKeys = configPriorityMap.keySet();
+  Integer defaultPriority = 99;
+  ArrayList<FunctionManager> defaultFMlist = new ArrayList<FunctionManager>();
+
+  for(QualifiedResource LV2FM : LV2FMs.getQualifiedResourceList()){
+    try{
+      Integer thisConfigPriority = Integer.parseInt(getProperty(LV2FM,"configPriority"));
+      if (!configMapKeys.contains(thisConfigPriority)){
+        //New configPriority,
+        ArrayList<FunctionManager> FMlist = new ArrayList<FunctionManager>();
+        FMlist.add((FunctionManager) LV2FM);
+        configPriorityMap.put(thisConfigPriority,FMlist);
+      }else{
+        //Existing configPriority, append FM name to this priority
+        ArrayList<FunctionManager> FMlist = configPriorityMap.get(thisConfigPriority);
+        FMlist.add((FunctionManager) LV2FM);
+        configPriorityMap.put(thisConfigPriority,FMlist);
+      }
+    }
+    catch(Exception e){
+      defaultFMlist.add((FunctionManager) LV2FM);
+    }
+  }
+  //Lump all FMs without ConfigPriority property into Last priority
+  if( !configPriorityMap.isEmpty()){
+    Integer lastPriority = configPriorityMap.lastKey();
+    ArrayList<FunctionManager> lastPriorityFMlist = configPriorityMap.get(lastPriority);
+    lastPriorityFMlist.addAll(defaultFMlist);
+    configPriorityMap.put(lastPriority, lastPriorityFMlist);
+  }
+  else{
+    //Lump all FMs without ConfigPriority property into default priority if no FM has configPriority
+    configPriorityMap.put(defaultPriority, defaultFMlist);
+  }
+
+  return configPriorityMap;
+ }
+
 }
 
 

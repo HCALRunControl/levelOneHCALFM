@@ -68,25 +68,33 @@ public class HCALxmlHandler {
     logger.warn("Done constructing xmlHandler.");
   }
 
-
-  public Element getHCALuserXML() throws UserActionException {
+  
+  public Element parseHCALuserXML(String userXMLstring) throws UserActionException {
     try {
-      // return the userXML
-      String userXmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-
-      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML.");
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+    docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       InputSource inputSource = new InputSource();
-      inputSource.setCharacterStream(new StringReader(userXmlString));
+      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
       logger.debug("[HCAL " + functionManager.FMname + "]: formatted the userXML.");
       return hcalUserXML.getDocumentElement();
-    }
-    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
+    }  
+    catch (DOMException | SAXException | ParserConfigurationException | IOException e ) {
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
       logger.error(errMessage);
       throw new UserActionException(errMessage);
+    }
+  }
+
+  public Element getHCALuserXML() throws UserActionException {
+    try {
+      // return the userXML
+      String userXmlString =  ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml();
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML.");
+      return parseHCALuserXML(userXmlString);
+    }
+    catch (UserActionException e) {
+      throw e;
     }
   }
 
@@ -445,6 +453,7 @@ public class HCALxmlHandler {
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: ";
         functionManager.goToError(errMessage,e);
+        throw new UserActionException(e.getMessage());
     }
   }
 
@@ -753,7 +762,7 @@ public class HCALxmlHandler {
     return tmpCtrlSequence;
   }
 
-  static String readFile(String path, Charset encoding) throws IOException {
+  public static String readFile(String path, Charset encoding) throws IOException {
       byte[] encoded = Files.readAllBytes(Paths.get(path));
       return new String(encoded, encoding);
    }  
