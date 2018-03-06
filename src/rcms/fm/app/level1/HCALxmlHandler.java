@@ -3,7 +3,9 @@ package rcms.fm.app.level1;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.StringWriter;
@@ -45,6 +47,7 @@ import rcms.fm.fw.parameter.type.ShortT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.resource.QualifiedResource;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -451,6 +454,33 @@ public class HCALxmlHandler {
           logger.info("[HCAL " + functionManager.FMname + "]: Done parsing the common mastersnippet. Continue to parse the main one.");
         }
 
+        //Validate partition attribute input if LV1 is parsing the mastersnippet
+        if (!functionManager.containerFMChildren.isEmpty()){
+          //Masked FM children should be valid input. Use containerAllFMChildren instead of containerFMChildren
+          List<QualifiedResource> allFMlists = functionManager.containerAllFMChildren.getQualifiedResourceList();
+          ArrayList<String> ValidPartitionNames  = new ArrayList<String>();
+          for (QualifiedResource FMqr: allFMlists){
+            // FM name = HCAL_PartitionName
+            ValidPartitionNames.add(FMqr.getName().substring(5));
+          }
+
+          for(int i =0;i< listOfTags.getLength();i++){
+            if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+              Element iElement = (Element) listOfTags.item(i);
+              if(iElement.hasAttribute("Partition")){
+                String ElementName      = iElement.getNodeName();
+                String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+                String[] ElementPartitionArray = ElementPartition.split(";");
+                for(String partitionName:ElementPartitionArray){
+                  if(! ValidPartitionNames.contains(partitionName)){
+                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid PartitionName="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
+                    functionManager.goToError(errMessage);
+                  }
+                }
+              }
+            }
+          }
+        }
         for(int i =0;i< listOfTags.getLength();i++){
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
