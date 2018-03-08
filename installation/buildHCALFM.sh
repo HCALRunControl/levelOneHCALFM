@@ -78,7 +78,7 @@ if [ "$1" = "release" ]; then
     echo "Building HCALFM release: $GITREV"
     tagCommit=`git rev-parse HEAD | head -c 7`
     sed -i '$ d' ../gui/jsp/footer.jspf
-    echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version:${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
+    echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version: ${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
     ant -DgitRev="${GITREV_fname}"
     #Update the tags only if build successful and not building old release
     if [ "$?" = "0" ]; then
