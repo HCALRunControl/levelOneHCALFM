@@ -682,6 +682,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Get list of childFMs from QG
     List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
     functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    functionManager.containerAllFMChildren = new QualifiedResourceContainer(childFMs);
     // Fill containerFMchildren with Active FMs only
     List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
     functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
@@ -2621,48 +2622,73 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
   
-  // Function to receive parameter
+  // Function to receive parameter and set to same parameter
+  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+    CheckAndSetTargetParameter(pSet,PamName, PamName,printResult);
+  }
   void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
-    CheckAndSetParameter(pSet,PamName,true);
+    CheckAndSetTargetParameter(pSet,PamName, PamName,true);
   }
 
-  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+
+  // Function to receive parameter and set to other parameter
+  void CheckAndSetTargetParameter(ParameterSet pSet , String InputPamName, String TargetPamName, boolean printResult) throws UserActionException{
     String inputString = getUserFunctionManager().getLastInput().getInputString();
 
-    if( pSet.get(PamName) != null){
-      if (pSet.get(PamName).getType().equals(StringT.class)){
-        String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
-        }
-      }
-      if (pSet.get(PamName).getType().equals(IntegerT.class)){
-        Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+    if( pSet.get(InputPamName) != null){
+      if (pSet.get(InputPamName).getType().equals(StringT.class)){
+        String PamValue = ((StringT)pSet.get(InputPamName).getValue()).getString();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(TargetPamName, new StringT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }else{
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
-      if (pSet.get(PamName).getType().equals(BooleanT.class)){
-        Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+      if (pSet.get(InputPamName).getType().equals(IntegerT.class)){
+        Integer PamValue = ((IntegerT)pSet.get(InputPamName).getValue()).getInteger();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(TargetPamName, new IntegerT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
         }
         else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
+        }
+      }
+      if (pSet.get(InputPamName).getType().equals(BooleanT.class)){
+        Boolean PamValue = ((BooleanT)pSet.get(InputPamName).getValue()).getBoolean();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(TargetPamName, new BooleanT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }
+        else{
+           String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
     }
     else{
-      String errMessage =" Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled";
+      String errMessage =" Did not receive "+ InputPamName +" from last input= "+inputString+" ! Please check if "+ InputPamName+ " was filled";
       logger.warn(errMessage);
       throw new UserActionException(errMessage);
     }

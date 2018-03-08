@@ -270,7 +270,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("GLOBAL_CONF_KEY",new StringT(GlobalConfKey)));
 
-        // RUN_CONFIG_SELECTED = LocalRunKey; CFGSNIPPET_KEY_SELECTED = MasterSnippet file of LocalRunKey
+        // CFGSNIPPET_KEY_SELECTED = LocalRunKey;  RUN_CONFIG_SELECTED= MasterSnippet file of LocalRunKey
         RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
         CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
       }
@@ -425,8 +425,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
+      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
       pSet.put(new CommandParameter<StringT>("RUN_CONFIG_SELECTED", new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>("CFGSNIPPET_KEY_SELECTED", new StringT(CfgSnippetKeySelected)));
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS", LocalRunKeyMap));
+
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
 
@@ -769,26 +773,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
 
-      // Try to find a common masterSnippet from MasterSnippet
-      String CommonMasterSnippetFile ="";
+      // Parse MasterSnippet
       try{
-        String TagName="CommonMasterSnippet";
-        String attribute="file";
-        CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+        //Parse common+main mastersnippet to pick up all-partition settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
       }
       catch(UserActionException e){
-        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
-        functionManager.goToError(e.getMessage());
+        String errMessage = "[HCAL LVL1"+functionManager.FMname+"]: Failed to parse mastersnippets:";
+        functionManager.goToError(errMessage,e);
+        return;
       }
-
-      if(!CommonMasterSnippetFile.equals("")){    
-          //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
-      }
-      //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+      
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
@@ -796,7 +791,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
         StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
         
-        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ selectedRun+" and it looks like this "+RunkeyCfgScript);
+        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
       }
 
@@ -945,29 +940,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("TPG_KEY"                , new StringT(TpgKey)));
       pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
       pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT"         , new StringT(FullCfgScript)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(TTCciControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(LTCControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("SINGLEPARTITION_MODE"  , new BooleanT(isSinglePartition)));
-      // Only send the one to be used by LV2,so that run info will be consistent
-      if(isSinglePartition){
-        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_SINGLE"       , new StringT(ICIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_SINGLE"        , new StringT(PIControlSequence)));
-      }
-      else{
-        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_MULTI"       , new StringT(ICIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_MULTI"        , new StringT(PIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"             , new StringT(LPMControlSequence)));
-      }
       pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED"         , new BooleanT(ClockChanged)));
       pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER" , new BooleanT(UseResetForRecover)));
-      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(PIControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS"      , new BooleanT(UsePrimaryTCDS)));
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
-      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
-      pSet.put(new CommandParameter<StringT>("DQM_TASK"               , new StringT(DQMtask)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());

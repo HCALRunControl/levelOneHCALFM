@@ -121,8 +121,11 @@ public class HCALFunctionManager extends UserFunctionManager {
   // container of XdaqExecutive in the running Group.
   public XdaqApplicationContainer containerXdaqExecutive = null;
 
-  // container of all FunctionManagers in the running Group.
+  // container of all active FunctionManagers in the running Group.
   public QualifiedResourceContainer containerFMChildren = null;
+  
+  // container of all FunctionManagers in the running Group.
+  public QualifiedResourceContainer containerAllFMChildren = null;
   
   // container with the EvmTrig FunctionManager for local runs
   public QualifiedResourceContainer containerFMEvmTrig = null;

@@ -3,7 +3,9 @@ package rcms.fm.app.level1;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.StringWriter;
@@ -45,6 +47,7 @@ import rcms.fm.fw.parameter.type.ShortT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.resource.QualifiedResource;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -420,10 +423,15 @@ public class HCALxmlHandler {
     }
     return tmpAttribute;
   }
-
   // Fill parameters from MasterSnippet
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
+      parseMasterSnippet(selectedRun, CfgCVSBasePath, "") ;
+  }
+
+  // Fill parameters from MasterSnippet
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath,String PartitionName) throws UserActionException{
     try{
+        logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet. Mastersnippet file=" + selectedRun + "; PartitionName= "+PartitionName);
         // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
@@ -432,19 +440,106 @@ public class HCALxmlHandler {
         Element masterSnippetElement = masterSnippet.getDocumentElement();
 
         NodeList listOfTags = masterSnippetElement.getChildNodes();
+        String commonMasterSnippetFile = "";
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            if (listOfTags.item(i).getNodeName() == "CommonMasterSnippet") {
+              if (commonMasterSnippetFile != "") {
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Found multiple instances of CommonMasterSnippet. Only one is allowed.";
+                throw new UserActionException(errMessage);
+              }
+              commonMasterSnippetFile = ((Element)listOfTags.item(i)).getAttributes().getNamedItem("file").getNodeValue();
+            }
+          }
+        }
+        if (commonMasterSnippetFile != "") {
+          if(PartitionName==""){
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
+          }else{
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + " for Partition="+PartitionName+" .");
+          }
+          this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,PartitionName);
+          logger.info("[HCAL " + functionManager.FMname + "]: Done parsing the common mastersnippet. Continue to parse the main one.");
+        }
+
+        //Validate partition attribute input if LV1 is parsing the mastersnippet
+        if (!functionManager.containerFMChildren.isEmpty()){
+          //Masked FM children should be valid input. Use containerAllFMChildren instead of containerFMChildren
+          List<QualifiedResource> allFMlists = functionManager.containerAllFMChildren.getQualifiedResourceList();
+          ArrayList<String> ValidPartitionNames  = new ArrayList<String>();
+          for (QualifiedResource FMqr: allFMlists){
+            // FM name = HCAL_PartitionName
+            ValidPartitionNames.add(FMqr.getName().substring(5));
+            ValidPartitionNames.add(FMqr.getName());
+          }
+
+          for(int i =0;i< listOfTags.getLength();i++){
+            if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+              Element iElement = (Element) listOfTags.item(i);
+              if(iElement.hasAttribute("Partition")){
+                String ElementName      = iElement.getNodeName();
+                String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+                String[] ElementPartitionArray = ElementPartition.split(";");
+                for(String partitionName:ElementPartitionArray){
+                  if(! ValidPartitionNames.contains(partitionName)){
+                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid Partition="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
+                    functionManager.goToError(errMessage);
+                  }
+                }
+                if(ElementName.equals("CfgScript")){
+                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found Partition attribute in CfgScript. This is not allowed. Please try to set the same partition-specific setting via snippet." ;
+                    functionManager.goToError(errMessage);
+                }
+              }
+            }
+          }
+        }
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            Element iElement = (Element) listOfTags.item(i);
+            //Remove the partition attributed elements if we are parsing for all partition
+            if(PartitionName=="" && iElement.hasAttribute("Partition")){
+              iElement.getParentNode().removeChild(iElement);
+              logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is partition specific.");
+            }
+            if(PartitionName!=""){
+               //Remove the non-partition elements if we are parsing for some partition
+               if(!iElement.hasAttribute("Partition")){
+                  iElement.getParentNode().removeChild(iElement);
+                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is not partition specific.");
+               }
+               //Remove the partition elements that are for other partitions
+               if(iElement.hasAttribute("Partition")){
+                  String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+                  if(!ElementPartition.contains(PartitionName)){
+                    iElement.getParentNode().removeChild(iElement);
+                    logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+ElementPartition+" do not contain "+PartitionName);
+                  }
+               }
+            }
+          }
+        }
+        masterSnippet.getDocumentElement().normalize();
+
         for(int i =0;i< listOfTags.getLength();i++){
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
             Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
-            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName = "+ iTagName );
-
+            
             if(isValidTag){
               if (iTagName == "FMParameter") {
                 SetHCALFMParameter(iElement);
               } else {
-                NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-                SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                //Parse all parameters if no PartitionName is specified
+                if(!iElement.hasAttribute("Partition") ){
+                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with no partition attribute");
+                }
+                else{
+                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with partition= "+PartitionName);
+                }
+                  NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+                  SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
               }
             }
           }
