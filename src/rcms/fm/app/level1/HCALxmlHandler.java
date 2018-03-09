@@ -97,7 +97,7 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
+        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/userXML.xsd"));
       }
       catch (SAXException e) {
         throw e;
@@ -109,6 +109,7 @@ public class HCALxmlHandler {
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       validator.validate(new SAXSource(inputSource));
+      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
       logger.debug("[HCAL " + functionManager.FMname + "]: formatted the userXML.");
@@ -117,7 +118,44 @@ public class HCALxmlHandler {
     catch (SAXException | DOMException | ParserConfigurationException | IOException e ) {
       SAXParseException casted = (SAXParseException) e;
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
-      errMessage += ("\nGrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      errMessage += ("\nuserXML is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      logger.error(errMessage);
+      throw new UserActionException(errMessage);
+    }
+  }
+
+
+  public Element parseGrandmaster(String grandmasterString) throws UserActionException {
+    try {
+      Schema schema;
+      try {
+        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
+      }
+      catch (SAXException e) {
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
+        throw new UserActionException(errMessage);
+      }
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
+      docBuilder = docBuilderFactory.newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader("<grandmaster>" + grandmasterString + "</grandmaster>"));
+      validator.validate(new SAXSource(inputSource));
+      inputSource.setCharacterStream(new StringReader("<grandmaster>" + grandmasterString + "</grandmaster>"));
+      Document hcalGrandmaster = docBuilder.parse(inputSource);
+      hcalGrandmaster.getDocumentElement().normalize();
+      logger.debug("[HCAL " + functionManager.FMname + "]: formatted the grandmaster.");
+      return hcalGrandmaster.getDocumentElement();
+    }  
+    catch (SAXException e) {
+      SAXParseException casted = (SAXParseException) e;
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the grandmaster: " + e.getMessage();
+      errMessage += ("\ngrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      throw new UserActionException(errMessage);
+    }
+    catch (DOMException | ParserConfigurationException | IOException e ) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster: " + e.getMessage();
       logger.error(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -136,31 +174,29 @@ public class HCALxmlHandler {
   }
 
   // Get userXML from a CfgCVS path
-  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
+  public Element getHCALgrandmaster(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
-      // return the userXML
+      // return the grandmaster
       File grandMaster = new File(CfgCVSBasePath+fileName+"/pro");
-      String userXmlString ="";
+      String grandmasterString ="";
       if (grandMaster.exists()){
-        userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
+        try {
+          grandmasterString = new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro")));
+        }
+        catch (IOException e) {
+          throw new UserActionException(e.getMessage());
+        }
       }
       else{
         String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandMaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
         throw new UserActionException(errMessage);
         //functionManager.goToError(errMessage);
       }
-      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
-      docBuilder = docBuilderFactory.newDocumentBuilder();
-      InputSource inputSource = new InputSource();
-      inputSource.setCharacterStream(new StringReader(userXmlString));
-      Document hcalUserXML = docBuilder.parse(inputSource);
-      hcalUserXML.getDocumentElement().normalize();
-      return hcalUserXML.getDocumentElement();
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the grandmaster :"+ grandmasterString);
+      return parseGrandmaster(grandmasterString);
     }
-    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      SAXParseException casted = (SAXParseException) e;
+    catch (UserActionException e) {
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
-      errMessage += ("\nGrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -169,25 +205,25 @@ public class HCALxmlHandler {
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML = null;
+      Element hcalXML = null;
     try {
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
       }
     }
     catch(UserActionException e){
       throw e;
     }
     try{
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
-          return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tagName).equals(null)) {
+        if (hcalXML.getElementsByTagName(tagName).getLength()==1) {
+          return hcalXML.getElementsByTagName(tagName).item(0).getTextContent();
         }
         else {
-          String errMessage = (hcalUserXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
+          String errMessage = (hcalXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
           throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
         }
       }
@@ -196,21 +232,21 @@ public class HCALxmlHandler {
     catch (UserActionException e) {throw e;}
   }
 
-  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
+  public String getNamedXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML=null;
+      Element hcalXML=null;
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
       }
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
-          NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tag).equals(null)) {
+        if (hcalXML.getElementsByTagName(tag).getLength()!=0) {
+          NodeList nodes = hcalXML.getElementsByTagName(tag); 
           logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
             logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
