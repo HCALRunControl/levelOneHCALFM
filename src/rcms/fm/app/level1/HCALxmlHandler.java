@@ -102,7 +102,7 @@ public class HCALxmlHandler {
   }
 
   // Get userXML from a CfgCVS path
-  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
+  public Element getHCALgrandmaster(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
       // return the userXML
       File grandMaster = new File(CfgCVSBasePath+fileName+"/pro");
@@ -133,25 +133,25 @@ public class HCALxmlHandler {
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML = null;
+      Element hcalXML = null;
     try {
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
       }
     }
     catch(UserActionException e){
       throw e;
     }
     try{
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
-          return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tagName).equals(null)) {
+        if (hcalXML.getElementsByTagName(tagName).getLength()==1) {
+          return hcalXML.getElementsByTagName(tagName).item(0).getTextContent();
         }
         else {
-          String errMessage = (hcalUserXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
+          String errMessage = (hcalXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
           throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
         }
       }
@@ -160,21 +160,21 @@ public class HCALxmlHandler {
     catch (UserActionException e) {throw e;}
   }
 
-  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
+  public String getNamedXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML=null;
+      Element hcalXML=null;
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
       }
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
-          NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tag).equals(null)) {
+        if (hcalXML.getElementsByTagName(tag).getLength()!=0) {
+          NodeList nodes = hcalXML.getElementsByTagName(tag); 
           logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
             logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
