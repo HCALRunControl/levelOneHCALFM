@@ -118,7 +118,7 @@ public class HCALxmlHandler {
     catch (SAXException | DOMException | ParserConfigurationException | IOException e ) {
       SAXParseException casted = (SAXParseException) e;
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
-      errMessage += ("\nuserXML is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      errMessage += (" userXML is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
       logger.error(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -151,7 +151,7 @@ public class HCALxmlHandler {
     catch (SAXException e) {
       SAXParseException casted = (SAXParseException) e;
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the grandmaster: " + e.getMessage();
-      errMessage += ("\ngrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      errMessage += (" Grandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
       throw new UserActionException(errMessage);
     }
     catch (DOMException | ParserConfigurationException | IOException e ) {
@@ -196,7 +196,7 @@ public class HCALxmlHandler {
       return parseGrandmaster(grandmasterString);
     }
     catch (UserActionException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster: " + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
