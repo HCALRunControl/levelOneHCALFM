@@ -88,10 +88,10 @@ function updatePage() {
       if (currentState != cachedState) {
         setStateColors();
         if (currentState == "Initial") {
-            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+            $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').show();
         }
         else {
-            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+            $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').hide();
         }
         if (currentState == "Configured") {
           $('#Destroy').hide();
@@ -165,8 +165,8 @@ function setProgress(parName, progress) {
 }
 
 function mirrorSelection() {
-    $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
-    $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
+    $('#LOCAL_RUNKEY_SELECTED').val($('#dropdown option:selected').text());
+    $('#MASTERSNIPPET_SELECTED').val($('#dropdown option:selected').val());
     //$('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
     if ($('#dropdown option:selected').attr("eventsToTake") != "default") {
       $('#newNUMBER_OF_EVENTScheckbox :checkbox').click();
@@ -175,8 +175,8 @@ function mirrorSelection() {
 }
 
 function checkCheckboxes() {
-    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
-    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
+    $('#newLOCAL_RUNKEY_SELECTEDcheckbox :checkbox').prop('checked', true);
+    $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').prop('checked', true);
     $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
 }
 
@@ -185,9 +185,9 @@ function undisable(paramNumber) {
     $(parameterInputBoxID).removeAttr("disabled");
 }
 function clickboxes() {
-    if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
-        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
-        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
+    if ($('#newLOCAL_RUNKEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
+        $('#newLOCAL_RUNKEY_SELECTEDcheckbox :checkbox').click();
+        $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').click();
         $('#newMASKED_RESOURCEScheckbox :checkbox').click();
         $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
     }
@@ -219,7 +219,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
           dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ "' ";
 
-        if (localRunKeysArray[i] != $("#CFGSNIPPET_KEY_SELECTED").val()) {
+        if (localRunKeysArray[i] != $("#LOCAL_RUNKEY_SELECTED").val()) {
           dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
         }
         else {
@@ -228,10 +228,10 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
-    var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
-    var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
-    var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
-    var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
+    var cfgSnippetKeyNumber = $('#LOCAL_RUNKEY_SELECTED').attr("name").substring(20);
+    var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'LOCAL_RUNKEY_SELECTED'";
+    var masterSnippetNumber = $('#MASTERSNIPPET_SELECTED').attr("name").substring(20);
+    var masterSnippetArgs = "'" + masterSnippetNumber + "', 'MASTERSNIPPET_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
     var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition(); fillDriverID(); makeAutoconfigureButton(); displaySetButtonForEvents('runkey');";
@@ -312,20 +312,20 @@ function hidecheckboxes() {
     var currentState = $('#currentState').text();
     if (currentState == "Initial") {
         $('#runkeySelection').show();
-        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
-        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+        $('#newLOCAL_RUNKEY_SELECTEDcheckbox :checkbox').show();
+        $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').show();
     }
     else {
         $('#runkeySelection').hide();
-        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
-        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+        $('#newLOCAL_RUNKEY_SELECTEDcheckbox :checkbox').hide();
+        $('#newMASTERSNIPPET_SELECTEDcheckbox :checkbox').hide();
     }
 }
 
 function hideinitializebutton() {
     var button = $('#commandSection :input')
     button.each(function () {
-        if ($('#CFGSNIPPET_KEY_SELECTED').val() == "not set") {
+        if ($('#LOCAL_RUNKEY_SELECTED').val() == "not set") {
             button.hide();
         }
         else {
@@ -336,7 +336,7 @@ function hideinitializebutton() {
 
 
 function hidelocalparams() {
-    if ($('#CFGSNIPPET_KEY_SELECTED').val().indexOf("global") !== -1) {
+    if ($('#LOCAL_RUNKEY_SELECTED').val().indexOf("global") !== -1) {
         $('#newNUMBER_OF_EVENTScheckbox').parent().hide();
         $('#newHCAL_EVENTSTAKEN').parent().hide();
     }
@@ -355,9 +355,9 @@ function moveversionnumber() {
       maskSummary = maskSummary.replace("\]","");
       maskSummary = maskSummary.replace(/,/g, ", ");
       if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
       $("#runNumber").text($("#RUN_NUMBER").val());
-      $("#runKey").text($("#CFGSNIPPET_KEY_SELECTED").val());
+      $("#runKey").text($("#LOCAL_RUNKEY_SELECTED").val());
     }
 
 function setupMaskingPanels() {
@@ -486,7 +486,7 @@ function makeIcons() {
 }
 
 function displaySetButtonForEvents(runkeyOrCheckbox) {
-  if($("#newCFGSNIPPET_KEY_SELECTEDcheckbox > input").is(":checked")) {
+  if($("#newLOCAL_RUNKEY_SELECTEDcheckbox > input").is(":checked")) {
     $("#setEventsButton").val("Set number of events and local run key");
   }
   if (runkeyOrCheckbox == "runkey") {
@@ -506,18 +506,18 @@ function hcalOnLoad() {
   moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     setStateColors();
-    removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
-    removeduplicatecheckbox('RUN_CONFIG_SELECTED');
+    removeduplicatecheckbox('LOCAL_RUNKEY_SELECTED');
+    removeduplicatecheckbox('MASTERSNIPPET_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
     removeduplicatecheckbox('MASK_SUMMARY');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
     removeduplicatecheckbox('SINGLEPARTITION_MODE');
-    copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
-    makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
-    copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
-    makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
+    copyContents(LOCAL_RUNKEY_SELECTED, newLOCAL_RUNKEY_SELECTED);
+    makecheckbox('newLOCAL_RUNKEY_SELECTEDcheckbox', 'LOCAL_RUNKEY_SELECTED');
+    copyContents(MASTERSNIPPET_SELECTED, newMASTERSNIPPET_SELECTED);
+    makecheckbox('newMASTERSNIPPET_SELECTEDcheckbox', 'MASTERSNIPPET_SELECTED');
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(MASK_SUMMARY, newMASK_SUMMARY);
@@ -537,8 +537,8 @@ function hcalOnLoad() {
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
-    hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
-    hideduplicatefield('RUN_CONFIG_SELECTED');
+    hideduplicatefield('LOCAL_RUNKEY_SELECTED');
+    hideduplicatefield('MASTERSNIPPET_SELECTED');
     hideduplicatefield('MASKED_RESOURCES');
     hideduplicatefield('MASK_SUMMARY');
     hideduplicatefield('NUMBER_OF_EVENTS');
@@ -550,7 +550,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
-    makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
+    makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
     setupMaskingPanels();

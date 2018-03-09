@@ -96,7 +96,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     {
       String theGrandmaster = "";
       try {
-        theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
+        // TODO FIXME the line below should eventually be replaced by the one below it, once the configs' userXMLs get updated 
+        theGrandmaster=xmlHandler.getHCALuserXMLelementContent("MasterSnippetList",false);
+        //theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
       }
       catch (UserActionException e) {
         logger.error(e.getMessage()); 
@@ -170,7 +172,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
 
       if(grandmaster!=""){
-        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("LocalRunkey");
+        // TODO FIXME: the line below should be replaced by the one below it once the grandmasters are updated
+        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("RunConfig");
+        //NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("LocalRunkey");
         for (int i=0; i < nodes.getLength(); i++) {
           //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
           //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
@@ -215,7 +219,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
 
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCALRUNKEYS",LocalRunKeys));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCAL_RUNKEYS",LocalRunKeys));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP" ,LocalRunKeyMap));
       
     }
