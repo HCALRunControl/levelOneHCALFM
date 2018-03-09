@@ -101,7 +101,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       catch (UserActionException e) {
         logger.error(e.getMessage()); 
         //functionManager.goToError("[HCAL LV1] Cannot find  \"MasterSnippetList\" tag in LV1 FM's userXML. Example: %lt MasterSnippetList %gt Filename %lt /MasterSnippetList %gt");
-        functionManager.goToError("[HCAL LV1] Cannot find  \"MasterSnippetList\" tag in LV1 FM's userXML. Example: <MasterSnippetList>Filename</MasterSnippetList>");
+        functionManager.goToError("[HCAL LV1] Cannot find  \"MasterSnippetList\" tag in LV1 FM's userXML. Example: <tt>&lt;MasterSnippetList&gt;Filename&lt;/MasterSnippetList&gt;</tt>. Reason: " + e.getMessage());
       }
       if (!theMasterSnippetList.equals("")) {
         logger.info("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);

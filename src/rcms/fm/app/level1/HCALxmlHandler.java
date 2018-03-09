@@ -11,22 +11,32 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import rcms.fm.fw.user.UserActionException;
 
@@ -58,6 +68,8 @@ public class HCALxmlHandler {
 
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
+  private DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+  private SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
   public DocumentBuilder docBuilder;
   public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter","DQM_TASK"};
 
@@ -68,19 +80,44 @@ public class HCALxmlHandler {
     logger.warn("Done constructing xmlHandler.");
   }
 
+  static class HCALxmlErrorHandler implements ErrorHandler {
+    public void fatalError( SAXParseException e )
+       throws SAXException {
+      throw e;
+    }
+    public void error( SAXParseException e ) throws SAXException {
+      throw e;
+    }
+    public void warning( SAXParseException e ) throws SAXException {
+      throw e;
+    }
+  }
   
-  public Element parseHCALuserXML(String userXMLstring) throws UserActionException {
+  public Element parseHCALuserXML(String userXMLstring) throws UserActionException, SAXException {
     try {
-    docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      Schema schema;
+      try {
+        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
+      }
+      catch (SAXException e) {
+        throw e;
+      }
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
+      validator.validate(new SAXSource(inputSource));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
       logger.debug("[HCAL " + functionManager.FMname + "]: formatted the userXML.");
       return hcalUserXML.getDocumentElement();
     }  
-    catch (DOMException | SAXException | ParserConfigurationException | IOException e ) {
+    catch (SAXException | DOMException | ParserConfigurationException | IOException e ) {
+      SAXParseException casted = (SAXParseException) e;
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      errMessage += ("\nGrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
       logger.error(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -93,8 +130,8 @@ public class HCALxmlHandler {
       logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML.");
       return parseHCALuserXML(userXmlString);
     }
-    catch (UserActionException e) {
-      throw e;
+    catch (SAXException | UserActionException e) {
+      throw new UserActionException(e.getMessage());
     }
   }
 
@@ -113,7 +150,7 @@ public class HCALxmlHandler {
         //functionManager.goToError(errMessage);
       }
       logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(userXmlString));
       Document hcalUserXML = docBuilder.parse(inputSource);
@@ -121,7 +158,9 @@ public class HCALxmlHandler {
       return hcalUserXML.getDocumentElement();
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster snippet:" + e.getMessage();
+      SAXParseException casted = (SAXParseException) e;
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      errMessage += ("\nGrandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -215,7 +254,7 @@ public class HCALxmlHandler {
 
       // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
 
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
@@ -305,7 +344,7 @@ public class HCALxmlHandler {
     try {
 
       //System.out.println(execXMLstring);
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
@@ -350,7 +389,7 @@ public class HCALxmlHandler {
     try {
       String newExecXMLstring = "";
 
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
@@ -388,7 +427,7 @@ public class HCALxmlHandler {
     String TagContent ="";
     try{
         // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
@@ -407,7 +446,7 @@ public class HCALxmlHandler {
   public String getHCALMasterSnippetTagAttribute(String selectedRun, String CfgCVSBasePath, String TagName,String attribute) throws UserActionException{
     String tmpAttribute ="";
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
@@ -425,7 +464,7 @@ public class HCALxmlHandler {
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
     try{
         // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
         
         masterSnippet.getDocumentElement().normalize();
@@ -767,3 +806,4 @@ public class HCALxmlHandler {
       return new String(encoded, encoding);
    }  
 }
+
