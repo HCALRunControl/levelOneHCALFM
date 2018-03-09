@@ -92,21 +92,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
     }
 
-    // Get the MasterSnippetList in the userXML
+    // Get the grandmaster in the userXML
     {
-      String theMasterSnippetList = "";
+      String theGrandmaster = "";
       try {
-        theMasterSnippetList=xmlHandler.getHCALuserXMLelementContent("MasterSnippetList",false);
+        theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
       }
       catch (UserActionException e) {
         logger.error(e.getMessage()); 
-        //functionManager.goToError("[HCAL LV1] Cannot find  \"MasterSnippetList\" tag in LV1 FM's userXML. Example: %lt MasterSnippetList %gt Filename %lt /MasterSnippetList %gt");
-        functionManager.goToError("[HCAL LV1] Cannot find  \"MasterSnippetList\" tag in LV1 FM's userXML. Example: <tt>&lt;MasterSnippetList&gt;Filename&lt;/MasterSnippetList&gt;</tt>. Reason: " + e.getMessage());
+        //functionManager.goToError("[HCAL LV1] Cannot find  \"grandmaster\" tag in LV1 FM's userXML. Example: %lt grandmaster %gt Filename %lt /grandmaster %gt");
+        functionManager.goToError("[HCAL LV1] Cannot find  \"grandmaster\" tag in LV1 FM's userXML. Example: <tt>&lt;grandmaster&gt;Filename&lt;/grandmaster&gt;</tt>. Reason: " + e.getMessage());
       }
-      if (!theMasterSnippetList.equals("")) {
-        logger.info("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);
+      if (!theGrandmaster.equals("")) {
+        logger.info("[HCAL " + functionManager.FMname + "] The grandmaster for this FM is " + theGrandmaster);
       }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_MASTERSNIPPETLIST",new StringT(theMasterSnippetList)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_GRANDMASTER",new StringT(theGrandmaster)));
     }
     // Get the RunSequenceName from the userXML
     {
@@ -167,10 +167,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       VectorT<StringT> LocalRunKeys = new VectorT<StringT>();
 
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
 
-      if(MasterSnippetList!=""){
-        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
+      if(grandmaster!=""){
+        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("RunConfig");
         for (int i=0; i < nodes.getLength(); i++) {
           //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
           //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());

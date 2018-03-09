@@ -188,7 +188,7 @@ public class HCALxmlHandler {
         }
       }
       else{
-        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandMaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
+        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandmaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
         throw new UserActionException(errMessage);
         //functionManager.goToError(errMessage);
       }
@@ -204,14 +204,14 @@ public class HCALxmlHandler {
 
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
       Element hcalXML = null;
     try {
       if (!isGrandMaster){
         hcalXML = getHCALuserXML();
       }
       else{
-        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,grandmaster);
       }
     }
     catch(UserActionException e){
@@ -236,13 +236,13 @@ public class HCALxmlHandler {
     try {
       boolean foundTheRequestedNamedElement = false;
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
       Element hcalXML=null;
       if (!isGrandMaster){
         hcalXML = getHCALuserXML();
       }
       else{
-        hcalXML = getHCALgrandmaster(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,grandmaster);
       }
       if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tag).equals(null)) {
         if (hcalXML.getElementsByTagName(tag).getLength()!=0) {
