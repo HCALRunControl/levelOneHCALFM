@@ -358,21 +358,11 @@ public class HCALxmlHandler {
           }
         }
 
-        DOMSource domSource = new DOMSource(execXML);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-        newExecXMLstring = writer.toString();
-        newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-        //logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
+        newExecXMLstring = domSourceToString(new DOMSource(execXML));
       }
       return newExecXMLstring;
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
@@ -388,7 +378,6 @@ public class HCALxmlHandler {
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
-      DOMSource domSource = new DOMSource(execXML);
 
       Element stateListenerContext = execXML.createElement("xc:Context");
       //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
@@ -406,18 +395,10 @@ public class HCALxmlHandler {
         execXML.getDocumentElement().appendChild(stateListenerContext);
       }
 
-      StringWriter writer = new StringWriter();
-      StreamResult result = new StreamResult(writer);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-      transformer.transform(domSource, result);
-      newExecXMLstring = writer.toString();
-      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-      return newExecXMLstring;
+      DOMSource domSource = new DOMSource(execXML);
+      return domSourceToString(domSource);
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
     }
@@ -433,7 +414,6 @@ public class HCALxmlHandler {
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
-      DOMSource domSource = new DOMSource(execXML);
 
       // add the magical attribute to the Endpoints
       NodeList xcEndpointNodes = execXML.getDocumentElement().getElementsByTagName("xc:Endpoint");
@@ -443,18 +423,10 @@ public class HCALxmlHandler {
         currentEndpointElement.setAttribute("connectOnRequest", "true");
       }
 
-      StringWriter writer = new StringWriter();
-      StreamResult result = new StreamResult(writer);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-      transformer.transform(domSource, result);
-      newExecXMLstring = writer.toString();
-      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-      return newExecXMLstring;
+      DOMSource domSource = new DOMSource(execXML);
+      return domSourceToString(domSource);
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: setUTCPConnectOnRequest(): Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: setUTCPConnectOnRequest(): Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
@@ -936,5 +908,24 @@ public class HCALxmlHandler {
       byte[] encoded = Files.readAllBytes(Paths.get(path));
       return new String(encoded, encoding);
    }  
+
+  private static String domSourceToString(DOMSource domSource) throws UserActionException {
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        try {
+          Transformer transformer = tf.newTransformer();
+          transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+          transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+          transformer.transform(domSource, result);
+        }
+        catch (TransformerException e) {
+          // TODO Auto-generated catch block
+          throw new UserActionException(e.getMessage());
+        }
+        String theString = writer.toString();
+        theString = theString.replaceAll("(?m)^[ \t]*\r?\n", "");
+        return theString;
+  }
 }
 
