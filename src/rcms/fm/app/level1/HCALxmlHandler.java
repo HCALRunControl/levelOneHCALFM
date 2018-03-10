@@ -176,7 +176,7 @@ public class HCALxmlHandler {
     }
   }
 
-  // Get userXML from a CfgCVS path
+  // Get grandmaster from a CfgCVS path
   public Element getHCALgrandmaster(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
       // return the grandmaster
