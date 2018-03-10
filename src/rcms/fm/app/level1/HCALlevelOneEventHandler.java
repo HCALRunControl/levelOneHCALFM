@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import java.lang.Math;
 import java.lang.Integer;
 
@@ -417,8 +421,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
+      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
       pSet.put(new CommandParameter<StringT>("MASTERSNIPPET_SELECTED", new StringT(MastersnippetSelected)));
       pSet.put(new CommandParameter<StringT>("LOCAL_RUNKEY_SELECTED", new StringT(LocalRunkeySelected)));
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", LocalRunKeyMap));
+
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
 
@@ -761,26 +769,16 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
 
-      // Try to find a common masterSnippet from MasterSnippet
-      String CommonMasterSnippetFile ="";
+      // Parse MasterSnippet
       try{
-        String TagName="CommonMasterSnippet";
-        String attribute="file";
-        CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(mastersnippet,CfgCVSBasePath,TagName,attribute);
+        //Parse common+main mastersnippet to pick up all-partition settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
       }
       catch(UserActionException e){
-        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
-        functionManager.goToError(e.getMessage());
+        String errMessage = "[HCAL LVL1"+functionManager.FMname+"]: Failed to parse mastersnippets:";
+        functionManager.goToError(errMessage,e);
+        return;
       }
-
-      if(!CommonMasterSnippetFile.equals("")){    
-          //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
-      }
-      //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ mastersnippet);
-      xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath);
       //Append CfgScript from runkey (if any)
       StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
@@ -788,7 +786,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
         StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
         
-        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ mastersnippet+" and it looks like this "+RunkeyCfgScript);
+        logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
       }
 
@@ -937,29 +935,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("TPG_KEY"                , new StringT(TpgKey)));
       pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
       pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT"         , new StringT(FullCfgScript)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(TTCciControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(LTCControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("SINGLEPARTITION_MODE"  , new BooleanT(isSinglePartition)));
-      // Only send the one to be used by LV2,so that run info will be consistent
-      if(isSinglePartition){
-        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_SINGLE"       , new StringT(ICIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_SINGLE"        , new StringT(PIControlSequence)));
-      }
-      else{
-        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_MULTI"       , new StringT(ICIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_MULTI"        , new StringT(PIControlSequence)));
-        pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"             , new StringT(LPMControlSequence)));
-      }
       pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED"         , new BooleanT(ClockChanged)));
       pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER" , new BooleanT(UseResetForRecover)));
-      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(PIControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS"      , new BooleanT(UsePrimaryTCDS)));
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
-      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
-      pSet.put(new CommandParameter<StringT>("DQM_TASK"               , new StringT(DQMtask)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -983,10 +965,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
-          SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
-          PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
-          configureTaskSeq.addLast(fmChildrenTask);
+
+          //Sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs properties
+          TreeMap<Integer, ArrayList<FunctionManager> > priorityFMmap= getConfigPriorities(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+
+          for (Map.Entry<Integer, ArrayList<FunctionManager> > entry: priorityFMmap.entrySet()){
+            Integer                        thisPriority = entry.getKey();
+            ArrayList<FunctionManager> thisPriorityFMs  = entry.getValue();
+          
+            logger.info("[HCAL LVL1 " + functionManager.FMname +"] configPriority ="+thisPriority+" has the following FMs");
+            QualifiedResourceContainer thisPriorityFMContainer = new QualifiedResourceContainer(thisPriorityFMs);
+            PrintQRnames(thisPriorityFMContainer);
+            SimpleTask thisPriorityTask   = new SimpleTask(thisPriorityFMContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring normalFMs with priority"+thisPriority);
+            configureTaskSeq.addLast(thisPriorityTask);
+          }
         }
         // 3) configure EvmTrig FM last 
         // NOTE: Emptyness check is important to support global run
@@ -1751,6 +1743,49 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     return false;
   }
  }
+ 
+ //Get sorted Map of ConfigPriority (1:FM1,FM2, 2:FM3,FM4) from the LV2FMs. The QRC must contain LV2 FM QualifiedResource
+ public TreeMap<Integer, ArrayList<FunctionManager> > getConfigPriorities(QualifiedResourceContainer LV2FMs){
+  //TreeMap by default sorts accending order with keys
+  TreeMap<Integer, ArrayList<FunctionManager> > configPriorityMap  = new TreeMap<Integer, ArrayList<FunctionManager> >();
+  Set<Integer> configMapKeys = configPriorityMap.keySet();
+  Integer defaultPriority = 99;
+  ArrayList<FunctionManager> defaultFMlist = new ArrayList<FunctionManager>();
+
+  for(QualifiedResource LV2FM : LV2FMs.getQualifiedResourceList()){
+    try{
+      Integer thisConfigPriority = Integer.parseInt(getProperty(LV2FM,"configPriority"));
+      if (!configMapKeys.contains(thisConfigPriority)){
+        //New configPriority,
+        ArrayList<FunctionManager> FMlist = new ArrayList<FunctionManager>();
+        FMlist.add((FunctionManager) LV2FM);
+        configPriorityMap.put(thisConfigPriority,FMlist);
+      }else{
+        //Existing configPriority, append FM name to this priority
+        ArrayList<FunctionManager> FMlist = configPriorityMap.get(thisConfigPriority);
+        FMlist.add((FunctionManager) LV2FM);
+        configPriorityMap.put(thisConfigPriority,FMlist);
+      }
+    }
+    catch(Exception e){
+      defaultFMlist.add((FunctionManager) LV2FM);
+    }
+  }
+  //Lump all FMs without ConfigPriority property into Last priority
+  if( !configPriorityMap.isEmpty()){
+    Integer lastPriority = configPriorityMap.lastKey();
+    ArrayList<FunctionManager> lastPriorityFMlist = configPriorityMap.get(lastPriority);
+    lastPriorityFMlist.addAll(defaultFMlist);
+    configPriorityMap.put(lastPriority, lastPriorityFMlist);
+  }
+  else{
+    //Lump all FMs without ConfigPriority property into default priority if no FM has configPriority
+    configPriorityMap.put(defaultPriority, defaultFMlist);
+  }
+
+  return configPriorityMap;
+ }
+
 }
 
 

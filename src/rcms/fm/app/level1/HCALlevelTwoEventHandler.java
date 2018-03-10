@@ -17,6 +17,7 @@ import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
@@ -265,14 +266,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.parameterSender.start();
       }
 
-  
-      if (parameterSet.get("MASTERSNIPPET_SELECTED") != null) {
-        String MastersnippetSelected = ((StringT)parameterSet.get("MASTERSNIPPET_SELECTED").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASTERSNIPPET_SELECTED",new StringT(MastersnippetSelected)));
+
+      //Receive selected runkey name, mastersnippet file name, runkey map from LV1 
+      CheckAndSetParameter( parameterSet, "MASTERSNIPPET_SELECTED");
+      CheckAndSetParameter( parameterSet, "LOCAL_RUNKEY_SELECTED");
+      //TODO: Extend checkAndSetParameter for MapT<?>
+      if( parameterSet.get("LOCAL_RUNKEY_MAP") != null){
+        MapT<MapT<StringT>> localRunkeyMap = ((MapT<MapT<StringT>>)parameterSet.get("LOCAL_RUNKEY_MAP").getValue());
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received local runkey map: "+localRunkeyMap.toString());
+        functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", localRunkeyMap));
       }
-      else {
-        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive the user-selected mastersnippet.";
-        logger.warn(warnMessage);
+      else{
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive LOCAL_RUNKEY_MAP during initAction");
       }
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -452,109 +457,48 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive any parameters during ConfigureAction! Check if LV1 sends any.");
       }
       else {
-        // Determine the run type from the configure command
-        if (parameterSet.get("HCAL_RUN_TYPE") != null) {
-          RunType = ((StringT)parameterSet.get("HCAL_RUN_TYPE").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a run type ...\nThis is OK for e.g. CASTOR LVL2 FMs directly connected to the CDAQ LVL0 FM";
-          logger.warn(warnMessage);
-        }
+        try{
+          // Determine the run type from the configure command
+          CheckAndSetParameter(       parameterSet, "HCAL_RUN_TYPE" );
+          CheckAndSetParameter(       parameterSet, "RUN_KEY");
+          CheckAndSetTargetParameter( parameterSet, "RUN_KEY" ,"CONFIGURED_WITH_RUN_KEY",true);
 
-        // get the run key from the configure command
-        if (parameterSet.get("RUN_KEY") != null) {
-          RunKey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_KEY",new StringT(RunKey)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_RUN_KEY",new StringT(RunKey)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a run key.\nThis is probably OK for normal HCAL LVL2 operations ...";
-          logger.warn(warnMessage);
-        }
+          // Check and receive TPG key
+          CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
 
-        // get the tpg key from the configure command
-        if (parameterSet.get("TPG_KEY") != null) {
-          TpgKey = ((StringT)parameterSet.get("TPG_KEY").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_TPG_KEY",new StringT(TpgKey)));
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Received a L1 TPG key: " + TpgKey;
-          logger.warn(warnMessage);
-        }
-        else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a L1 TPG key.\nThis is only OK for HCAL local run operations ...";
-          logger.warn(warnMessage);
-        }
-
-        // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
-        ClockChanged = false;
-        if (parameterSet.get("CLOCK_CHANGED") != null) {
-          ClockChanged = ((BooleanT)parameterSet.get("CLOCK_CHANGED").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("CLOCK_CHANGED",new BooleanT(ClockChanged)));
+          // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
+          ClockChanged = false;
+          CheckAndSetParameter(       parameterSet, "CLOCK_CHANGED" );
+          ClockChanged = ((BooleanT)functionManager.getHCALparameterSet().get("CLOCK_CHANGED").getValue()).getBoolean();
           if (ClockChanged) {
-            logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did receive a request to perform special actions due to central CMS clock source change during the configureAction().\nThe ClockChange is: " + ClockChanged);
+            logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did receive a request to perform special actions due to central CMS clock source change during the configureAction().");
           }
-          else {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a request to perform special actions due to central CMS clock source change during the configureAction().\nThe ClockChange is: " + ClockChanged);
-          }
+          UseResetForRecover = true;
+          CheckAndSetParameter( parameterSet, "USE_RESET_FOR_RECOVER");
 
-        }
-        else {
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Did not receive any request to perform special actions due to a central CMS clock source change during the configureAction().\nThis is (probably) OK for HCAL local runs.\nFor CASTOR in global runs this might be a problem ...");
-        }
+          UsePrimaryTCDS = true;
+          CheckAndSetParameter( parameterSet, "USE_PRIMARY_TCDS");
 
-        UseResetForRecover = true;
-        if (parameterSet.get("USE_RESET_FOR_RECOVER") != null) {
-          UseResetForRecover = ((BooleanT)parameterSet.get("USE_RESET_FOR_RECOVER").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_RESET_FOR_RECOVER", new BooleanT(UseResetForRecover)));
-        }
+          // get the supervisor error from the lvl1 
+          SupervisorError = "not set";
+          CheckAndSetParameter( parameterSet, "SUPERVISOR_ERROR");
 
-        UsePrimaryTCDS = true;
-        if (parameterSet.get("USE_PRIMARY_TCDS") != null) {
-          UsePrimaryTCDS=((BooleanT)parameterSet.get("USE_PRIMARY_TCDS").getValue()).getBoolean();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
+          // get the FED list from the configure command in global run
+          CheckAndSetParameter(       parameterSet, "FED_ENABLE_MASK");
+          CheckAndSetTargetParameter( parameterSet, "FED_ENABLE_MASK" ,"CONFIGURED_WITH_FED_ENABLE_MASK",true);
+        }
+        catch (UserActionException e){
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
+          logger.error(warnMessage);
         }
 
-        // get the supervisor error from the lvl1 
-        SupervisorError = "not set";
-        if (parameterSet.get("SUPERVISOR_ERROR") != null) {
-          SupervisorError = ((StringT)parameterSet.get("SUPERVISOR_ERROR").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
-        }
-
-        // get the FED list from the configure command in global run
-        if (parameterSet.get("FED_ENABLE_MASK") != null) {
-          FedEnableMask = ((StringT)parameterSet.get("FED_ENABLE_MASK").getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
-
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction(). Here it is:\n "+ FedEnableMask);
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
-        }
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         try{
-          CheckAndSetParameter( parameterSet , "HCAL_RUNINFOPUBLISH" );
           CheckAndSetParameter( parameterSet , "OFFICIAL_RUN_NUMBERS");
           CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
-          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      ,false);
-          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   ,false);
-          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     ,false);
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
-          CheckAndSetParameter( parameterSet , "DQM_TASK");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
-          // Only set the parameter being used so that RunInfo will be clear
-          if(isSinglePartition){
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      ,false);
-          }
-          else{
-            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     ,false);
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      ,false);
-          }
         }
         catch (UserActionException e){
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
@@ -562,25 +506,46 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // Fill the local variable with the value received from LV1
+      // Parse the mastersnippet 
+      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      // Reset HCAL_CFGSCRIPT:
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
+      // Parse MasterSnippet
+      try{
+        //Parse common+main mastersnippet to pick up all-partition settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
+        //Parse common+main mastersnippet for partition specific settings
+        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
+      }
+      catch(UserActionException e){
+        String errMessage = "[HCAL LVL2"+functionManager.FMname+"]: Failed to parse mastersnippets:";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
+
+      //Append CfgScript from runkey (if any)
+      StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
+      if (LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"))!=null){
+        StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
+        StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));
+        
+        logger.info("[HCAL LVL2 "+ functionManager.FMname +"] Adding Runkey CfgScript from this runkey: "+ runkeyName.getString()+" and it looks like this "+RunkeyCfgScript);
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",MasterSnippetCfgScript.concat(RunkeyCfgScript)));
+      }
+
+      //Put Mastersnippet results into local variables to be sent to supervisor
+      FullCfgScript               = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      FedEnableMask               = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK"    ).getValue()).getString();
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
       String LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       if(isSinglePartition){
-        //KKH: Set ICIControl from userXML if it is not empty
-        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath);
-        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
       }
       else{
-        //KKH: Set ICIControl from userXML if it is not empty
-        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
-          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath);
-        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
       }

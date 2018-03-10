@@ -59,6 +59,7 @@ import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
@@ -681,12 +682,15 @@ public class HCALEventHandler extends UserEventHandler {
     // Get list of childFMs from QG
     List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
     functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    functionManager.containerAllFMChildren = new QualifiedResourceContainer(childFMs);
     // Fill containerFMchildren with Active FMs only
     List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
     functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
 
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    //Empty the container if LPM FM is masked
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(functionManager.containerFMTCDSLPM.getActiveQRList());
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
 
@@ -1218,7 +1222,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
-                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
                 functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
                 //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
@@ -1255,7 +1259,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
@@ -2612,52 +2616,83 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
   
-  // Function to receive parameter
+  // Function to receive parameter and set to same parameter
+  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+    CheckAndSetTargetParameter(pSet,PamName, PamName,printResult);
+  }
   void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
-    CheckAndSetParameter(pSet,PamName,true);
+    CheckAndSetTargetParameter(pSet,PamName, PamName,true);
   }
 
-  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+
+  // Function to receive parameter and set to other parameter
+  void CheckAndSetTargetParameter(ParameterSet pSet , String InputPamName, String TargetPamName, boolean printResult) throws UserActionException{
     String inputString = getUserFunctionManager().getLastInput().getInputString();
 
-    if( pSet.get(PamName) != null){
-      if (pSet.get(PamName).getType().equals(StringT.class)){
-        String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
-        }
-      }
-      if (pSet.get(PamName).getType().equals(IntegerT.class)){
-        Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+    if( pSet.get(InputPamName) != null){
+      if (pSet.get(InputPamName).getType().equals(StringT.class)){
+        String PamValue = ((StringT)pSet.get(InputPamName).getValue()).getString();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(TargetPamName, new StringT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }else{
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
-      if (pSet.get(PamName).getType().equals(BooleanT.class)){
-        Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+      if (pSet.get(InputPamName).getType().equals(IntegerT.class)){
+        Integer PamValue = ((IntegerT)pSet.get(InputPamName).getValue()).getInteger();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(TargetPamName, new IntegerT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
         }
         else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
+        }
+      }
+      if (pSet.get(InputPamName).getType().equals(BooleanT.class)){
+        Boolean PamValue = ((BooleanT)pSet.get(InputPamName).getValue()).getBoolean();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(TargetPamName, new BooleanT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }
+        else{
+           String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
     }
     else{
-      String errMessage =" Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled";
+      String errMessage =" Did not receive "+ InputPamName +" from last input= "+inputString+" ! Please check if "+ InputPamName+ " was filled";
       logger.warn(errMessage);
       throw new UserActionException(errMessage);
     }
   }
+  // Print of the names of the QR in an arrayList
+  void PrintQRnames(List<QualifiedResource> qrlist){
+    QualifiedResourceContainer qrc = new QualifiedResourceContainer(qrlist);
+    PrintQRnames(qrc);
+  }
+
   // Print of the names of the QR in a QRContainer 
   void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
@@ -2744,5 +2779,25 @@ public class HCALEventHandler extends UserEventHandler {
         qr.setInitialized(true);
       }
     }
-  } 
+  }
+
+  // Get property from a QR
+  public String getProperty(QualifiedResource QR,  String name ) throws Exception {
+
+    List<ConfigProperty> propertiesList = QR.getResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+    ConfigProperty property = null;
+    Iterator<ConfigProperty> iter = propertiesList.iterator();
+    while(iter.hasNext()) {
+      property = iter.next();
+      if(property.getName().equals(name)) {
+        return property.getValue();
+      }
+    }
+    throw new Exception("Property "+name+" not found");
+  }
+
 }
