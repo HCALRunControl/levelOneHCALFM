@@ -772,7 +772,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Parse MasterSnippet
       try{
         //Parse common+main mastersnippet to pick up all-partition settings
-        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
+        xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath,"");
       }
       catch(UserActionException e){
         String errMessage = "[HCAL LVL1"+functionManager.FMname+"]: Failed to parse mastersnippets:";
