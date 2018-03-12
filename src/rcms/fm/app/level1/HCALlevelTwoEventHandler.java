@@ -507,7 +507,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // Parse the mastersnippet 
-      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
+      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("MASTERSNIPPET_SELECTED").getValue()).getString();
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
