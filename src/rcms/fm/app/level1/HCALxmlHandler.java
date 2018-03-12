@@ -102,7 +102,7 @@ public class HCALxmlHandler {
       try {
         //schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/userXML.xsd"));
         // TODO move this to cfgCVS
-        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/testuserXML.xsd"));
+        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/test/userXML.xsd"));
       }
       catch (SAXException e) {
         throw e;
