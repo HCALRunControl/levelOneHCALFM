@@ -100,7 +100,9 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/userXML.xsd"));
+        //schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/userXML.xsd"));
+        // TODO move this to cfgCVS
+        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/testuserXML.xsd"));
       }
       catch (SAXException e) {
         throw e;
@@ -132,7 +134,9 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
+        //schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
+        //TODO: add this to CfgCVS
+        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/test/grandmaster.xsd"));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
