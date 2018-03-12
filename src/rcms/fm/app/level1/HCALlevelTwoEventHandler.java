@@ -507,16 +507,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // Parse the mastersnippet 
-      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("MASTERSNIPPET_SELECTED").getValue()).getString();
+      String mastersnippet       = ((StringT)functionManager.getHCALparameterSet().get("MASTERSNIPPET_SELECTED").getValue()).getString();
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
       // Parse MasterSnippet
       try{
         //Parse common+main mastersnippet to pick up all-partition settings
-        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
+        xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath,"");
         //Parse common+main mastersnippet for partition specific settings
-        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
+        xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath,functionManager.FMpartition);
       }
       catch(UserActionException e){
         String errMessage = "[HCAL LVL2"+functionManager.FMname+"]: Failed to parse mastersnippets:";
