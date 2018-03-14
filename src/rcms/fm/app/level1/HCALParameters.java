@@ -85,10 +85,19 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_RUN_TYPE"                    ,  new StringT("local")      ) );  // Run type -- local or global
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_COMMENT"                     ,  new StringT("")           ) );  // User-input comment
-		this.put( new FunctionManagerParameter<MapT<MapT<StringT>>>  ("LOCAL_RUNKEY_MAP"     ,  new MapT<MapT<StringT>>()));    // Local run types available
-		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCAL_RUNKEYS"  ,  new VectorT<StringT>()    ) );  // List of local run keys
-		this.put( new FunctionManagerParameter<StringT>  ("MASTERSNIPPET_SELECTED"           ,  new StringT("not set")    ) );  // User selected mastersnippet
-		this.put( new FunctionManagerParameter<StringT>  ("LOCAL_RUNKEY_SELECTED"            ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user (aka Mastersnippet file)
+		this.put( new FunctionManagerParameter<MapT<MapT<StringT>>>  ("LOCAL_RUNKEY_MAP"     ,  new MapT<MapT<StringT>>() ) );  /* Local run types available. This parameter gets represented as JSON in the GUI.
+		                                                                                                                           The JSON looks like:
+		                                                                                                                            { "LocalRunKeyName1" : { "LocalRunkeyAttribute1" : "attribute1Value", 
+		                                                                                                                                                       ... , 
+		                                                                                                                                                     "LocalRunkeyAttributeN" : "attributeNValue" },
+		                                                                                                                               ... ,
+		                                                                                                                              "LocalRunkeyNameN" : {  ...                                        }  
+		                                                                                                                             } 
+                                                                                                                            */
+		                                                                                                                        // //Local run types available: {"LocalRunKeyName"  : { "LocalRunkeyAttribute1" : "attribute1Value", ... , "LocalRunkeyAttributeN" : "attributeValueN"}}
+		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCAL_RUNKEYS"  ,  new VectorT<StringT>()    ) );  // Ordered list of local run key names, the keys of LOCAL_RUNKEY_MAP
+		this.put( new FunctionManagerParameter<StringT>  ("MASTERSNIPPET_SELECTED"           ,  new StringT("not set")    ) );  // User selected mastersnippet filename
+		this.put( new FunctionManagerParameter<StringT>  ("LOCAL_RUNKEY_SELECTED"            ,  new StringT("not set")    ) );  // Key name for the local run key selected by the user
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
 		this.put( new FunctionManagerParameter<StringT>  ("LPM_SUPERVISOR"                   ,  new StringT("")           ) );  // Supervisor configuring the LPM
 		this.put( new FunctionManagerParameter<StringT>  ("EVM_TRIG_FM"                      ,  new StringT("")           ) );  // Function manager doing eventbuilding and triggeradapting duties
