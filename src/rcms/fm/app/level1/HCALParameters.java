@@ -25,7 +25,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT","DRIVER_IDENTIFIER"};
+	private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT","DRIVER_IDENTIFIER"};
 
 	private HCALParameters() {
 		super();
@@ -68,18 +68,18 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL_SINGLE"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI in single Partition mode
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL_MULTI"             ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI in multi-partition mode
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TIME_OF_FM_START"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Date and time of when FM was initialized
-		this.put( new FunctionManagerParameter<IntegerT> ("INITIALIZED_WITH_SID"            ,  new IntegerT(-1)       ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  SID on initialize
+		this.put( new FunctionManagerParameter<IntegerT> ("INITIALIZED_WITH_SID"            ,  new IntegerT(-1)        ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  SID on initialize
 		this.put( new FunctionManagerParameter<StringT>  ("INITIALIZED_WITH_GLOBAL_CONF_KEY" ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Current global configuration key
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_RUN_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Global configuration key at last configure
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_TPG_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Trigger key at last configure
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_FED_ENABLE_MASK"  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  FED enable mask at last configure
-		this.put( new FunctionManagerParameter<StringT>  ("DQM_TASK"                         ,  new StringT("pedestal") , FunctionManagerParameter.Exported.READONLY) );  // Used for Local Run to specify which DQM task to be run on this run 
+		this.put( new FunctionManagerParameter<StringT>  ("DQM_TASK"                         ,  new StringT("pedestal"), FunctionManagerParameter.Exported.READONLY) );  // Used for Local Run to specify which DQM task to be run on this run 
 
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_PRIMARY_TCDS"                 ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using the secondary TCDS system
-		this.put( new FunctionManagerParameter<BooleanT> ("HCAL_RUNINFOPUBLISH"              ,  new BooleanT(true)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for publishing RunInfo 
-		this.put( new FunctionManagerParameter<BooleanT> ("OFFICIAL_RUN_NUMBERS"             ,  new BooleanT(true)    ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using official Run number 
+		this.put( new FunctionManagerParameter<BooleanT> ("HCAL_RUNINFOPUBLISH"              ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for publishing RunInfo 
+		this.put( new FunctionManagerParameter<BooleanT> ("OFFICIAL_RUN_NUMBERS"             ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using official Run number 
 
-    // User editable parameters. These can also be dictated by the level0
+		// User editable parameters. These can also be dictated by the level0
 		this.put( new FunctionManagerParameter<IntegerT> ("RUN_NUMBER"                       ,  new IntegerT(0)           ) );  // Current run number
 		this.put( new FunctionManagerParameter<IntegerT> ("NUMBER_OF_EVENTS"                 ,  new IntegerT(1000)        ) );  // Requested number of events for local runs
 
@@ -93,8 +93,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		                                                                                                                               ... ,
 		                                                                                                                              "LocalRunkeyNameN" : {  ...                                        }  
 		                                                                                                                            } 
-                                                                                                                            */
-		                                                                                                                        // //Local run types available: {"LocalRunKeyName"  : { "LocalRunkeyAttribute1" : "attribute1Value", ... , "LocalRunkeyAttributeN" : "attributeValueN"}}
+		                                                                                                                        */
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCAL_RUNKEYS"  ,  new VectorT<StringT>()    ) );  // Ordered list of local run key names, the keys of LOCAL_RUNKEY_MAP
 		this.put( new FunctionManagerParameter<StringT>  ("MASTERSNIPPET_SELECTED"           ,  new StringT("not set")    ) );  // User selected mastersnippet filename
 		this.put( new FunctionManagerParameter<StringT>  ("LOCAL_RUNKEY_SELECTED"            ,  new StringT("not set")    ) );  // Key name for the local run key selected by the user
@@ -128,13 +127,13 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	}
 
 	public synchronized HCALParameters getClonedParameterSet() { 
-    HCALParameters cloned = new HCALParameters();
+		HCALParameters cloned = new HCALParameters();
 		for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
 			if (pair.getValue() instanceof FunctionManagerParameter) {
 				cloned.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
 			}
 		}
-	  return cloned;
+		return cloned;
 	}
 
 	public synchronized ParameterSet<FunctionManagerParameter> getChanged( ParameterSet<FunctionManagerParameter> earlier) {
