@@ -92,7 +92,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		                                                                                                                                                     "LocalRunkeyAttributeN" : "attributeNValue" },
 		                                                                                                                               ... ,
 		                                                                                                                              "LocalRunkeyNameN" : {  ...                                        }  
-		                                                                                                                             } 
+		                                                                                                                            } 
                                                                                                                             */
 		                                                                                                                        // //Local run types available: {"LocalRunKeyName"  : { "LocalRunkeyAttribute1" : "attribute1Value", ... , "LocalRunkeyAttributeN" : "attributeValueN"}}
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCAL_RUNKEYS"  ,  new VectorT<StringT>()    ) );  // Ordered list of local run key names, the keys of LOCAL_RUNKEY_MAP
