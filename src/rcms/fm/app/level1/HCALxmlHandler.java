@@ -98,6 +98,9 @@ public class HCALxmlHandler {
   
   public Element parseHCALuserXML(String userXMLstring) throws UserActionException, SAXException {
     try {
+      // TODO: maybe invent a better way to get the xsd so that userXML can be validated
+      //       however for now don't bother using a validator on the userXML
+      /*
       Schema schema;
       try {
         // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
@@ -109,13 +112,14 @@ public class HCALxmlHandler {
       catch (SAXException e) {
         throw e;
       }
-      Validator validator = schema.newValidator();
-      docBuilderFactory.setSchema(schema);
-      validator.setErrorHandler(new HCALxmlErrorHandler());
+      */
+      //Validator validator = schema.newValidator();
+      //docBuilderFactory.setSchema(schema);
+      //validator.setErrorHandler(new HCALxmlErrorHandler());
       docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
-      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
-      validator.validate(new SAXSource(inputSource));
+      //inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
+      //validator.validate(new SAXSource(inputSource));
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
