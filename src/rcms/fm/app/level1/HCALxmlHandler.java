@@ -102,7 +102,7 @@ public class HCALxmlHandler {
       try {
         // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
         String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd"));
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
       }
       catch (SAXException e) {
         throw e;
@@ -136,7 +136,7 @@ public class HCALxmlHandler {
       try {
         //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
         String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd"));
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd/pro"));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
