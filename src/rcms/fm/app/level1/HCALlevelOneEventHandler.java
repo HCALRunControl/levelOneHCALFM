@@ -101,8 +101,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String theGrandmaster = "";
       try {
         // TODO FIXME the line below should eventually be replaced by the one below it, once the configs' userXMLs get updated 
-        theGrandmaster=xmlHandler.getHCALuserXMLelementContent("MasterSnippetList",false);
-        //theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
+        //theGrandmaster=xmlHandler.getHCALuserXMLelementContent("MasterSnippetList",false);
+        theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
       }
       catch (UserActionException e) {
         logger.error(e.getMessage()); 
@@ -177,8 +177,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if(grandmaster!=""){
         // TODO FIXME: the line below should be replaced by the one below it once the grandmasters are updated
-        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("RunConfig");
-        //NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("LocalRunkey");
+        //NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("RunConfig");
+        NodeList nodes = xmlHandler.getHCALgrandmaster(CfgCVSBasePath,grandmaster).getElementsByTagName("LocalRunkey");
         for (int i=0; i < nodes.getLength(); i++) {
           //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
           //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
