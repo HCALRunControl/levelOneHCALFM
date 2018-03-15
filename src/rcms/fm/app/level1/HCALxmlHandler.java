@@ -101,8 +101,10 @@ public class HCALxmlHandler {
       Schema schema;
       try {
         // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
+        //String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        //schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
+        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/cvs/RevHistory/Master/userXML.xsd/pro"));
+
       }
       catch (SAXException e) {
         throw e;
