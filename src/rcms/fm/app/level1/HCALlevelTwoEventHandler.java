@@ -268,16 +268,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
 
       //Receive selected runkey name, mastersnippet file name, runkey map from LV1 
-      CheckAndSetParameter( parameterSet, "RUN_CONFIG_SELECTED");
-      CheckAndSetParameter( parameterSet, "CFGSNIPPET_KEY_SELECTED");
+      CheckAndSetParameter( parameterSet, "MASTERSNIPPET_SELECTED");
+      CheckAndSetParameter( parameterSet, "LOCAL_RUNKEY_SELECTED");
       //TODO: Extend checkAndSetParameter for MapT<?>
-      if( parameterSet.get("AVAILABLE_RUN_CONFIGS") != null){
-        MapT<MapT<StringT>> localRunkeyMap = ((MapT<MapT<StringT>>)parameterSet.get("AVAILABLE_RUN_CONFIGS").getValue());
+      if( parameterSet.get("LOCAL_RUNKEY_MAP") != null){
+        MapT<MapT<StringT>> localRunkeyMap = ((MapT<MapT<StringT>>)parameterSet.get("LOCAL_RUNKEY_MAP").getValue());
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received local runkey map: "+localRunkeyMap.toString());
-        functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS", localRunkeyMap));
+        functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", localRunkeyMap));
       }
       else{
-        logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive AVAILABLE_RUN_CONFIGS during initAction");
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive LOCAL_RUNKEY_MAP during initAction");
       }
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -507,16 +507,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // Parse the mastersnippet 
-      String selectedRun       = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
+      String mastersnippet       = ((StringT)functionManager.getHCALparameterSet().get("MASTERSNIPPET_SELECTED").getValue()).getString();
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       // Reset HCAL_CFGSCRIPT:
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
       // Parse MasterSnippet
       try{
         //Parse common+main mastersnippet to pick up all-partition settings
-        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,"");
+        xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath,"");
         //Parse common+main mastersnippet for partition specific settings
-        xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,functionManager.FMpartition);
+        xmlHandler.parseMasterSnippet(mastersnippet,CfgCVSBasePath,functionManager.FMpartition);
       }
       catch(UserActionException e){
         String errMessage = "[HCAL LVL2"+functionManager.FMname+"]: Failed to parse mastersnippets:";
@@ -525,8 +525,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       //Append CfgScript from runkey (if any)
-      StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
-      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+      StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
+      MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
       if (LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"))!=null){
         StringT MasterSnippetCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue());
         StringT RunkeyCfgScript        = LocalRunKeyMap.get(runkeyName).get(new StringT("CfgToAppend"));

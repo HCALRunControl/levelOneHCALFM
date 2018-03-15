@@ -13,22 +13,32 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import rcms.fm.fw.user.UserActionException;
 
@@ -61,6 +71,8 @@ public class HCALxmlHandler {
 
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
+  private DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+  private SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
   public DocumentBuilder docBuilder;
   public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter","DQM_TASK"};
 
@@ -71,19 +83,86 @@ public class HCALxmlHandler {
     logger.warn("Done constructing xmlHandler.");
   }
 
+  static class HCALxmlErrorHandler implements ErrorHandler {
+    public void fatalError( SAXParseException e )
+       throws SAXException {
+      throw e;
+    }
+    public void error( SAXParseException e ) throws SAXException {
+      throw e;
+    }
+    public void warning( SAXParseException e ) throws SAXException {
+      throw e;
+    }
+  }
   
-  public Element parseHCALuserXML(String userXMLstring) throws UserActionException {
+  public Element parseHCALuserXML(String userXMLstring) throws UserActionException, SAXException {
     try {
-    docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      Schema schema;
+      try {
+        // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
+        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
+      }
+      catch (SAXException e) {
+        throw e;
+      }
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
+      validator.validate(new SAXSource(inputSource));
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
       logger.debug("[HCAL " + functionManager.FMname + "]: formatted the userXML.");
       return hcalUserXML.getDocumentElement();
     }  
-    catch (DOMException | SAXException | ParserConfigurationException | IOException e ) {
+    catch (SAXException | DOMException | ParserConfigurationException | IOException e ) {
+      SAXParseException casted = (SAXParseException) e;
       String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      errMessage += (" userXML is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      logger.error(errMessage);
+      throw new UserActionException(errMessage);
+    }
+  }
+
+
+  public Element parseGrandmaster(String grandmasterString) throws UserActionException {
+    try {
+      Schema schema;
+      try {
+        //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
+        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd/pro"));
+      }
+      catch (SAXException e) {
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
+        throw new UserActionException(errMessage);
+      }
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
+      docBuilder = docBuilderFactory.newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader("<grandmaster>" + grandmasterString + "</grandmaster>"));
+      validator.validate(new SAXSource(inputSource));
+      inputSource.setCharacterStream(new StringReader("<grandmaster>" + grandmasterString + "</grandmaster>"));
+      Document hcalGrandmaster = docBuilder.parse(inputSource);
+      hcalGrandmaster.getDocumentElement().normalize();
+      logger.debug("[HCAL " + functionManager.FMname + "]: formatted the grandmaster.");
+      return hcalGrandmaster.getDocumentElement();
+    }  
+    catch (SAXException e) {
+      SAXParseException casted = (SAXParseException) e;
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the grandmaster: " + e.getMessage();
+      errMessage += (" Grandmaster is not well-formed at line " + casted.getLineNumber() + ", column " +  casted.getColumnNumber());
+      throw new UserActionException(errMessage);
+    }
+    catch (DOMException | ParserConfigurationException | IOException e ) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster: " + e.getMessage();
       logger.error(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -96,35 +175,35 @@ public class HCALxmlHandler {
       logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML.");
       return parseHCALuserXML(userXmlString);
     }
-    catch (UserActionException e) {
-      throw e;
+    catch (SAXException | UserActionException e) {
+      throw new UserActionException(e.getMessage());
     }
   }
 
-  // Get userXML from a CfgCVS path
-  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
+  // Get grandmaster from a CfgCVS path
+  public Element getHCALgrandmaster(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
-      // return the userXML
+      // return the grandmaster
       File grandMaster = new File(CfgCVSBasePath+fileName+"/pro");
-      String userXmlString ="";
+      String grandmasterString ="";
       if (grandMaster.exists()){
-        userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
+        try {
+          grandmasterString = new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro")));
+        }
+        catch (IOException e) {
+          throw new UserActionException(e.getMessage());
+        }
       }
       else{
-        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandMaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
+        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandmaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
         throw new UserActionException(errMessage);
         //functionManager.goToError(errMessage);
       }
-      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      InputSource inputSource = new InputSource();
-      inputSource.setCharacterStream(new StringReader(userXmlString));
-      Document hcalUserXML = docBuilder.parse(inputSource);
-      hcalUserXML.getDocumentElement().normalize();
-      return hcalUserXML.getDocumentElement();
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the grandmaster :"+ grandmasterString);
+      return parseGrandmaster(grandmasterString);
     }
-    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster snippet:" + e.getMessage();
+    catch (UserActionException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster: " + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -132,26 +211,26 @@ public class HCALxmlHandler {
 
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML = null;
+      String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
+      Element hcalXML = null;
     try {
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,grandmaster);
       }
     }
     catch(UserActionException e){
       throw e;
     }
     try{
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
-          return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tagName).equals(null)) {
+        if (hcalXML.getElementsByTagName(tagName).getLength()==1) {
+          return hcalXML.getElementsByTagName(tagName).item(0).getTextContent();
         }
         else {
-          String errMessage = (hcalUserXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
+          String errMessage = (hcalXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
           throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
         }
       }
@@ -160,21 +239,21 @@ public class HCALxmlHandler {
     catch (UserActionException e) {throw e;}
   }
 
-  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
+  public String getNamedXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
-      Element hcalUserXML=null;
+      String grandmaster = ((StringT) functionManager.getHCALparameterSet().get("HCAL_GRANDMASTER").getValue()).getString();
+      Element hcalXML=null;
       if (!isGrandMaster){
-        hcalUserXML = getHCALuserXML();
+        hcalXML = getHCALuserXML();
       }
       else{
-        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        hcalXML = getHCALgrandmaster(CfgCVSBasePath,grandmaster);
       }
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
-          NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
+      if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tag).equals(null)) {
+        if (hcalXML.getElementsByTagName(tag).getLength()!=0) {
+          NodeList nodes = hcalXML.getElementsByTagName(tag); 
           logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
             logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
@@ -218,7 +297,7 @@ public class HCALxmlHandler {
 
       // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
 
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
@@ -283,21 +362,11 @@ public class HCALxmlHandler {
           }
         }
 
-        DOMSource domSource = new DOMSource(execXML);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-        newExecXMLstring = writer.toString();
-        newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-        //logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
+        newExecXMLstring = domSourceToString(new DOMSource(execXML));
       }
       return newExecXMLstring;
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
@@ -308,12 +377,11 @@ public class HCALxmlHandler {
     try {
 
       //System.out.println(execXMLstring);
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
-      DOMSource domSource = new DOMSource(execXML);
 
       Element stateListenerContext = execXML.createElement("xc:Context");
       //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
@@ -331,18 +399,10 @@ public class HCALxmlHandler {
         execXML.getDocumentElement().appendChild(stateListenerContext);
       }
 
-      StringWriter writer = new StringWriter();
-      StreamResult result = new StreamResult(writer);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-      transformer.transform(domSource, result);
-      newExecXMLstring = writer.toString();
-      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-      return newExecXMLstring;
+      DOMSource domSource = new DOMSource(execXML);
+      return domSourceToString(domSource);
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
     }
@@ -353,12 +413,11 @@ public class HCALxmlHandler {
     try {
       String newExecXMLstring = "";
 
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
-      DOMSource domSource = new DOMSource(execXML);
 
       // add the magical attribute to the Endpoints
       NodeList xcEndpointNodes = execXML.getDocumentElement().getElementsByTagName("xc:Endpoint");
@@ -368,18 +427,10 @@ public class HCALxmlHandler {
         currentEndpointElement.setAttribute("connectOnRequest", "true");
       }
 
-      StringWriter writer = new StringWriter();
-      StreamResult result = new StreamResult(writer);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-      transformer.transform(domSource, result);
-      newExecXMLstring = writer.toString();
-      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-      return newExecXMLstring;
+      DOMSource domSource = new DOMSource(execXML);
+      return domSourceToString(domSource);
     }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+    catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: setUTCPConnectOnRequest(): Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: setUTCPConnectOnRequest(): Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
@@ -391,7 +442,7 @@ public class HCALxmlHandler {
     String TagContent ="";
     try{
         // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
@@ -410,7 +461,7 @@ public class HCALxmlHandler {
   public String getHCALMasterSnippetTagAttribute(String selectedRun, String CfgCVSBasePath, String TagName,String attribute) throws UserActionException{
     String tmpAttribute ="";
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
@@ -433,7 +484,7 @@ public class HCALxmlHandler {
     try{
         logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet. Mastersnippet file=" + selectedRun + "; PartitionName= "+PartitionName);
         // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        docBuilder = docBuilderFactory.newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
         
         masterSnippet.getDocumentElement().normalize();
@@ -861,4 +912,24 @@ public class HCALxmlHandler {
       byte[] encoded = Files.readAllBytes(Paths.get(path));
       return new String(encoded, encoding);
    }  
+
+  private static String domSourceToString(DOMSource domSource) throws UserActionException {
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        try {
+          Transformer transformer = tf.newTransformer();
+          transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+          transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+          transformer.transform(domSource, result);
+        }
+        catch (TransformerException e) {
+          // TODO Auto-generated catch block
+          throw new UserActionException(e.getMessage());
+        }
+        String theString = writer.toString();
+        theString = theString.replaceAll("(?m)^[ \t]*\r?\n", "");
+        return theString;
+  }
 }
+
