@@ -100,9 +100,9 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        //schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/userXML.xsd"));
-        // TODO move this to cfgCVS
-        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/test/userXML.xsd"));
+        // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
+        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd"));
       }
       catch (SAXException e) {
         throw e;
@@ -134,9 +134,9 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        //schema = schemaFactory.newSchema(new File("/home/daqowner/TriDAS/levelOneHCALFM/test/grandmaster.xsd"));
-        //TODO: add this to CfgCVS
-        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/tmp/test/grandmaster.xsd"));
+        //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
+        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd"));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
