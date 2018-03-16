@@ -379,9 +379,7 @@ public class HCALxmlHandler {
   }  
 
   public String addStateListenerContext(String execXMLstring, String rcmsStateListenerURL) throws UserActionException{
-    String newExecXMLstring = "";
     try {
-
       //System.out.println(execXMLstring);
       docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
@@ -417,8 +415,6 @@ public class HCALxmlHandler {
 
   public String setUTCPConnectOnRequest(String execXMLstring) throws UserActionException{
     try {
-      String newExecXMLstring = "";
-
       docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
@@ -857,7 +853,6 @@ public class HCALxmlHandler {
   }
   public String getTagTextContent(NodeList inputlist, String TagName) throws UserActionException{  
     String TagContent = "";
-    boolean HasUniqueTag = false;
     //Return empty string if we do not have a unique Tag in mastersnippet. 
     if( !hasUniqueTag(inputlist,TagName) ){
       return TagContent;

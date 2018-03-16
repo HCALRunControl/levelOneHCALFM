@@ -158,7 +158,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
         StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
-        List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
         for (StringT MaskedApplication : MaskedResourceArray) {
           //String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
           //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
@@ -437,12 +436,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
      
       String CfgCVSBasePath           = "not set";
-      String LVL1CfgScript            = "not set";
-      String LVL1TTCciControlSequence = "not set";
-      String LVL1LTCControlSequence   = "not set";
-      String LVL1TCDSControlSequence   = "not set";
-      String LVL1LPMControlSequence   = "not set";
-      String LVL1PIControlSequence = "not set";
+
       // Set the default value everytime we configure
       boolean isSinglePartition   = false; 
       String ICIControlSequence   = "not set";
@@ -1533,10 +1527,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("preparingTestMode")));
 
-      String LVL1CfgScript            = "not set";
-      String LVL1TTCciControlSequence = "not set";
-      String LVL1LTCControlSequence   = "not set";
-
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
@@ -1560,9 +1550,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
-      String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
-      String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
-      
 
       // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
       // KKH: resurrect this if you want to fix prepareTTStestmode

@@ -951,8 +951,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
 
 
-        Boolean needtowait = false;
-
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 

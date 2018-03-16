@@ -1694,9 +1694,6 @@ public class HCALEventHandler extends UserEventHandler {
     // parse FED mask
     String[] FedValueArray = FedEnableMask.split("%");
 
-    // list of misparsed FEDs
-    String errorFEDs = "";
-
     for ( int j=0 ; j<FedValueArray.length ; j++) {
       logger.debug("[HCAL " + functionManager.FMname + "] FED_ENABLE_MASK parsing: testing " + FedValueArray[j]);
 
@@ -2161,8 +2158,6 @@ public class HCALEventHandler extends UserEventHandler {
       int icount = 0;
       while ((stopHCALSupervisorWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         icount++;
-        Date now = Calendar.getInstance().getTime();
-
         // poll HCAL supervisor status in the Configuring/Configured/Running/RunningDegraded states every 5 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
         if (icount%5==0) {
           if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) ||
@@ -2180,8 +2175,6 @@ public class HCALEventHandler extends UserEventHandler {
               String status   = "undefined";
               String stateName   = "undefined";
               String progressFromSupervisor = "undefined";
-              String taname   = "undefined";
-
               // ask for the status of the HCAL supervisor
               for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
                 try {
@@ -2267,8 +2260,6 @@ public class HCALEventHandler extends UserEventHandler {
       int icount = 0;
       while ((stopTriggerAdapterWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         icount++;
-        Date now = Calendar.getInstance().getTime();
-
         // poll TriggerAdapter status every 1 sec
         if (icount%1==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
@@ -2431,6 +2422,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       stopAlarmerWatchThread = false;
       try {
+        @SuppressWarnings("unused")
         URL alarmerURL = new URL(functionManager.alarmerURL);
       } catch (MalformedURLException e) {
         // in case the URL is bogus, just don't run the thread
@@ -2440,8 +2432,6 @@ public class HCALEventHandler extends UserEventHandler {
 
       // poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
-        Date now = Calendar.getInstance().getTime();
-
         FMstate = functionManager.getState().getStateString();
         if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
