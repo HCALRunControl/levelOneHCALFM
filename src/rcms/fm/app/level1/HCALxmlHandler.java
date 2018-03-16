@@ -78,9 +78,9 @@ public class HCALxmlHandler {
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
-    logger.warn("Constructing xmlHandler.");
+    logger.info("Constructing xmlHandler.");
     this.functionManager = parentFunctionManager;
-    logger.warn("Done constructing xmlHandler.");
+    logger.info("Done constructing xmlHandler.");
   }
 
   static class HCALxmlErrorHandler implements ErrorHandler {
@@ -260,23 +260,23 @@ public class HCALxmlHandler {
       if (!hcalXML.equals(null) && !hcalXML.getElementsByTagName(tag).equals(null)) {
         if (hcalXML.getElementsByTagName(tag).getLength()!=0) {
           NodeList nodes = hcalXML.getElementsByTagName(tag); 
-          logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
+          logger.info("["+ functionManager.FMname + "]: the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
-            logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
+            logger.info("[" + functionManager.FMname + "]: found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
             if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
                foundTheRequestedNamedElement = true;
                if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
                   return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
                }else{
-                  logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
+                  logger.info("["+functionManager.FMname+"] Did not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
                   String emptyString = "";
                   return emptyString;
                }
             }
           }
           if (!foundTheRequestedNamedElement) {
-            String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that name did not exist in that element. Empty String is returned.";
-            logger.warn(errMessage);
+            String errMessage = "[HCAL " + functionManager.FMname + "]: this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that name did not exist in that element. Empty String is returned.";
+            logger.info(errMessage);
             String emptyString = "";
             return emptyString;
             //throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
@@ -284,7 +284,7 @@ public class HCALxmlHandler {
         }
         else {
           //throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
-          logger.warn("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+          logger.info("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
           String emptyElement="";
           return  emptyElement;
         }
@@ -876,7 +876,7 @@ public class HCALxmlHandler {
           tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
       }
       else{
-          logger.warn("[Martin log "+functionManager.FMname+"] Did not find the attribute='"+attribute+" in tag='"+TagName+"'.");
+          logger.info("[HCAL "+functionManager.FMname+"]: Did not find the attribute='"+attribute+" in tag='"+TagName+"'.");
           return tmpAttribute;
       }
       return tmpAttribute;

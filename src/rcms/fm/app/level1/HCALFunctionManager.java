@@ -343,10 +343,10 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     destroyed = false;
 
-    logger.warn("JohnLog: about to construct HCALParameterSender.");
+    logger.info("[HCAL " + FMname + "]: about to construct HCALParameterSender.");
     this.parameterSender = new HCALParameterSender(this);
     this.parameterSender.start();
-    logger.warn("JohnLog: finished calling HCALParameterSender.start()");
+    logger.info("[HCAL " + FMname + "]: finished calling HCALParameterSender.start()");
 
     System.out.println("[HCAL " + FMname + "] createAction executed ...");
     logger.debug("[HCAL " + FMname + "] createAction executed ...");

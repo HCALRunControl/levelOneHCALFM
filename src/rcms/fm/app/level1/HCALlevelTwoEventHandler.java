@@ -102,7 +102,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "] Received the following SID from LV1 :"+ Sid) ;
         }
         else {
-          String warnMessage = "[Martin log HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
           logger.warn(warnMessage);
         }
 
@@ -145,7 +145,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if( qg.getRegistryEntry("SID") ==null){
         Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
         qg.putRegistryEntry("SID", Integer.toString(sid));
-        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+        logger.info("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
       }
       else{
         logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
@@ -717,14 +717,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
         else{
           //Destroy XDAQ() for this FM
-          logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Going to destroyXDAQ for this FM as it is masked from FED list");
+          logger.info("[HCAL LV2 "+ functionManager.FMname +"] Going to destroyXDAQ for this FM as it is masked from FED list");
           stopHCALSupervisorWatchThread = true;
           functionManager.destroyXDAQ();
           functionManager.fireEvent( HCALInputs.SETCONFIGURE );
         }
       }
       else{
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Did not receive EMPTY_FMS from LV1.");
+        logger.info("[HCAL LV2 "+ functionManager.FMname +"] Did not receive EMPTY_FMS from LV1.");
       }
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -795,7 +795,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Start EmptyFM
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Starting EmptyFM");
+        logger.info("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Starting EmptyFM");
         functionManager.fireEvent( HCALInputs.SETSTART ); 
         // set action
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1050,7 +1050,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Stop EmptyFM
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Pausing EmptyFM");
+        logger.info("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Pausing EmptyFM");
         functionManager.fireEvent( HCALInputs.SETPAUSE ); 
         // set actions
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1113,7 +1113,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Resume EmptyFM
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Resuming EmptyFM");
+        logger.info("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Resuming EmptyFM");
         functionManager.fireEvent( HCALInputs.SETRESUME ); 
         // set actions
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1235,7 +1235,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
         functionManager.goToError(errMessage);
       } 
-      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
 
       // Reset the EmptyFMs for all LV2s
@@ -1413,7 +1413,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         //Stop EmptyFM
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Stopping EmptyFM");
+        logger.info("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Stopping EmptyFM");
         functionManager.fireEvent( HCALInputs.SETCONFIGURE ); 
         // set actions
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1776,15 +1776,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
     public TTCciWatchThread(HCALFunctionManager parentFunctionManager) {
       this.logger = new RCMSLogger(HCALFunctionManager.class);
-      logger.warn("Constructing TTCciWatchThread");
+      logger.info("Constructing TTCciWatchThread");
       this.functionManager = parentFunctionManager;
-      logger.warn("Done construction TTCciWatchThread for " + functionManager.FMname + ".");
+      logger.info("Done construction TTCciWatchThread for " + functionManager.FMname + ".");
     }
     public void run() {
       while (!stopTTCciWatchThread && !functionManager.isDestroyed() && functionManager != null) {
           for (QualifiedResource ttcciControlResource : functionManager.containerTTCciControl.getApplications()) {
             XdaqApplication ttcciControl = (XdaqApplication) ttcciControlResource;
-            logger.warn("[JohnLog] " + functionManager.FMname + ": " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
+            logger.info("[HCAL " + functionManager.FMname + "]: " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
             //Poll the xdaq to issue transitions
             if (ttcciControl.refreshState().toString().equals("configured") ) {
               // Running To Stopping
@@ -1850,7 +1850,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
         } 
       }
-      logger.warn("[HCAL " + functionManager.FMname + "] ... stopping TTCci watchdog thread done.");
+      logger.info("[HCAL " + functionManager.FMname + "] ... stopping TTCci watchdog thread done.");
     }
   }
 }

@@ -1419,7 +1419,7 @@ public class HCALEventHandler extends UserEventHandler {
   // find out if all controlled EVMs are happy before stopping the run
   protected boolean isRUBuildersEmpty() {
     if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-      logger.warn("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
+      logger.info("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
     }
 
     boolean reply = true;
@@ -1487,7 +1487,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       if(!freeEvtIdsInFirstIteration .equals(freeEvtIdsValue) && freeEvtIdsInLastIteration.equals(freeEvtIdsValue )) {
         ntry++;
-        logger.warn("[HCAL " + functionManager.FMname + "] Free IDs: " + freeEvtIdsValue);
+        logger.info("[HCAL " + functionManager.FMname + "] Free IDs: " + freeEvtIdsValue);
         if(ntry == 5) {
           String errMessage = "[HCAL " + functionManager.FMname + "] EVM on URI " + app.getResource().getURI().toString() + " seems to have stopped building when not flushed.\nLast number of fre events Ids was: " + freeEvtIdsInLastIteration;
           logger.error(errMessage);
@@ -1757,7 +1757,7 @@ public class HCALEventHandler extends UserEventHandler {
           if ( FedId >= functionManager.firstHBHEaFedId && FedId <= functionManager.lastHBHEaFedId ) {
             if(!functionManager.HBHEain) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEa FED range.\nEnabling the HBHEa partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEa FED range.\nEnabling the HBHEa partition.");
               }
               functionManager.HBHEain = true;
             }
@@ -1765,7 +1765,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHBHEbFedId && FedId <= functionManager.lastHBHEbFedId ) {
             if(!functionManager.HBHEbin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEb FED range.\nEnabling the HBHEb partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEb FED range.\nEnabling the HBHEb partition.");
               }
               functionManager.HBHEbin = true;
             }
@@ -1773,7 +1773,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHBHEcFedId && FedId <= functionManager.lastHBHEcFedId ) {
             if(!functionManager.HBHEcin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEc FED range.\nEnabling the HBHEc partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEc FED range.\nEnabling the HBHEc partition.");
               }
               functionManager.HBHEcin = true;
             }
@@ -1781,7 +1781,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHFFedId && FedId <= functionManager.lastHFFedId ) {
             if(!functionManager.HFin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HF partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HF partition.");
               }
               functionManager.HFin = true;
             }
@@ -1789,7 +1789,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHOFedId && FedId <= functionManager.lastHOFedId ) {
             if(!functionManager.HOin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HO partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HO partition.");
               }
               functionManager.HOin = true;
             }
@@ -2330,7 +2330,7 @@ public class HCALEventHandler extends UserEventHandler {
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Stopping the TA ...")));
 
                   if (!SpecialFMsAreControlled) {
-                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
+                    logger.info("[HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
                     functionManager.fireEvent(HCALInputs.STOP);
                   }
 
@@ -2352,7 +2352,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       // stop the TriggerAdapter watchdog thread
       System.out.println("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-      logger.warn("[SethLog HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
+      logger.info("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
       TriggerAdapterWatchThreadList.remove(this);
     }
   }
