@@ -548,42 +548,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
 
-      // switch parsing, etc. of the zero supression HCAL CFG snippet on or off, special zero suppression handling ...
-      if (RunKey.equals("noZS") || RunKey.equals("VdM-noZS")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] The zero supression is switched off ...");
-        functionManager.useZS        = false;
-        functionManager.useSpecialZS = false;
-      }
-      else if (RunKey.equals("test-ZS") || RunKey.equals("VdM-test-ZS")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] The special zero suppression is switched on i.e. not blocked by this FM ...");
-        functionManager.useZS        = false;
-        functionManager.useSpecialZS = true;
-      }
-      else if (RunKey.equals("ZS") || RunKey.equals("VdM-ZS")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] The zero suppression is switched on i.e. not blocked by this FM ...");
-        functionManager.useZS        = true;
-        functionManager.useSpecialZS = false;
-
-      }
-      else {
-        if (!RunKey.equals("")) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Do not understand how to handle this RUN_KEY: " + RunKey + " - please check the RS3 config in use!\nPerhaps the wrong key was given by the CDAQ shifter!?";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return; }
-        }
+      if (!GlobalRunkey.equals("")) {
+        // Send an error to the L0 if it gives us a nonsense global run key, but do not go to error state.
+        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Do not understand how to handle this RUN_KEY: " + GlobalRunkey + ". HCAL does not use a global RUN_KEY.";
+        logger.error(errMessage);
+        functionManager.sendCMSError(errMessage);
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+        //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return; }
       }
 
-      // check the RUN_KEY for VdM snippets, etc. request
-      if (RunKey.equals("VdM-noZS") || RunKey.equals("VdM-test-ZS") || RunKey.equals("VdM-ZS")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Special VdM scan snippets, etc. were enabled by the RUN_KEY for this FM.\nThe RUN_KEY given is: " + RunKey);
-        functionManager.useVdMSnippet = true;
-      }
-      else {
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] No special VdM scan snippets, etc. enabled for this FM.\nThe RUN_KEY given is: " + RunKey);
-      }
 
       if (TpgKey!=null && TpgKey!="NULL") {
 

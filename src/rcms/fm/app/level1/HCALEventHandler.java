@@ -117,8 +117,8 @@ public class HCALEventHandler extends UserEventHandler {
   public Integer localeventstaken =  -1;          // TODO: what does this do?
   public String  GlobalConfKey    =  "";          // global configuration key
   public String  RunType          =  "";          // local or global
-  public String  RunKey           =  "";          // Current global run key
-  public String  CachedRunKey     =  "";          // Previous global run key
+  public String  GlobalRunkey           =  "";          // Current global run key
+  public String  CachedGlobalRunkey     =  "";          // Previous global run key
   public String  TpgKey           =  "";          // Current trigger key
   public String  CachedTpgKey     =  "";          // Previous trigger key
   public String  FedEnableMask    =  "";          // FED enable mask received from level0 on configure in global
