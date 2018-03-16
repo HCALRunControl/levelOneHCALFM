@@ -953,11 +953,6 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
 
-  // method which returns a password free string
-  protected String PasswordFree(String Input) {
-    return Input.replaceAll("PASSWORD=[A-Za-z_0-9]+\"|PASSWORD=[A-Za-z_0-9]+,|OracleDBPassword=\"[A-Za-z_0-9]+\"","here_was_something_removed_because_of_security");
-  }
-
   // establish connection to RunInfoDB - if needed
   protected void checkRunInfoDBConnection() {
     if (functionManager.HCALRunInfo == null) {
@@ -1414,108 +1409,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
   }
-
-
-  // find out if all controlled EVMs are happy before stopping the run
-  protected boolean isRUBuildersEmpty() {
-    if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
-    }
-
-    boolean reply = true;
-
-    XdaqApplication evmApp = null;
-    Iterator evmIterator = functionManager.containerEVM.getQualifiedResourceList().iterator();
-    while (evmIterator.hasNext()) {
-      evmApp = (XdaqApplication) evmIterator.next();
-
-      try {
-        waitRUBuilderToEmpty(evmApp);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Could not flush RUBuilder\nEVM URI: " + evmApp.getResource().getURI().toString();
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-        reply = false;
-      }
-    }
-    return reply;
-  }
-
-  // find out if one EVM is happy
-  private void waitRUBuilderToEmpty(XdaqApplication app) throws UserActionException {
-    if(app == null) { return; }
-    String nbEvtIdsValue;
-    String freeEvtIdsValue;
-    String freeEvtIdsInLastIteration;
-    String freeEvtIdsInFirstIteration;
-    XDAQParameter nbEvtIdsParm;
-    XDAQParameter freeEvtIdsParm;
-    int ntry = 0;
-
-    String nbEvtIdsInBuilderName = "nbEvtIdsInBuilder";
-    String freeEvtIdsName = "freeEventIdFIFOElements";
-    try {
-      nbEvtIdsParm = app.getXDAQParameter();
-      nbEvtIdsParm.select(nbEvtIdsInBuilderName);
-      nbEvtIdsValue = getValue(nbEvtIdsParm, nbEvtIdsInBuilderName);
-
-      freeEvtIdsParm = app.getXDAQParameter();
-      freeEvtIdsParm.select(freeEvtIdsName );
-      freeEvtIdsInLastIteration = getValue(freeEvtIdsParm,freeEvtIdsName);
-      freeEvtIdsInFirstIteration = freeEvtIdsInLastIteration;
-    }
-    catch (Exception e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "] RUBuilder: exception occured while getting parameter ...";
-      logger.error(errMessage, e);
-      throw new UserActionException(errMessage,e);
-    }
-
-    while(true) {
-      try {
-        Thread.sleep(10000);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Sleeping thread failed while waiting for the RU builder to flush!";
-        logger.error(errMessage, e);
-        throw new UserActionException(errMessage);
-      }
-      freeEvtIdsValue = getValue(freeEvtIdsParm,freeEvtIdsName);
-      if(nbEvtIdsValue.equals(freeEvtIdsValue)) {
-        break;
-      }
-
-      if(!freeEvtIdsInFirstIteration .equals(freeEvtIdsValue) && freeEvtIdsInLastIteration.equals(freeEvtIdsValue )) {
-        ntry++;
-        logger.info("[HCAL " + functionManager.FMname + "] Free IDs: " + freeEvtIdsValue);
-        if(ntry == 5) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] EVM on URI " + app.getResource().getURI().toString() + " seems to have stopped building when not flushed.\nLast number of fre events Ids was: " + freeEvtIdsInLastIteration;
-          logger.error(errMessage);
-          throw new UserActionException(errMessage);
-        }
-      }
-      else {
-        ntry = 0;
-      }
-      freeEvtIdsInLastIteration = freeEvtIdsValue;
-    }
-  }
-
-  private String getValue(XDAQParameter param, String s) throws UserActionException {
-    try {
-      if(param.get()) {
-        return param.getValue(s);
-      }
-      else {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Failed to get: "+ s;
-        throw new UserActionException(errMessage);
-      }
-    }
-    catch (Exception e) {
-      throw new UserActionException("[HCAL " + functionManager.FMname + "] Could not get value of: " + s,e);
-    }
-  }
-
 
   // checks if the TriggerAdapter is stopped
   protected Boolean isTriggerAdapterStopped() {
