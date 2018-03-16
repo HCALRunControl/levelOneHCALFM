@@ -93,7 +93,6 @@ public class HCALEventHandler extends UserEventHandler {
 
 
 
-  String configString  = ""; // Configuration documents for hcos
   String ConfigDoc     = "";
   String FullCfgScript = "not set";
 
@@ -215,44 +214,6 @@ public class HCALEventHandler extends UserEventHandler {
     // Destroy the FM
     super.destroy();
   }
-
-  @SuppressWarnings("unchecked")
-    // Returns the embeded String of the User XML field
-    // If not found, an empty string is returned
-    // TODO kill this and make it look at the found mastersnippet xml
-    protected String GetUserXMLElement(String elementName) {
-
-      // Get the FM's resource configuration
-      String myConfig = configString;
-      logger.debug("[HCAL base] GetUserXMLElement: looking for element " + elementName + " in : " + myConfig );
-
-      // Get element value
-      String elementValue = getXmlRscConf(myConfig, elementName);
-
-      return elementValue;
-    }
-
-  // Returns the xml string of element "ElementName"
-  // If not found, an empty string is returned
-  // TODO remove custom XML parsing and replace with something non-idiotic
-  static private String getXmlRscConf(String xmlRscConf, String elementName) {
-    String response = "";
-
-    // Check if the xmlRscConf is filled
-    if (xmlRscConf == null || xmlRscConf.equals("") ) return response;
-
-    // Check for a valid argument
-    if (elementName == null || elementName.equals("") ) return response;
-
-    int beginIndex = xmlRscConf.indexOf("<"+elementName+">") + elementName.length() + 2;
-    int endIndex   = xmlRscConf.indexOf("</"+elementName+">");
-
-    // Check if the element is available in the userXML, and if so, get the info
-    if (beginIndex >= (elementName.length() + 2)) response = xmlRscConf.substring(beginIndex, endIndex);
-
-    return response;
-  }
-
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
   //protected void getUsePrimaryTCDS(){
@@ -988,6 +949,7 @@ public class HCALEventHandler extends UserEventHandler {
       logger.error(errMessage,e);
     }
   }
+
   protected void publishGlobalParameter (String nameForDB, String parameterName){
     String globalParameterString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
     Parameter<StringT> parameter;
@@ -1006,10 +968,10 @@ public class HCALEventHandler extends UserEventHandler {
       logger.error(errMessage,e);
     }
   }
+
   protected void publishGlobalParameter (String parameterName) {
     publishGlobalParameter(parameterName, parameterName);
   }
-
 
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
@@ -2570,6 +2532,7 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException(errMessage);
     }
   }
+
   // Print of the names of the QR in an arrayList
   void PrintQRnames(List<QualifiedResource> qrlist){
     QualifiedResourceContainer qrc = new QualifiedResourceContainer(qrlist);
@@ -2682,5 +2645,4 @@ public class HCALEventHandler extends UserEventHandler {
     }
     throw new Exception("Property "+name+" not found");
   }
-
 }
