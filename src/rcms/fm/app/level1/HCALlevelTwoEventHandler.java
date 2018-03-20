@@ -1527,6 +1527,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      //String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
+      //String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
 
       // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
       // KKH: resurrect this if you want to fix prepareTTStestmode
