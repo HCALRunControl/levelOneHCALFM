@@ -2,17 +2,23 @@ package rcms.fm.app.level1;
  
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.List;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.stateFormat.StateNotification;
 import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.TaskSequence;
+import rcms.fm.resource.QualifiedResource;
+import rcms.fm.resource.qualifiedresource.FunctionManager;
  
  
 /**
@@ -83,6 +89,26 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           dateFormatter.setTimeZone(TimeZone.getDefault());
           String TimeNow =  dateFormatter.format(new Date());
           errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
+
+          // Try to get ErrMsgVector from LV2 FM
+          List<QualifiedResource> fmChildrenList    = fm.containerFMChildren.getActiveQRList();
+          VectorT<MapT<StringT>> LV1_xDAQ_err_msg  = new VectorT<MapT<StringT>>();
+          try{
+            for(QualifiedResource qr : fmChildrenList){
+                FunctionManager LV2fm  = (FunctionManager)qr;
+                String LV2fmState = LV2fm.getState().getStateString();
+                if (LV2fmState.equals(HCALStates.ERROR.toString()) ) {
+                  VectorT<MapT<StringT>> xDAQ_err_msg  = (VectorT<MapT<StringT>>)LV2fm.getParameter().get("XDAQ_ERR_MSG").getValue();
+                  logger.error("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
+                  LV1_xDAQ_err_msg.getVector().addAll(xDAQ_err_msg.getVector());
+                }
+            }
+            fm.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<MapT<StringT>>>("XDAQ_ERR_MSG", LV1_xDAQ_err_msg));
+          }
+          catch (ParameterServiceException e){
+            logger.error("[HCAL " + fm.FMname+"] : fail to get XDAQ_ERR_MSG from LV2, exception= :"+e.getMessage());
+          }
+
           fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
         }
 
