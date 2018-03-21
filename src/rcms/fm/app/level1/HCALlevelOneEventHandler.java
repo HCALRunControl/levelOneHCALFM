@@ -311,7 +311,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if (functionManager.FMrole.equals("HCAL")) {
             LocalRunkeySelected = "global_HCAL";
             MastersnippetSelected = xmlHandler.getNamedXMLelementAttributeValue("LocalRunkey", LocalRunkeySelected, "snippet",true);
-            logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the LocalRunkeySelected = " + MastersnippetSelected );
+            logger.info("[HCAL " + functionManager.FMname + "]: This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the LocalRunkeySelected = " + MastersnippetSelected );
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASTERSNIPPET_SELECTED",new StringT(MastersnippetSelected)));
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LOCAL_RUNKEY_SELECTED",new StringT(LocalRunkeySelected)));
           }
@@ -329,7 +329,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASTERSNIPPET_SELECTED", new StringT(MastersnippetSelected)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LOCAL_RUNKEY_SELECTED", new StringT(LocalRunkeySelected)));
       }else{
-        logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
+        logger.warn("[HCAL "+functionManager.FMname + "]: Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
     
       //Check to see if maskedapps has an instance number
@@ -356,7 +356,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if( qg.getRegistryEntry("SID") ==null){
         Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
         qg.putRegistryEntry("SID", sid);
-        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+        logger.info("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
       }
       else{
         logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
@@ -607,15 +607,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         // get the run key from the configure command
         if (parameterSet.get("RUN_KEY") != null) {
-          RunKey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
+          GlobalRunkey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
           // set the run key in the function manager parameters
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_KEY",new StringT(RunKey)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_RUN_KEY",new StringT(RunKey)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_KEY",new StringT(GlobalRunkey)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_RUN_KEY",new StringT(GlobalRunkey)));
+          if (!GlobalRunkey.equals("")) {
+            logger.warn("[HCAL LVL1 " + functionManager.FMname + "]The HCALFM received a global run key from the L0. This is deprecated!");
+          }
 
         }
         else {
-          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a run key.\nThis is probably OK for normal HCAL LVL1 operations ...";
-          logger.warn(warnMessage);
+          String infoMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a global run key from the L0. This is normal.";
+          logger.info(infoMessage);
         }
 
         // get the tpg key from the configure command
@@ -623,7 +626,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           TpgKey = ((StringT)parameterSet.get("TPG_KEY").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_TPG_KEY",new StringT(TpgKey)));
           String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Received a L1 TPG key: " + TpgKey;
-          logger.warn(warnMessage);
+          logger.info(warnMessage);
         }
         else {
           String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a L1 TPG key.\nThis is only OK for HCAL local run operations or if HCAL is out of the trigger for global runs ...";
@@ -695,40 +698,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
 
-      // switch parsing, etc. of the zero supression HCAL CFG snippet on or off, special zero suppression handling ...
-      if (RunKey.equals("noZS") || RunKey.equals("VdM-noZS")) {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The zero supression is switched off ...");
-        functionManager.useZS        = false;
-        functionManager.useSpecialZS = false;
-      }
-      else if (RunKey.equals("test-ZS") || RunKey.equals("VdM-test-ZS")) {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The special zero suppression is switched on i.e. not blocked by this FM ...");
-        functionManager.useZS        = false;
-        functionManager.useSpecialZS = true;
-      }
-      else if (RunKey.equals("ZS") || RunKey.equals("VdM-ZS")) {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The zero suppression is switched on i.e. not blocked by this FM ...");
-        functionManager.useZS        = true;
-        functionManager.useSpecialZS = false;
-      }
-      else {
-        if (!RunKey.equals("")) {
-          String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Do not understand how to handle this RUN_KEY: " + RunKey + " - please check the RS3 config in use!\nPerhaps the wrong key was given by the CDAQ shifter!?";
+      if (parameterSet.get("RUN_KEY") != null) {
+        GlobalRunkey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
+        if (!GlobalRunkey.equals("")) {
+          // Send an error to the L0 GUI if we are given a nonsense global run key, but do not go to error state.
+          String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Do not understand how to handle this RUN_KEY: " + GlobalRunkey + ". HCAL does not use a global RUN_KEY.";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return; }
+          //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+          //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return; }
         }
-      }
-
-      // check the RUN_KEY for VdM snippets, etc. request
-      if (RunKey.equals("VdM-noZS") || RunKey.equals("VdM-test-ZS") || RunKey.equals("VdM-ZS")) {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Special VdM scan snippets, etc. were enabled by the RUN_KEY for this FM.\nThe RUN_KEY given is: " + RunKey);
-        functionManager.useVdMSnippet = true;
-      }
-      else {
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] No special VdM scan snippets, etc. enabled for this FM.\nThe RUN_KEY given is: " + RunKey);
       }
 
       // check if the RUN_KEY has changed
@@ -737,19 +717,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if (functionManager.VeryFirstConfigure  && !functionManager.containerFMChildren.isEmpty()) {
 
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found attached FM childs will try to check their RUN_KEY ...");
+        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found attached FM childs will try to check their global RUN_KEY ...");
 
         Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
         FunctionManager fmChild = null;
         functionManager.VeryFirstConfigure = false;
       }
 
-      if (RunKey.equals(CachedRunKey)) {
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The RUN_KEY did not change for this run ...");
+      if (GlobalRunkey.equals(CachedGlobalRunkey)) {
+        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The global RUN_KEY did not change for this run ...");
       }
       else {
         ChangedKeysDetected = true;
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The RUN_KEY has changed for this run.");
+        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The global RUN_KEY has changed for this run.");
       }
 
       if (TpgKey.equals(CachedTpgKey)) {
@@ -760,7 +740,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.warn("[HCAL LVL1 " + functionManager.FMname + "] The TPG_KEY has changed for this run.");
       }
 
-      CachedRunKey = RunKey;
+      CachedGlobalRunkey = GlobalRunkey;
       CachedTpgKey = TpgKey;
 
       // Parse the mastersnippet:
@@ -861,7 +841,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
       else{
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
         alarmerthread = new AlarmerWatchThread();
         alarmerthread.start();
       }
@@ -901,7 +881,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       for(QualifiedResource qr : fmChildrenList) {
         String childFMName = qr.getName();
         if (maskedChildFMs.contains(childFMName)) {
-          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to destroy FM XDAQ " + childFMName + "." );
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Based on FED_ENABLE_MASK, I am attempting to destroy FM XDAQ " + childFMName + "." );
 
           // Check that the partition is not responsible for event building/triggering
           if (childFMName.equals(evmTrigFM)) {
@@ -931,7 +911,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
       pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER"            , new IntegerT(functionManager.RunNumber)));
       pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE"          , new StringT(RunType)));
-      pSet.put(new CommandParameter<StringT>("RUN_KEY"                , new StringT(RunKey)));
+      pSet.put(new CommandParameter<StringT>("RUN_KEY"                , new StringT(GlobalRunkey)));
       pSet.put(new CommandParameter<StringT>("TPG_KEY"                , new StringT(TpgKey)));
       pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
       pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
@@ -950,8 +930,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if (!functionManager.containerFMChildren.isEmpty()) {
         logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
 
-
-        Boolean needtowait = false;
 
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
@@ -1159,7 +1137,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           startTaskSeq.addLast(TTCciTask);
         }
 
-      logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
       functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
       }
 
@@ -1352,7 +1330,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: ");
           PrintQRnames(normalFMsToHaltContainer);
         }
-        logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
 
         functionManager.theStateNotificationHandler.executeTaskSequence(haltTaskSeq);
       }
@@ -1442,7 +1420,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
-      logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside stoppingAction(); computeNewState()");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] Received state notification inside stoppingAction(); computeNewState()");
       computeNewState((StateNotification) obj);
       return;
 

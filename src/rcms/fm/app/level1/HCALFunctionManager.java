@@ -211,15 +211,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   public WSESubscription wsSubscription = null;  
   public String RunInfoFlashlistName = "empty";
 
-  // switch to use or not use zero suppression given by a HCAL CFG snippet
-  public boolean useZS = true;
-
-  // switch to use or not use the special zero suppression given by a HCAL CFG snippet (to use it also the standard useZS = true is needed so this snippet will be used too)
-  public boolean useSpecialZS = true;
-
-  // switch to enable special configuration snippets needed for the VdM scan
-  public boolean useVdMSnippet = false;
-
   // switch to find out if this FM is configuring for the very first time
   protected Boolean VeryFirstConfigure = true;
 
@@ -343,10 +334,10 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     destroyed = false;
 
-    logger.warn("JohnLog: about to construct HCALParameterSender.");
+    logger.info("[HCAL " + FMname + "]: about to construct HCALParameterSender.");
     this.parameterSender = new HCALParameterSender(this);
     this.parameterSender.start();
-    logger.warn("JohnLog: finished calling HCALParameterSender.start()");
+    logger.info("[HCAL " + FMname + "]: finished calling HCALParameterSender.start()");
 
     System.out.println("[HCAL " + FMname + "] createAction executed ...");
     logger.debug("[HCAL " + FMname + "] createAction executed ...");
@@ -357,38 +348,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     System.out.println("[HCAL " + FMname + "] destroyAction called");
     logger.info("[HCAL " + FMname + "] destroyAction called");
-
-    
-    // if RunInfo database is connected try to report the destroying of this FM
-    /*if ((HCALRunInfo!=null) && (RunWasStarted)) {
-      {
-      Date date = new Date();
-      Parameter<DateT> stoptime = new Parameter<DateT>("TIME_ON_EXIT",new DateT(date));
-      try {
-      logger.debug("[HCAL " + FMname + "] Publishing to the RunInfo DB TIME_ONE_EXIT: " + date.toString());
-      if (HCALRunInfo != null) { HCALRunInfo.publish(stoptime); }
-      }
-      catch (RunInfoException e) {
-      String errMessage = "[HCAL " + FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run time on exit ...\nProbably this is OK when the FM was destroyed.";
-      logger.error(errMessage,e);
-    // supressed to not worry the CDAQ shifter sendCMSError(errMessage);
-    }
-    }
-    {
-    Parameter<StringT> StateOnExit = new Parameter<StringT>("STATE_ON_EXIT",new StringT(getState().getStateString()));
-    try {
-    logger.debug("[HCAL " + FMname + "] Publishing to the RunInfo DB STATE_ON_EXIT: " + getState().getStateString());
-    if (HCALRunInfo != null) { HCALRunInfo.publish(StateOnExit); }
-    }
-    catch (RunInfoException e) {
-    String errMessage = "[HCAL " + FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run state on exit ...\nProbably this is OK when the FM was destroyed.";
-    logger.error(errMessage,e);
-    // supressed to not worry the CDAQ shifter sendCMSError(errMessage);
-    }
-    }
-
-    HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
-    }*/
 
     // LV1 should try to close any open session ID not requested by LV0 
     if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {

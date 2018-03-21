@@ -229,13 +229,6 @@ public class HCALMasker {
         }
     }
 
-
-    for (Map.Entry<String, Resource> entry : candidates.entrySet()) {
-      String key = entry.getKey();
-      //logger.warn("[JohnLog2] key:" + key);
-   }
-  
-  
     return candidates;
   }
 
