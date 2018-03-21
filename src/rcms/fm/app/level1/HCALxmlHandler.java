@@ -201,7 +201,7 @@ public class HCALxmlHandler {
         }
       }
       else{
-        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandmaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
+        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandmaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and grandmaster="+fileName+".";
         throw new UserActionException(errMessage);
         //functionManager.goToError(errMessage);
       }
