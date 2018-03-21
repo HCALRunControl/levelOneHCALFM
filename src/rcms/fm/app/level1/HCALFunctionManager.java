@@ -976,6 +976,11 @@ public class HCALFunctionManager extends UserFunctionManager {
         if (FMpartition.contains("HBHEa"))  {          loopMap  = TCDS_HBHEa;        }
         if (FMpartition.contains("HBHEb"))  {          loopMap  = TCDS_HBHEb;        }
         if (FMpartition.contains("HBHEc"))  {          loopMap  = TCDS_HBHEc;        }
+        if (FMpartition.equals("HBHE"))  { 
+            loopMap  = TCDS_HBHEa; 
+            loopMap.putAll(TCDS_HBHEb);
+            loopMap.putAll(TCDS_HBHEc);
+        }
         if (FMpartition.contains("HO"))     {          loopMap  = TCDS_HO;           }
         if (FMpartition.contains("HF"))     {          loopMap  = TCDS_HF;           }
         if (FMpartition.contains("Laser"))  {          loopMap  = TCDS_Laser;        }

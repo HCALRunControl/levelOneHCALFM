@@ -2384,6 +2384,17 @@ public class HCALEventHandler extends UserEventHandler {
       XDAQParameter NameQuery         = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
       HashMap<String,String> partitionStatusMap  = new HashMap<String,String>(); // e.g. <HO,HO_Status>,<Laser,LASER_Status>
       HashMap<String,String> partitionMessageMap = new HashMap<String,String>(); // e.g. <HO,HO_Message>,<Laser,LASER_Message>
+
+      // TODO: Get this map from FM property OR snippet 
+      // If FM name is found in this map, all partitions will be watched/ignored together.
+      // If not the partition matched to the FM name substring will be watched.
+      HashMap<String,List<String>> FMnameToPartitionMap = new HashMap<String,List<String>>(); // e.g. <HBHE,HBHEa>, <HBHE,HBHEb> ...
+      List<String>  HBHEpartitions   = new ArrayList<String>();  // HBHEa,HBHEb,HBHEc
+      HBHEpartitions.add("HBHEa");
+      HBHEpartitions.add("HBHEb");
+      HBHEpartitions.add("HBHEc");
+      FMnameToPartitionMap.put("HCAL_HBHE",HBHEpartitions);
+
       try{
         AlarmerPamNames = NameQuery.getNames();
       }
@@ -2393,26 +2404,47 @@ public class HCALEventHandler extends UserEventHandler {
       for(QualifiedResource qr : fmChildrenList){
         String LV2FMname             = qr.getName(); //e.g. HCAL_HO
         try{
-          // Get FM_PARTITION from the LV2 parameterSet 
-          String partition = ((StringT)(((FunctionManager)qr).getParameter().get("FM_PARTITION").getValue())).getString();
-          if (!partition.equals("not set")){
-            for(String pamName : AlarmerPamNames){
-              //Match partition names with AlarmerInfospace parameters ignore case
-              if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
-                //Use Infospace partition name for query
-                watchedAlarms.add(pamName);                                    //e.g. HO_Status
-                //Use FMname partition name for ignoring Empty/Masked FMs
-                watchedPartitions.add(partition);                              //e.g. HO
-                partitionStatusMap.put(partition,pamName);
-              }
-              if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
-                watchedAlarms.add(pamName);                                   //e.g. HO_Message
-                partitionMessageMap.put(partition,pamName);
+          if(FMnameToPartitionMap.get(LV2FMname)!=null){
+            List<String> parititonsOfThisFM = FMnameToPartitionMap.get(LV2FMname);
+            for (String partition : parititonsOfThisFM){
+              for(String pamName : AlarmerPamNames){
+                //Match partition names with AlarmerInfospace parameters ignore case
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
+                  //Use Infospace partition name for query
+                  watchedAlarms.add(pamName);                                    //e.g. HO_Status
+                  //Use FMname partition name for ignoring Empty/Masked FMs
+                  watchedPartitions.add(partition);                              //e.g. HO
+                  partitionStatusMap.put(partition,pamName);
+                }
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
+                  watchedAlarms.add(pamName);                                   //e.g. HO_Message
+                  partitionMessageMap.put(partition,pamName);
+                }
               }
             }
           }
           else{
-            logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: not watching this partition: "+partition+" because LV2:"+LV2FMname+" has no supervisor");
+            // Get FM_PARTITION from the LV2 parameterSet 
+            String partition = ((StringT)(((FunctionManager)qr).getParameter().get("FM_PARTITION").getValue())).getString();
+            if (!partition.equals("not set")){
+              for(String pamName : AlarmerPamNames){
+                //Match partition names with AlarmerInfospace parameters ignore case
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
+                  //Use Infospace partition name for query
+                  watchedAlarms.add(pamName);                                    //e.g. HO_Status
+                  //Use FMname partition name for ignoring Empty/Masked FMs
+                  watchedPartitions.add(partition);                              //e.g. HO
+                  partitionStatusMap.put(partition,pamName);
+                }
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
+                  watchedAlarms.add(pamName);                                   //e.g. HO_Message
+                  partitionMessageMap.put(partition,pamName);
+                }
+              }
+            }
+            else{
+              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: not watching this partition: "+partition+" because LV2:"+LV2FMname+" has no supervisor");
+            }
           }
         }
         catch (ParameterServiceException e){
@@ -2451,24 +2483,29 @@ public class HCALEventHandler extends UserEventHandler {
               delayAlarmerWatchThread=false;
             }
             // Empty or masked partitions. Alarms will be ignored for these partitions.
-            VectorT<StringT> emptyFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
-            VectorT<StringT> maskedFMs      = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
+            VectorT<StringT> EmptyOrMaskedFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
+            VectorT<StringT> maskedFMs              = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
+            EmptyOrMaskedFMs.getVector().addAll(maskedFMs.getVector()); 
             LinkedHashSet<String> ignoredPartitions = new LinkedHashSet<String>();
 
-            for(StringT FMname : emptyFMs){
-              String partitionOfemptyFM = FMname.getString().substring(5);
-              // Should be 1) a valid partition and 2)not already ignored
-              if(watchedPartitions.contains(partitionOfemptyFM) && !ignoredPartitions.contains(partitionOfemptyFM)){
-                ignoredPartitions.add(partitionOfemptyFM);
-                logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfemptyFM+" because FM is empty: "+FMname.getString());
+            for(StringT FMname : EmptyOrMaskedFMs){
+              if(FMnameToPartitionMap.get(FMname)!=null){
+                // Should be 1) a valid partition and 2)not already ignored
+                List<String> parititonsOfThisFM = FMnameToPartitionMap.get(FMname);
+                for (String partition : parititonsOfThisFM){
+                  if(watchedPartitions.contains(partition) && !ignoredPartitions.contains(partition)){
+                    ignoredPartitions.add(partition);
+                    logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partition+" because FM is empty/masked: "+FMname.getString());
+                  }
+                }
               }
-            }
-            for(StringT FMname : maskedFMs){
-              // Should be 1) a valid partition and 2)not already ignored
-              String partitionOfmaskedFM = FMname.getString().substring(5);
-              if(watchedPartitions.contains(partitionOfmaskedFM) && !ignoredPartitions.contains(partitionOfmaskedFM)){
-                ignoredPartitions.add(partitionOfmaskedFM);
-                logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfmaskedFM+" because FM is masked: "+FMname.getString());
+              else{
+                String partitionOfemptyFM = FMname.getString().substring(5);
+                // Should be 1) a valid partition and 2)not already ignored
+                if(watchedPartitions.contains(partitionOfemptyFM) && !ignoredPartitions.contains(partitionOfemptyFM)){
+                  ignoredPartitions.add(partitionOfemptyFM);
+                  logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfemptyFM+" because FM is empty/masked: "+FMname.getString());
+                }
               }
             }
             for (String ignoredPartition : ignoredPartitions) {
