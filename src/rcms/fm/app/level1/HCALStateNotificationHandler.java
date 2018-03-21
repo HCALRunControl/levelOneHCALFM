@@ -215,8 +215,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       if(taskSequence == null) {
 
+        String infomsg = "Received a State Notification while taskSequence is null \n";
+
         setTimeoutThread(false);
-        logger.debug("FM is in local mode");
+        logger.debug(infomsg);
         fm.theEventHandler.computeNewState(notification);
         return;
     }
