@@ -51,8 +51,7 @@ public class HCALParameterSender implements Runnable {
 	public HCALParameterSender(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
 		this.functionManager = parentFunctionManager;
-    HCALParameters test = parentFunctionManager.getHCALparameterSet();
-		this.previousParameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
+    this.previousParameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
 		this.executorService = Executors.newSingleThreadScheduledExecutor();
 	}
 

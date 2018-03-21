@@ -172,8 +172,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  hcalPIControlSingle               =  new CommandParameter<StringT>  ("HCAL_PICONTROL_SINGLE"   ,  new StringT("")     );
     CommandParameter<StringT>  hcalPIControlMulti                =  new CommandParameter<StringT>  ("HCAL_PICONTROL_MULTI"    ,  new StringT("")     );
     CommandParameter<StringT>  configureSUPERVISOR_ERROR         =  new CommandParameter<StringT>  ("SUPERVISOR_ERROR"        ,  new StringT("not set")     );
-    CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
-    CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
+    CommandParameter<StringT>  configureMASTERSNIPPET_SELECTED   =  new CommandParameter<StringT>  ("MASTERSNIPPET_SELECTED"     ,  new StringT("")     );
+    CommandParameter<StringT>  configureLOCAL_RUNKEY_SELECTED    =  new CommandParameter<StringT>  ("LOCAL_RUNKEY_SELECTED" ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
     CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
     CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
@@ -205,9 +205,9 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(hcalPIControlMulti);
       configureParameters.add(configureUSE_PRIMARY_TCDS);
       configureParameters.add(configureSUPERVISOR_ERROR);
-      configureParameters.add(configureRUN_CONFIG_SELECTED);
+      configureParameters.add(configureMASTERSNIPPET_SELECTED);
       configureParameters.add(configureSID);
-      configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
+      configureParameters.add(configureLOCAL_RUNKEY_SELECTED);
       configureParameters.add(configureAVAILABLE_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);
       configureParameters.add(configureRU_INSTANCE);

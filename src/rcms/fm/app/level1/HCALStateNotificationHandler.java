@@ -55,10 +55,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       //    "from this FM/app "+  notification.getIdentifier() +
       //    "from this state: " + notification.getFromState()  +
       //    " to this state: " + notification.getToState());
-      
-      String actualState = fm.getState().getStateString();
-      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
+      //String actualState = fm.getState().getStateString();
+      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      
       if ( fm.getState().equals(HCALStates.ERROR) ) {
         return;
       }
@@ -215,10 +215,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       if(taskSequence == null) {
 
-        setTimeoutThread(false);
         String infomsg = "Received a State Notification while taskSequence is null \n";
 
-        logger.debug("FM is in local mode");
+        setTimeoutThread(false);
+        logger.debug(infomsg);
         fm.theEventHandler.computeNewState(notification);
         return;
     }
@@ -285,9 +285,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
      *
      */
     protected void completeTransition() throws UserActionException, Exception {
- 
-        State FMState = fm.getState();
- 
         fm.setAction("Transition Completed");
  
         if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {
