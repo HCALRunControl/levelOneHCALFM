@@ -1,5 +1,10 @@
 package rcms.fm.app.level1;
  
+import java.util.Date;
+import java.util.TimeZone;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.user.UserActionException;
@@ -50,10 +55,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       //    "from this FM/app "+  notification.getIdentifier() +
       //    "from this state: " + notification.getFromState()  +
       //    " to this state: " + notification.getToState());
-      
-      String actualState = fm.getState().getStateString();
-      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
+      //String actualState = fm.getState().getStateString();
+      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      
       if ( fm.getState().equals(HCALStates.ERROR) ) {
         return;
       }
@@ -74,7 +79,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
-          errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received: " + notification.getReason();
+          DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
+          dateFormatter.setTimeZone(TimeZone.getDefault());
+          String TimeNow =  dateFormatter.format(new Date());
+          errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
           fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
         }
 
@@ -207,10 +215,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       if(taskSequence == null) {
 
-        setTimeoutThread(false);
         String infomsg = "Received a State Notification while taskSequence is null \n";
 
-        logger.debug("FM is in local mode");
+        setTimeoutThread(false);
+        logger.debug(infomsg);
         fm.theEventHandler.computeNewState(notification);
         return;
     }
@@ -277,9 +285,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
      *
      */
     protected void completeTransition() throws UserActionException, Exception {
- 
-        State FMState = fm.getState();
- 
         fm.setAction("Transition Completed");
  
         if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {

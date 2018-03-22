@@ -25,21 +25,33 @@ if [ "$1" = "release" ]; then
   git diff-index --quiet HEAD
   if [ "$?" = "0" ]; then
     #get the latest tag version
-    release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | tail -1`
-    releaseTags=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n`
-    Year=`date  +%y`
-    versionArr=(${release//./ })
     remotes=`git remote -v | grep HCALRunControl | tail -1`
     RC_remote=(${remotes[0]})
     echo "Fetching all HCALFM releases from github ..."
     git fetch $RC_remote --tags
+    release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | sort --field-separator=. -k1 -n| tail -1`
+    releaseTags=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n| sort --field-separator=. -k1 -n`
+    Year=`date  +%y`
+    versionArr=(${release//./ })
     if [ "$2" = "major" ]; then
-      GITREV="${Year}.$((versionArr[1]+1)).0"
-      GITREV_fname="${Year}_$((versionArr[1]+1))_0"
+      # reset version number in a new year
+      if [ "${Year}" != ${versionArr[0]} ]; then
+        GITREV="${Year}.0.0"
+        GITREV_fname="${Year}_0_0"
+      else
+        GITREV="${Year}.$((versionArr[1]+1)).0"
+        GITREV_fname="${Year}_$((versionArr[1]+1))_0"
+      fi
       isValidRelease="false"
     elif [ "$2" = "minor" ]; then
-      GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
-      GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+      # reset version number in a new year
+      if [ "${Year}" != ${versionArr[0]} ]; then
+        GITREV="${Year}.0.0"
+        GITREV_fname="${Year}_0_0"
+      else
+        GITREV="${Year}.${versionArr[1]}.$((versionArr[2]+1))"
+        GITREV_fname="${Year}_${versionArr[1]}_$((versionArr[2]+1))"
+      fi
       isValidRelease="false"
     else
       #Check if input is a valid release tags
@@ -66,7 +78,7 @@ if [ "$1" = "release" ]; then
     echo "Building HCALFM release: $GITREV"
     tagCommit=`git rev-parse HEAD | head -c 7`
     sed -i '$ d' ../gui/jsp/footer.jspf
-    echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version:${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
+    echo '<div id="hcalfmVersion"><a href="https://github.com/HCALRunControl/levelOneHCALFM/commit/'"${tagCommit}\">HCALFM version: ${GITREV} </a></div>" >> ../gui/jsp/footer.jspf
     ant -DgitRev="${GITREV_fname}"
     #Update the tags only if build successful and not building old release
     if [ "$?" = "0" ]; then

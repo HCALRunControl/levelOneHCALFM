@@ -103,21 +103,21 @@
               </td>
             </tr>
             <tr>
-              <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black">
+              <td id="newLOCAL_RUNKEY_SELECTEDcheckbox" class="label_center_black">
               </td>
               <td class="label_left_black">
                 <strong>Local Run Key</strong>
               </td>
-              <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black">
+              <td id ="newLOCAL_RUNKEY_SELECTED" class="label_center_black">
               </td>
             </tr>
             <tr>
-              <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black">
+              <td id="newMASTERSNIPPET_SELECTEDcheckbox" class="label_center_black">
               </td>
               <td class="label_left_black">
                 <strong>Mastersnippet</strong>
               </td>
-              <td id ="newRUN_CONFIG_SELECTED" class="label_center_black">
+              <td id ="newMASTERSNIPPET_SELECTED" class="label_center_black">
               </td>
             </tr>
             <tr>

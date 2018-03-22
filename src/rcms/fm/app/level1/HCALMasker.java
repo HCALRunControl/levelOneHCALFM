@@ -3,17 +3,20 @@ package rcms.fm.app.level1;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Arrays;
 import java.util.ArrayList;
 
 import rcms.util.logger.RCMSLogger;
 import rcms.common.db.DBConnectorException;
 import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
+import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
@@ -122,6 +125,22 @@ public class HCALMasker {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", maskedRss));
       }
   }
+  public boolean isCrossPartitionFM(Resource level2FM){
+    
+    List<ConfigProperty> propertiesList = level2FM.getProperties();
+    if(propertiesList.isEmpty()) {
+      return false;
+    }else{
+      for(ConfigProperty property : propertiesList){
+        if(property.getName().equals("isCrossPartitionFM")) {
+          logger.info("[HCAL "+level2FM.getName() +"] Found isCrossPartitionFM property with value="+property.getValue());
+          return Boolean.parseBoolean(property.getValue());
+        }
+      }
+    }
+    //return false if no property named "isCrossPartitionFM"
+    return false;
+  }
 
   protected Map<String, Resource> pickEvmTrig() {
     // Function to pick an FM that has the needed applications for triggering and eventbuilding, and put it in charge of those duties
@@ -131,18 +150,34 @@ public class HCALMasker {
 
     Boolean theresAcandidate = false;
     Boolean theresAdummyCandidate = false;
+    Boolean theresCrossPartitionFM = false;
 
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-
+    List<QualifiedResource> level2noMaskedFMlist=new ArrayList<QualifiedResource>() ;
+    //Ignore masked FMs
     for (QualifiedResource level2 : level2list) {
-      //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + ": now checking if " + level2.getName() + " is masked before picking the EvmTrig FM. The list of masked FMs is:");
-      //logger.warn(Arrays.asList(MaskedFMs.toArray()).toString());
       if (!Arrays.asList(MaskedFMs.toArray()).contains(new StringT(level2.getName()))) {
-        //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + "... didn't find " + level2.getName() + " in the masked FMs list.");
+        level2noMaskedFMlist.add(level2);
+      }
+    }
+    QualifiedResourceContainer level2QRC = new QualifiedResourceContainer(level2noMaskedFMlist);
+
+    //Get ConfigPriority map of active FMs
+    TreeMap<Integer, ArrayList<FunctionManager> > priorityFMmap = ((HCALlevelOneEventHandler)functionManager.theEventHandler).getConfigPriorities(level2QRC);
+    Integer  LastPriority = priorityFMmap.lastKey();
+    List<QualifiedResource> level2EvmTrigCandidateList = new ArrayList<QualifiedResource>();
+
+    //Add last priority FMs into evmTrigCandidateList
+    level2EvmTrigCandidateList.addAll(priorityFMmap.get(LastPriority));
+    logger.info("[HCAL "+functionManager.FMname+"] Considering following FMs to be EvmTrig:");
+    functionManager.theEventHandler.PrintQRnames(level2EvmTrigCandidateList);
+
+    //Consider only LV2 FMs with last priority to be EvmTrig (FM with no ConfigPriority will be grouped into this)
+    for (QualifiedResource level2 : level2EvmTrigCandidateList) {
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
           logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -152,20 +187,37 @@ public class HCALMasker {
           
           //Add all masked Executive's app into MASKED_RESOURCES, so that they will not be considered as candidate
           ignoreMaskedExecutiveApps(level2Children);
-          logger.debug("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
-          logger.debug("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
+          Boolean isAcandidate      = isEvmTrigCandidate(level2Children).get("isAcandidate");
+          Boolean isAdummyCandidate = isEvmTrigCandidate(level2Children).get("isAdummyCandidate");
+          logger.debug("["+functionManager.FMname + "] For this LV2 "+ level2.getName() + "  isAcandidate= " + isAcandidate.toString() + " isAdummyCandidate = "+ isAdummyCandidate.toString() );
 
           try {
-            if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
-              candidates = getEvmTrigResources(level2Children);
-              candidates.put("EvmTrigFM", level2.getResource());
-              theresAcandidate = true;
+            if (!theresAcandidate && isAcandidate) {
+                candidates = getEvmTrigResources(level2Children);
+                candidates.put("EvmTrigFM", level2.getResource());
+                theresAcandidate = true;
             }
-            if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
+            if (!theresAdummyCandidate && isAdummyCandidate) {
               candidates = getEvmTrigResources(level2Children);
               candidates.put("EvmTrigFM", level2.getResource());
               theresAcandidate = true;
               theresAdummyCandidate = true;
+            }
+            //Consider replacing the dummyCandidate if this level2 is a crossPartitionFM 
+            if(theresAdummyCandidate){
+              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource())){
+                //this crossPartitionFM is also a dummyCandidate, pick it. 
+                if( isAdummyCandidate ){
+                  logger.info("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
+                  candidates = getEvmTrigResources(level2Children);
+                  candidates.put("EvmTrigFM", level2.getResource());
+                  theresCrossPartitionFM = true;
+                }
+                else{
+                  //crossPartitionFM is not dummyCandidate, not expected. alert the user to check for human error
+                  logger.error("[HCAL "+functionManager.FMname +"] "+level2.getName()+" is a CrossPartitionFM but do not contain a DummyTriggerAdapter. Not picking it as EvmTrigFM, it will not be configured last.");
+                }
+              }
             }
           }
           catch (UserActionException ex) {
@@ -175,16 +227,8 @@ public class HCALMasker {
         catch (DBConnectorException ex) {
           logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
         }
-      }
     }
 
-
-    for (Map.Entry<String, Resource> entry : candidates.entrySet()) {
-      String key = entry.getKey();
-      //logger.warn("[JohnLog2] key:" + key);
-   }
-  
-  
     return candidates;
   }
 
@@ -216,6 +260,8 @@ public class HCALMasker {
       trivialFU = evmTrigResources.get("hcalTrivialFU").getName();
       triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
       EvmTrigFM = evmTrigResources.get("EvmTrigFM").getName();
+      logger.info("[HCAL "+ functionManager.FMname + "]: setMaskedFMs: EvmTrigFM is picked as "+EvmTrigFM);
+
     }
 
     VectorT<StringT> maskedFMsVector = new VectorT<StringT>();
