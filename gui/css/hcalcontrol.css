@@ -433,10 +433,6 @@ a {
     padding-bottom: 12px;
     border-bottom: 1px solid lightgray;
 }
-#ACTION_MSG {
-  font-family: Helvetica;
-  max-width: unset;
-}
 #rsName {
   display: inline-block;
   max-width: 265px;
@@ -534,8 +530,32 @@ a {
   min-width:620px;
 }
 #ACTION_MSG {
+  font-family: Helvetica;
+  max-width: unset;
   width:100%;
+}
+#maskSummary {
+  font-family: Helvetica;
+  max-width: unset;
+  width:100%;
+  color: gray;
+}
+#maskSummaryArea {
+  min-width:620px;
 }
 #drive {
   color: #ef8700;
+}
+#infoSection {
+  margin-top: 6px;
+}
+.tooltip {
+  display: none;
+  border: 1px solid lightgray;
+  overflow: scroll;
+  background-color: #ffffff;
+}
+.tooltip textarea {
+  width:100%;
+  height:40px;
 }
