@@ -46,6 +46,17 @@ function showsupervisorerror() {
 
 // The scripts below use jQuery.
 //
+//
+function showErrorTable() {
+    var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
+    errTableHTML = "<table>";
+    errTableHTML += "<tr class='title_center_black'><td>timestamp</td><td>name</td><td>message</td></tr>"
+    for(var i=0; i<errVector.length; i++) {
+      errTableHTML += "<tr class='label_left_black'><td>" + errVector[i]["timestamp"] + "</td><td>" + errVector[i]["app"] + "</td><td>" + errVector[i]["message"] + "</td></tr>";
+    }
+    errTableHTML += "</table>";
+    $("#errMapError").html(errTableHTML);
+}
 function setStateColors() {
   $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
 }
@@ -56,6 +67,7 @@ function updatePage() {
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
+    var cachedErrMap = $('#XDAQ_ERR_MSG').val();
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
@@ -124,11 +136,13 @@ function updatePage() {
         setSpectatorDisplay();
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+      if ($('#XDAQ_ERR_MSG').val() !=  cachedErrMap) { showErrorTable(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
       cachedRunNo = $('#RUN_NUMBER').val();
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
+      cachedErrMap = $('#XDAQ_ERR_MSG').val();
       cachedState = currentState;
       if ($('#EXIT').val() == "true" && currentState=="Halted" && driving()) { $('#Destroy').click(); }
       if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving()) { onClickCommandButton('Initialize'); }
@@ -550,6 +564,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
+    showErrorTable();
     makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
