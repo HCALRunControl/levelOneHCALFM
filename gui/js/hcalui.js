@@ -49,8 +49,7 @@ function showsupervisorerror() {
 //
 function showErrorTable() {
     var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
-    errTableHTML = "<table id='errTable'>" + "<tr class='errHeaderRow'>";;
-    errTableHTML 
+    errTableHTML = "<table id='errTable'> <tr class='errHeaderRow'>";
     errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
     for(var i=0; i<errVector.length; i++) {
       errTableHTML += "<tr class='errRow'>";
