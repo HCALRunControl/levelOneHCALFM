@@ -4,7 +4,7 @@
   <xs:complexType name="userXMLType">
     <xs:sequence>
       <xs:element type="xs:string" name="CfgCVSBasePath" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="grandmaster" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="grandmaster" maxOccurs="1" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 </xs:schema>
