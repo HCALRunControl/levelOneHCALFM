@@ -67,6 +67,7 @@
                 <jar file="${fm.jar}"><!-- basedir="${fm.classes}" /> -->
                         <fileset dir="${fm.classes}" />
                         <fileset dir="${fm.gui}" />
+                        <fileset dir="../schema/" includes="grandmaster.xsd" />
                 </jar>
 	</target>
 

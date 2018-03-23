@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -141,8 +142,8 @@ public class HCALxmlHandler {
       Schema schema;
       try {
         //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd/pro"));
+        //Note /grandmaster.xsd refers to the path in the jar
+        schema = schemaFactory.newSchema( new StreamSource(HCALxmlHandler.class.getResourceAsStream("/grandmaster.xsd")));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
