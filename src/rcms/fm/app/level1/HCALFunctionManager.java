@@ -48,6 +48,8 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URL;
@@ -221,6 +223,8 @@ public class HCALFunctionManager extends UserFunctionManager {
   public String alarmerURL = "";
 
   public String alarmerPartition = "";
+
+  private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d yyyy, hh:mm a z");
 
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
@@ -1091,6 +1095,10 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
     }
     throw new Exception("Property "+name+" not found");
+  }
+
+  protected String getTimestampString() {
+    return ZonedDateTime.now().format(formatter);
   }
 
 }

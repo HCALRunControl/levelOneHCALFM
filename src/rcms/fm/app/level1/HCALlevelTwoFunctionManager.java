@@ -66,10 +66,14 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
           for (StringT errAppName : errAppNameVector){
             // none is a place holder on xDAQ side for RCMS to safely look at the infospace at anytime.
             if(!errAppName.equals("none")){
-              MapT<StringT> Name_err_map = new MapT<StringT>();
+              MapT<StringT> errMap = new MapT<StringT>();
               // Associate name of app to err_message of app by vector position
-              Name_err_map.put( "("+partition+") "+ errAppName, errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
-              xDAQ_err_msg.add(Name_err_map);
+              //Name_err_map.put( "("+partition+") "+ errAppName, errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
+              errMap.put( "timestamp", new StringT(getTimestampString()));
+              errMap.put( "app", new StringT("("+partition+") "+ errAppName));
+              errMap.put("message", errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
+              
+              xDAQ_err_msg.add(errMap);
             }
           }
         }
