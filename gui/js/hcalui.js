@@ -49,10 +49,14 @@ function showsupervisorerror() {
 //
 function showErrorTable() {
     var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
-    errTableHTML = "<table>";
-    errTableHTML += "<tr class='title_center_black'><td>timestamp</td><td>name</td><td>message</td></tr>"
+    errTableHTML = "<table id='errTable'>" + "<tr class='errHeaderRow'>";;
+    errTableHTML 
+    errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
     for(var i=0; i<errVector.length; i++) {
-      errTableHTML += "<tr class='label_left_black'><td>" + errVector[i]["timestamp"] + "</td><td>" + errVector[i]["app"] + "</td><td>" + errVector[i]["message"] + "</td></tr>";
+      errTableHTML += "<tr class='errRow'>";
+      errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
+      errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
+      errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
     }
     errTableHTML += "</table>";
     $("#errMapError").html(errTableHTML);
