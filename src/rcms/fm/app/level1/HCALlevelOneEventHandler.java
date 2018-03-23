@@ -503,6 +503,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("not set")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<MapT<StringT>>>("XDAQ_ERR_MSG", new VectorT<MapT<StringT>>()));
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
