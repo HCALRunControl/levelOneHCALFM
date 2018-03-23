@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -98,28 +99,21 @@ public class HCALxmlHandler {
   
   public Element parseHCALuserXML(String userXMLstring) throws UserActionException, SAXException {
     try {
-      // TODO: maybe invent a better way to get the xsd so that userXML can be validated
-      //       however for now don't bother using a validator on the userXML
-      /*
       Schema schema;
       try {
-        // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        //String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        //schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
-        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/cvs/RevHistory/Master/userXML.xsd/pro"));
-
+        //Note "/userXML.xsd" refers to the path in the jar
+        schema = schemaFactory.newSchema( new StreamSource(HCALxmlHandler.class.getResourceAsStream("/userXML.xsd")));
       }
       catch (SAXException e) {
         throw e;
       }
-      */
-      //Validator validator = schema.newValidator();
-      //docBuilderFactory.setSchema(schema);
-      //validator.setErrorHandler(new HCALxmlErrorHandler());
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
       docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
-      //inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
-      //validator.validate(new SAXSource(inputSource));
+      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
+      validator.validate(new SAXSource(inputSource));
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
@@ -140,9 +134,8 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd/pro"));
+        //Note /grandmaster.xsd refers to the path in the jar
+        schema = schemaFactory.newSchema( new StreamSource(HCALxmlHandler.class.getResourceAsStream("/grandmaster.xsd")));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
