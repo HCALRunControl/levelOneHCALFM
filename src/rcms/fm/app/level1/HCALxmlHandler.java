@@ -896,7 +896,7 @@ public class HCALxmlHandler {
         }
       }
       catch (IOException e){
-        String errMesaage = "[HCAL " + functionManager.FMname + "]: Got an IOException when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage();
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an IOException when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage();
         functionManager.goToError(errMessage);
       }
     }
