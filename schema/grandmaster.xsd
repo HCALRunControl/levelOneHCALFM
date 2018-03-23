@@ -3,7 +3,7 @@
   <xs:element name="grandmaster">
     <xs:complexType>
       <xs:sequence>
-        <xs:element type="xs:string" name="RunSequenceName">
+        <xs:element type="xs:string" name="RunSequenceName" minOccurs="0">
           <xs:annotation>
             <xs:documentation> 
               Valid attributes and format: 
