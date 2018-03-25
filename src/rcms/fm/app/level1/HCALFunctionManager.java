@@ -224,7 +224,10 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String alarmerPartition = "";
 
-  private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d yyyy, hh:mm a z");
+  // the timestamp users see in the LogCollector logs has this format:
+  // "yyyy-MM-d HH:mm:ss"
+  // keep that format for grepping, but add timezone
+  private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss z");
 
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
@@ -1097,6 +1100,10 @@ public class HCALFunctionManager extends UserFunctionManager {
     throw new Exception("Property "+name+" not found");
   }
 
+  /** This method can be used to replace all multiple-line uses of Time.now() or DateTime.now() etc.
+   * 
+   * @return a string of the timestamp in the same format as the LogCollector logs, but with the timezone added
+   */
   protected String getTimestampString() {
     return ZonedDateTime.now().format(formatter);
   }
