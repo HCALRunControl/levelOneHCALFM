@@ -76,6 +76,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         } catch(Exception e){}
         String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
         String errMsg =  actionMsg;
+        String localGUIerrMsg = "";
+        VectorT<MapT<StringT>> LV1_xDAQ_err_msg  = new VectorT<MapT<StringT>>();
         if (!fm.containerhcalSupervisor.isEmpty()) {
           ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
           errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
@@ -88,11 +90,11 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
           dateFormatter.setTimeZone(TimeZone.getDefault());
           String TimeNow =  dateFormatter.format(new Date());
+          // This always contains long error message, single string
           errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
 
           // Try to get ErrMsgVector from LV2 FM
           List<QualifiedResource> fmChildrenList    = fm.containerFMChildren.getActiveQRList();
-          VectorT<MapT<StringT>> LV1_xDAQ_err_msg  = new VectorT<MapT<StringT>>();
           try{
             for(QualifiedResource qr : fmChildrenList){
                 FunctionManager LV2fm  = (FunctionManager)qr;
@@ -108,11 +110,16 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           catch (ParameterServiceException e){
             logger.error("[HCAL " + fm.FMname+"] : fail to get XDAQ_ERR_MSG from LV2, exception= :"+e.getMessage());
           }
-
-          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
+          if(!LV1_xDAQ_err_msg.isEmpty()){
+            localGUIerrMsg = "["+TimeNow+"] LV1 FM: supervisor reports the following  errors: ";
+          }
         }
-
+        //Send LV0 a string errMessage.
         handleError(errMsg,actionMsg);
+        // LV1 puts a supervisor header message if possible
+        if (!fm.containerFMChildren.isEmpty() && !LV1_xDAQ_err_msg.isEmpty()) {
+          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(localGUIerrMsg)));
+        }
         //logger.warn("["+fm.FMname+"]: Going to error, reset taskSequence to null. ");
         taskSequence = null;  //Reset taskSequence if we are in error
         return;
