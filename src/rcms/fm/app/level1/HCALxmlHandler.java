@@ -914,8 +914,8 @@ public class HCALxmlHandler {
       PrintWriter pw = new PrintWriter(sw);
       e.printStackTrace(pw);
 
-      String exMessage = "Caught IOException in HCALxmlHandler.readFile: ";
-      exMessage += sw.toString(); 
+      logger.error(sw.toString());
+      String exMessage = "Caught IOException in HCALxmlHandler.readFile with this file: "+e.getMessage();
       throw new UserActionException(exMessage);
     }
     return new String(encoded, encoding);
