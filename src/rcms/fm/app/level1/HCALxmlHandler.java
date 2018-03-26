@@ -510,6 +510,8 @@ public class HCALxmlHandler {
 
       Element masterSnippetElement = masterSnippet.getDocumentElement();
       NodeList elements = masterSnippetElement.getChildNodes();
+      NodeList listOfTags = masterSnippetElement.getChildNodes();
+
 
       // Look for common master snippet and, if present, parse first
       String commonMasterSnippetFile = "";
@@ -618,7 +620,13 @@ public class HCALxmlHandler {
           String parameterType = parameterTypeLong[parameterTypeLong.length - 1];
           String parameterValue = parameterElement.getTextContent();
         
-          logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
+          // Truncate parameter value
+          if (parameterValue.length()>=1000){
+            parameterValue = parameterValue.substring(0, Math.min(parameterValue.length(), 1000));
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value(truncated)=" + parameterValue);
+          }else{
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
+          }
 
           switch (parameterType) {
             case "BooleanT":
