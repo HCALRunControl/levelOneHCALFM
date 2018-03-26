@@ -46,6 +46,23 @@ function showsupervisorerror() {
 
 // The scripts below use jQuery.
 //
+//
+function showErrorTable() {
+    var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
+    if (errVector.length != 0) {
+      errTableHTML = "<table id='errTable'> <tr class='errHeaderRow'>";
+      //errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      for(var i=0; i<errVector.length; i++) {
+        errTableHTML += "<tr class='errRow'>";
+        //errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
+        errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
+        errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
+      }
+      errTableHTML += "</table>";
+      $("#errMapError").html(errTableHTML);
+    }
+}
 function setStateColors() {
   $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
 }
@@ -56,6 +73,7 @@ function updatePage() {
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
+    var cachedErrMap = $('#XDAQ_ERR_MSG').val();
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
@@ -124,11 +142,13 @@ function updatePage() {
         setSpectatorDisplay();
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+      if ($('#XDAQ_ERR_MSG').val() !=  cachedErrMap) { showErrorTable(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
       cachedRunNo = $('#RUN_NUMBER').val();
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
+      cachedErrMap = $('#XDAQ_ERR_MSG').val();
       cachedState = currentState;
       if ($('#EXIT').val() == "true" && currentState=="Halted" && driving()) { $('#Destroy').click(); }
       if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving()) { onClickCommandButton('Initialize'); }
