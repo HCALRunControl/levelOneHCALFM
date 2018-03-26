@@ -3,6 +3,7 @@ package rcms.fm.app.level1;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Arrays;
 import java.util.ArrayList;
 
@@ -15,6 +16,7 @@ import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
+import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
@@ -155,12 +157,27 @@ public class HCALMasker {
     VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-
+    List<QualifiedResource> level2noMaskedFMlist=new ArrayList<QualifiedResource>() ;
+    //Ignore masked FMs
     for (QualifiedResource level2 : level2list) {
-      //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + ": now checking if " + level2.getName() + " is masked before picking the EvmTrig FM. The list of masked FMs is:");
-      //logger.warn(Arrays.asList(MaskedFMs.toArray()).toString());
       if (!Arrays.asList(MaskedFMs.toArray()).contains(new StringT(level2.getName()))) {
-        //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + "... didn't find " + level2.getName() + " in the masked FMs list.");
+        level2noMaskedFMlist.add(level2);
+      }
+    }
+    QualifiedResourceContainer level2QRC = new QualifiedResourceContainer(level2noMaskedFMlist);
+
+    //Get ConfigPriority map of active FMs
+    TreeMap<Integer, ArrayList<FunctionManager> > priorityFMmap = ((HCALlevelOneEventHandler)functionManager.theEventHandler).getConfigPriorities(level2QRC);
+    Integer  LastPriority = priorityFMmap.lastKey();
+    List<QualifiedResource> level2EvmTrigCandidateList = new ArrayList<QualifiedResource>();
+
+    //Add last priority FMs into evmTrigCandidateList
+    level2EvmTrigCandidateList.addAll(priorityFMmap.get(LastPriority));
+    logger.info("[HCAL "+functionManager.FMname+"] Considering following FMs to be EvmTrig:");
+    functionManager.theEventHandler.PrintQRnames(level2EvmTrigCandidateList);
+
+    //Consider only LV2 FMs with last priority to be EvmTrig (FM with no ConfigPriority will be grouped into this)
+    for (QualifiedResource level2 : level2EvmTrigCandidateList) {
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
           logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -210,16 +227,8 @@ public class HCALMasker {
         catch (DBConnectorException ex) {
           logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
         }
-      }
     }
 
-
-    for (Map.Entry<String, Resource> entry : candidates.entrySet()) {
-      String key = entry.getKey();
-      //logger.warn("[JohnLog2] key:" + key);
-   }
-  
-  
     return candidates;
   }
 

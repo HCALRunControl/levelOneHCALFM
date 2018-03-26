@@ -59,6 +59,7 @@ import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
@@ -92,7 +93,6 @@ public class HCALEventHandler extends UserEventHandler {
 
 
 
-  String configString  = ""; // Configuration documents for hcos
   String ConfigDoc     = "";
   String FullCfgScript = "not set";
 
@@ -116,8 +116,8 @@ public class HCALEventHandler extends UserEventHandler {
   public Integer localeventstaken =  -1;          // TODO: what does this do?
   public String  GlobalConfKey    =  "";          // global configuration key
   public String  RunType          =  "";          // local or global
-  public String  RunKey           =  "";          // Current global run key
-  public String  CachedRunKey     =  "";          // Previous global run key
+  public String  GlobalRunkey           =  "";          // Current global run key
+  public String  CachedGlobalRunkey     =  "";          // Previous global run key
   public String  TpgKey           =  "";          // Current trigger key
   public String  CachedTpgKey     =  "";          // Previous trigger key
   public String  FedEnableMask    =  "";          // FED enable mask received from level0 on configure in global
@@ -214,44 +214,6 @@ public class HCALEventHandler extends UserEventHandler {
     // Destroy the FM
     super.destroy();
   }
-
-  @SuppressWarnings("unchecked")
-    // Returns the embeded String of the User XML field
-    // If not found, an empty string is returned
-    // TODO kill this and make it look at the found mastersnippet xml
-    protected String GetUserXMLElement(String elementName) {
-
-      // Get the FM's resource configuration
-      String myConfig = configString;
-      logger.debug("[HCAL base] GetUserXMLElement: looking for element " + elementName + " in : " + myConfig );
-
-      // Get element value
-      String elementValue = getXmlRscConf(myConfig, elementName);
-
-      return elementValue;
-    }
-
-  // Returns the xml string of element "ElementName"
-  // If not found, an empty string is returned
-  // TODO remove custom XML parsing and replace with something non-idiotic
-  static private String getXmlRscConf(String xmlRscConf, String elementName) {
-    String response = "";
-
-    // Check if the xmlRscConf is filled
-    if (xmlRscConf == null || xmlRscConf.equals("") ) return response;
-
-    // Check for a valid argument
-    if (elementName == null || elementName.equals("") ) return response;
-
-    int beginIndex = xmlRscConf.indexOf("<"+elementName+">") + elementName.length() + 2;
-    int endIndex   = xmlRscConf.indexOf("</"+elementName+">");
-
-    // Check if the element is available in the userXML, and if so, get the info
-    if (beginIndex >= (elementName.length() + 2)) response = xmlRscConf.substring(beginIndex, endIndex);
-
-    return response;
-  }
-
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
   //protected void getUsePrimaryTCDS(){
@@ -681,12 +643,15 @@ public class HCALEventHandler extends UserEventHandler {
     // Get list of childFMs from QG
     List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
     functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    functionManager.containerAllFMChildren = new QualifiedResourceContainer(childFMs);
     // Fill containerFMchildren with Active FMs only
     List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
     functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
 
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    //Empty the container if LPM FM is masked
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(functionManager.containerFMTCDSLPM.getActiveQRList());
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
     ActiveChildFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
 
@@ -949,11 +914,6 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
 
-  // method which returns a password free string
-  protected String PasswordFree(String Input) {
-    return Input.replaceAll("PASSWORD=[A-Za-z_0-9]+\"|PASSWORD=[A-Za-z_0-9]+,|OracleDBPassword=\"[A-Za-z_0-9]+\"","here_was_something_removed_because_of_security");
-  }
-
   // establish connection to RunInfoDB - if needed
   protected void checkRunInfoDBConnection() {
     if (functionManager.HCALRunInfo == null) {
@@ -989,6 +949,7 @@ public class HCALEventHandler extends UserEventHandler {
       logger.error(errMessage,e);
     }
   }
+
   protected void publishGlobalParameter (String nameForDB, String parameterName){
     String globalParameterString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
     Parameter<StringT> parameter;
@@ -1007,15 +968,19 @@ public class HCALEventHandler extends UserEventHandler {
       logger.error(errMessage,e);
     }
   }
+
   protected void publishGlobalParameter (String parameterName) {
     publishGlobalParameter(parameterName, parameterName);
   }
 
-
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI", "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START", "DQM_TASK"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI",
+                                          "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL",
+                                          "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  
+                                          "HCAL_TIME_OF_FM_START", "DQM_TASK", 
+                                          "LOCAL_RUNKEY_SELECTED", "MASTERSNIPPET_SELECTED"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
 
     maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
@@ -1034,9 +999,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     // TODO JHak put in run start time and stop times. This was always broken.
 
-    Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
-    globalRenamedParams.put(  "LOCAL_RUN_KEY"  ,                 "RUN_CONFIG_SELECTED"        );
-    globalRenamedParams.put(  "LOCAL_RUNKEY_NAME",               "CFGSNIPPET_KEY_SELECTED"    );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
 
@@ -1063,13 +1025,6 @@ public class HCALEventHandler extends UserEventHandler {
         // Publish the global parameters
         for (String paramName : globalParams) {
           publishGlobalParameter(paramName);
-        }
-        Set<String> renamedGlobalParamKeys = globalRenamedParams.keySet();
-        Iterator<String> gpi = renamedGlobalParamKeys.iterator();
-        String gpKey;
-        while (gpi.hasNext()) {
-          gpKey = gpi.next();
-          publishGlobalParameter( gpKey,globalRenamedParams.get(gpKey));
         }
       }
       logger.info("[HCAL " + functionManager.FMname + "] finished publishing to the RunInfo DB.");
@@ -1224,7 +1179,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
-                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
                 functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
                 //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
@@ -1261,7 +1216,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
@@ -1416,108 +1371,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
   }
-
-
-  // find out if all controlled EVMs are happy before stopping the run
-  protected boolean isRUBuildersEmpty() {
-    if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-      logger.warn("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
-    }
-
-    boolean reply = true;
-
-    XdaqApplication evmApp = null;
-    Iterator evmIterator = functionManager.containerEVM.getQualifiedResourceList().iterator();
-    while (evmIterator.hasNext()) {
-      evmApp = (XdaqApplication) evmIterator.next();
-
-      try {
-        waitRUBuilderToEmpty(evmApp);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Could not flush RUBuilder\nEVM URI: " + evmApp.getResource().getURI().toString();
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-        reply = false;
-      }
-    }
-    return reply;
-  }
-
-  // find out if one EVM is happy
-  private void waitRUBuilderToEmpty(XdaqApplication app) throws UserActionException {
-    if(app == null) { return; }
-    String nbEvtIdsValue;
-    String freeEvtIdsValue;
-    String freeEvtIdsInLastIteration;
-    String freeEvtIdsInFirstIteration;
-    XDAQParameter nbEvtIdsParm;
-    XDAQParameter freeEvtIdsParm;
-    int ntry = 0;
-
-    String nbEvtIdsInBuilderName = "nbEvtIdsInBuilder";
-    String freeEvtIdsName = "freeEventIdFIFOElements";
-    try {
-      nbEvtIdsParm = app.getXDAQParameter();
-      nbEvtIdsParm.select(nbEvtIdsInBuilderName);
-      nbEvtIdsValue = getValue(nbEvtIdsParm, nbEvtIdsInBuilderName);
-
-      freeEvtIdsParm = app.getXDAQParameter();
-      freeEvtIdsParm.select(freeEvtIdsName );
-      freeEvtIdsInLastIteration = getValue(freeEvtIdsParm,freeEvtIdsName);
-      freeEvtIdsInFirstIteration = freeEvtIdsInLastIteration;
-    }
-    catch (Exception e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "] RUBuilder: exception occured while getting parameter ...";
-      logger.error(errMessage, e);
-      throw new UserActionException(errMessage,e);
-    }
-
-    while(true) {
-      try {
-        Thread.sleep(10000);
-      }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Sleeping thread failed while waiting for the RU builder to flush!";
-        logger.error(errMessage, e);
-        throw new UserActionException(errMessage);
-      }
-      freeEvtIdsValue = getValue(freeEvtIdsParm,freeEvtIdsName);
-      if(nbEvtIdsValue.equals(freeEvtIdsValue)) {
-        break;
-      }
-
-      if(!freeEvtIdsInFirstIteration .equals(freeEvtIdsValue) && freeEvtIdsInLastIteration.equals(freeEvtIdsValue )) {
-        ntry++;
-        logger.warn("[HCAL " + functionManager.FMname + "] Free IDs: " + freeEvtIdsValue);
-        if(ntry == 5) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] EVM on URI " + app.getResource().getURI().toString() + " seems to have stopped building when not flushed.\nLast number of fre events Ids was: " + freeEvtIdsInLastIteration;
-          logger.error(errMessage);
-          throw new UserActionException(errMessage);
-        }
-      }
-      else {
-        ntry = 0;
-      }
-      freeEvtIdsInLastIteration = freeEvtIdsValue;
-    }
-  }
-
-  private String getValue(XDAQParameter param, String s) throws UserActionException {
-    try {
-      if(param.get()) {
-        return param.getValue(s);
-      }
-      else {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Failed to get: "+ s;
-        throw new UserActionException(errMessage);
-      }
-    }
-    catch (Exception e) {
-      throw new UserActionException("[HCAL " + functionManager.FMname + "] Could not get value of: " + s,e);
-    }
-  }
-
 
   // checks if the TriggerAdapter is stopped
   protected Boolean isTriggerAdapterStopped() {
@@ -1696,9 +1549,6 @@ public class HCALEventHandler extends UserEventHandler {
     // parse FED mask
     String[] FedValueArray = FedEnableMask.split("%");
 
-    // list of misparsed FEDs
-    String errorFEDs = "";
-
     for ( int j=0 ; j<FedValueArray.length ; j++) {
       logger.debug("[HCAL " + functionManager.FMname + "] FED_ENABLE_MASK parsing: testing " + FedValueArray[j]);
 
@@ -1762,7 +1612,7 @@ public class HCALEventHandler extends UserEventHandler {
           if ( FedId >= functionManager.firstHBHEaFedId && FedId <= functionManager.lastHBHEaFedId ) {
             if(!functionManager.HBHEain) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEa FED range.\nEnabling the HBHEa partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEa FED range.\nEnabling the HBHEa partition.");
               }
               functionManager.HBHEain = true;
             }
@@ -1770,7 +1620,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHBHEbFedId && FedId <= functionManager.lastHBHEbFedId ) {
             if(!functionManager.HBHEbin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEb FED range.\nEnabling the HBHEb partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEb FED range.\nEnabling the HBHEb partition.");
               }
               functionManager.HBHEbin = true;
             }
@@ -1778,7 +1628,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHBHEcFedId && FedId <= functionManager.lastHBHEcFedId ) {
             if(!functionManager.HBHEcin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEc FED range.\nEnabling the HBHEc partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HBHEc FED range.\nEnabling the HBHEc partition.");
               }
               functionManager.HBHEcin = true;
             }
@@ -1786,7 +1636,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHFFedId && FedId <= functionManager.lastHFFedId ) {
             if(!functionManager.HFin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HF partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HF partition.");
               }
               functionManager.HFin = true;
             }
@@ -1794,7 +1644,7 @@ public class HCALEventHandler extends UserEventHandler {
           else if ( FedId >= functionManager.firstHOFedId && FedId <= functionManager.lastHOFedId ) {
             if(!functionManager.HOin) {
               if (functionManager.FMrole.equals("HCAL")) {
-                logger.warn("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HO partition.");
+                logger.info("[HCAL " + functionManager.FMname + "] FedId = " + FedId + " is in the HCAL HF FED range.\nEnabling the HO partition.");
               }
               functionManager.HOin = true;
             }
@@ -2163,8 +2013,6 @@ public class HCALEventHandler extends UserEventHandler {
       int icount = 0;
       while ((stopHCALSupervisorWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         icount++;
-        Date now = Calendar.getInstance().getTime();
-
         // poll HCAL supervisor status in the Configuring/Configured/Running/RunningDegraded states every 5 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
         if (icount%5==0) {
           if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) ||
@@ -2182,8 +2030,6 @@ public class HCALEventHandler extends UserEventHandler {
               String status   = "undefined";
               String stateName   = "undefined";
               String progressFromSupervisor = "undefined";
-              String taname   = "undefined";
-
               // ask for the status of the HCAL supervisor
               for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
                 try {
@@ -2269,8 +2115,6 @@ public class HCALEventHandler extends UserEventHandler {
       int icount = 0;
       while ((stopTriggerAdapterWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         icount++;
-        Date now = Calendar.getInstance().getTime();
-
         // poll TriggerAdapter status every 1 sec
         if (icount%1==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
@@ -2341,7 +2185,7 @@ public class HCALEventHandler extends UserEventHandler {
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Stopping the TA ...")));
 
                   if (!SpecialFMsAreControlled) {
-                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
+                    logger.info("[HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
                     functionManager.fireEvent(HCALInputs.STOP);
                   }
 
@@ -2363,7 +2207,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       // stop the TriggerAdapter watchdog thread
       System.out.println("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-      logger.warn("[SethLog HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
+      logger.info("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
       TriggerAdapterWatchThreadList.remove(this);
     }
   }
@@ -2387,6 +2231,17 @@ public class HCALEventHandler extends UserEventHandler {
       XDAQParameter NameQuery         = new XDAQParameter(alarmerURL_str,"hcalAlarmer",0);
       HashMap<String,String> partitionStatusMap  = new HashMap<String,String>(); // e.g. <HO,HO_Status>,<Laser,LASER_Status>
       HashMap<String,String> partitionMessageMap = new HashMap<String,String>(); // e.g. <HO,HO_Message>,<Laser,LASER_Message>
+
+      // TODO: Get this map from FM property OR snippet 
+      // If FM name is found in this map, all partitions will be watched/ignored together.
+      // If not the partition matched to the FM name substring will be watched.
+      HashMap<String,List<String>> FMnameToPartitionMap = new HashMap<String,List<String>>(); // e.g. <HBHE,HBHEa>, <HBHE,HBHEb> ...
+      List<String>  HBHEpartitions   = new ArrayList<String>();  // HBHEa,HBHEb,HBHEc
+      HBHEpartitions.add("HBHEa");
+      HBHEpartitions.add("HBHEb");
+      HBHEpartitions.add("HBHEc");
+      FMnameToPartitionMap.put("HCAL_HBHE",HBHEpartitions);
+
       try{
         AlarmerPamNames = NameQuery.getNames();
       }
@@ -2396,26 +2251,47 @@ public class HCALEventHandler extends UserEventHandler {
       for(QualifiedResource qr : fmChildrenList){
         String LV2FMname             = qr.getName(); //e.g. HCAL_HO
         try{
-          // Get FM_PARTITION from the LV2 parameterSet 
-          String partition = ((StringT)(((FunctionManager)qr).getParameter().get("FM_PARTITION").getValue())).getString();
-          if (!partition.equals("not set")){
-            for(String pamName : AlarmerPamNames){
-              //Match partition names with AlarmerInfospace parameters ignore case
-              if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
-                //Use Infospace partition name for query
-                watchedAlarms.add(pamName);                                    //e.g. HO_Status
-                //Use FMname partition name for ignoring Empty/Masked FMs
-                watchedPartitions.add(partition);                              //e.g. HO
-                partitionStatusMap.put(partition,pamName);
-              }
-              if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
-                watchedAlarms.add(pamName);                                   //e.g. HO_Message
-                partitionMessageMap.put(partition,pamName);
+          if(FMnameToPartitionMap.get(LV2FMname)!=null){
+            List<String> parititonsOfThisFM = FMnameToPartitionMap.get(LV2FMname);
+            for (String partition : parititonsOfThisFM){
+              for(String pamName : AlarmerPamNames){
+                //Match partition names with AlarmerInfospace parameters ignore case
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
+                  //Use Infospace partition name for query
+                  watchedAlarms.add(pamName);                                    //e.g. HO_Status
+                  //Use FMname partition name for ignoring Empty/Masked FMs
+                  watchedPartitions.add(partition);                              //e.g. HO
+                  partitionStatusMap.put(partition,pamName);
+                }
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
+                  watchedAlarms.add(pamName);                                   //e.g. HO_Message
+                  partitionMessageMap.put(partition,pamName);
+                }
               }
             }
           }
           else{
-            logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: not watching this partition: "+partition+" because LV2:"+LV2FMname+" has no supervisor");
+            // Get FM_PARTITION from the LV2 parameterSet 
+            String partition = ((StringT)(((FunctionManager)qr).getParameter().get("FM_PARTITION").getValue())).getString();
+            if (!partition.equals("not set")){
+              for(String pamName : AlarmerPamNames){
+                //Match partition names with AlarmerInfospace parameters ignore case
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Status")  ){
+                  //Use Infospace partition name for query
+                  watchedAlarms.add(pamName);                                    //e.g. HO_Status
+                  //Use FMname partition name for ignoring Empty/Masked FMs
+                  watchedPartitions.add(partition);                              //e.g. HO
+                  partitionStatusMap.put(partition,pamName);
+                }
+                if(pamName.toLowerCase().contains(partition.toLowerCase()) && pamName.contains("_Message")  ){
+                  watchedAlarms.add(pamName);                                   //e.g. HO_Message
+                  partitionMessageMap.put(partition,pamName);
+                }
+              }
+            }
+            else{
+              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: not watching this partition: "+partition+" because LV2:"+LV2FMname+" has no supervisor");
+            }
           }
         }
         catch (ParameterServiceException e){
@@ -2434,6 +2310,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       stopAlarmerWatchThread = false;
       try {
+        @SuppressWarnings("unused")
         URL alarmerURL = new URL(((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString());
       } catch (MalformedURLException e) {
         // in case the URL is bogus, just don't run the thread
@@ -2443,8 +2320,6 @@ public class HCALEventHandler extends UserEventHandler {
 
       // poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
-        Date now = Calendar.getInstance().getTime();
-
         FMstate = functionManager.getState().getStateString();
         if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
@@ -2454,24 +2329,29 @@ public class HCALEventHandler extends UserEventHandler {
               delayAlarmerWatchThread=false;
             }
             // Empty or masked partitions. Alarms will be ignored for these partitions.
-            VectorT<StringT> emptyFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
-            VectorT<StringT> maskedFMs      = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
+            VectorT<StringT> EmptyOrMaskedFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
+            VectorT<StringT> maskedFMs              = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
+            EmptyOrMaskedFMs.getVector().addAll(maskedFMs.getVector()); 
             LinkedHashSet<String> ignoredPartitions = new LinkedHashSet<String>();
 
-            for(StringT FMname : emptyFMs){
-              String partitionOfemptyFM = FMname.getString().substring(5);
-              // Should be 1) a valid partition and 2)not already ignored
-              if(watchedPartitions.contains(partitionOfemptyFM) && !ignoredPartitions.contains(partitionOfemptyFM)){
-                ignoredPartitions.add(partitionOfemptyFM);
-                logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfemptyFM+" because FM is empty: "+FMname.getString());
+            for(StringT FMname : EmptyOrMaskedFMs){
+              if(FMnameToPartitionMap.get(FMname)!=null){
+                // Should be 1) a valid partition and 2)not already ignored
+                List<String> parititonsOfThisFM = FMnameToPartitionMap.get(FMname);
+                for (String partition : parititonsOfThisFM){
+                  if(watchedPartitions.contains(partition) && !ignoredPartitions.contains(partition)){
+                    ignoredPartitions.add(partition);
+                    logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partition+" because FM is empty/masked: "+FMname.getString());
+                  }
+                }
               }
-            }
-            for(StringT FMname : maskedFMs){
-              // Should be 1) a valid partition and 2)not already ignored
-              String partitionOfmaskedFM = FMname.getString().substring(5);
-              if(watchedPartitions.contains(partitionOfmaskedFM) && !ignoredPartitions.contains(partitionOfmaskedFM)){
-                ignoredPartitions.add(partitionOfmaskedFM);
-                logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfmaskedFM+" because FM is masked: "+FMname.getString());
+              else{
+                String partitionOfemptyFM = FMname.getString().substring(5);
+                // Should be 1) a valid partition and 2)not already ignored
+                if(watchedPartitions.contains(partitionOfemptyFM) && !ignoredPartitions.contains(partitionOfemptyFM)){
+                  ignoredPartitions.add(partitionOfemptyFM);
+                  logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfemptyFM+" because FM is empty/masked: "+FMname.getString());
+                }
               }
             }
             for (String ignoredPartition : ignoredPartitions) {
@@ -2619,52 +2499,84 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
   
-  // Function to receive parameter
+  // Function to receive parameter and set to same parameter
+  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+    CheckAndSetTargetParameter(pSet,PamName, PamName,printResult);
+  }
   void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
-    CheckAndSetParameter(pSet,PamName,true);
+    CheckAndSetTargetParameter(pSet,PamName, PamName,true);
   }
 
-  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+
+  // Function to receive parameter and set to other parameter
+  void CheckAndSetTargetParameter(ParameterSet pSet , String InputPamName, String TargetPamName, boolean printResult) throws UserActionException{
     String inputString = getUserFunctionManager().getLastInput().getInputString();
 
-    if( pSet.get(PamName) != null){
-      if (pSet.get(PamName).getType().equals(StringT.class)){
-        String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
-        }
-      }
-      if (pSet.get(PamName).getType().equals(IntegerT.class)){
-        Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
-        }
-        else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+    if( pSet.get(InputPamName) != null){
+      if (pSet.get(InputPamName).getType().equals(StringT.class)){
+        String PamValue = ((StringT)pSet.get(InputPamName).getValue()).getString();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(TargetPamName, new StringT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }else{
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
-      if (pSet.get(PamName).getType().equals(BooleanT.class)){
-        Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
-        if(printResult){
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+      if (pSet.get(InputPamName).getType().equals(IntegerT.class)){
+        Integer PamValue = ((IntegerT)pSet.get(InputPamName).getValue()).getInteger();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(TargetPamName, new IntegerT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
         }
         else{
-          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+          String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
+        }
+      }
+      if (pSet.get(InputPamName).getType().equals(BooleanT.class)){
+        Boolean PamValue = ((BooleanT)pSet.get(InputPamName).getValue()).getBoolean();
+        if (functionManager.getParameterSet().get(TargetPamName) != null){
+          functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(TargetPamName, new BooleanT(PamValue)));
+          if(printResult){
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+          }
+          else{
+            logger.info("[HCAL "+ functionManager.FMname +" ] Received pam:"+InputPamName+ " and set pam:"+ TargetPamName +" from last input= "+inputString+"." );
+          }
+        }
+        else{
+           String errMessage = "Trying to set pam="+TargetPamName+" from input "+inputString+" but cannot find target parameter "+TargetPamName;
+          logger.error(errMessage);
+          throw new UserActionException(errMessage);
         }
       }
     }
     else{
-      String errMessage =" Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled";
+      String errMessage =" Did not receive "+ InputPamName +" from last input= "+inputString+" ! Please check if "+ InputPamName+ " was filled";
       logger.warn(errMessage);
       throw new UserActionException(errMessage);
     }
   }
+
+  // Print of the names of the QR in an arrayList
+  void PrintQRnames(List<QualifiedResource> qrlist){
+    QualifiedResourceContainer qrc = new QualifiedResourceContainer(qrlist);
+    PrintQRnames(qrc);
+  }
+
   // Print of the names of the QR in a QRContainer 
   void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
@@ -2751,5 +2663,24 @@ public class HCALEventHandler extends UserEventHandler {
         qr.setInitialized(true);
       }
     }
-  } 
+  }
+
+  // Get property from a QR
+  public String getProperty(QualifiedResource QR,  String name ) throws Exception {
+
+    List<ConfigProperty> propertiesList = QR.getResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+    ConfigProperty property = null;
+    Iterator<ConfigProperty> iter = propertiesList.iterator();
+    while(iter.hasNext()) {
+      property = iter.next();
+      if(property.getName().equals(name)) {
+        return property.getValue();
+      }
+    }
+    throw new Exception("Property "+name+" not found");
+  }
 }
