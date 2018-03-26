@@ -129,6 +129,9 @@ a {
   width:100%;
   font-family: monospace;
 }
+.parameterInputField {
+  white-space: pre-wrap;
+}
 #hcalmaintable .parameterInputField { 
   width:100%;
   font-family: monospace;

@@ -268,7 +268,7 @@ function makeAutoconfigureButton() {
     var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
     var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
     if (! $('#autoconfigureButton').length) {
-      $(autoconfigureButton).insertAfter("#setRunkeyButton");
+      $(autoconfigureButton).insertBefore("#setRunkeyButton");
     }
 }
 
@@ -547,7 +547,7 @@ function getContent(id) {
   console.log("this element has tagName" + $("#" + id).prop("tagName"));
   if ($("#" + id).prop("tagName").includes("INPUT")) {
     console.log("identified this as a 'input' tag");
-    content=$('#'+id).val();
+    content=$('#'+id).attr("value");
   }
   else { 
     console.log("identified this as not an 'input' tag");
@@ -572,17 +572,18 @@ function makeTooltips(className) {
 
 
       $(this).mouseenter( function(event) {
-        $('#'+tooltipId).show();
-        $('#'+tooltipId).css({
+        $("#"+tooltipId).css({
             position: "absolute",
-            top: $(this).position().top + "px",
-            left: $(this).position().left + "px"
+            float: "left",
+            top: $(this).position().top + $(this).height() + "px",
+            left: $(this).position().left + "px",
         });
-        $('#'+tooltipTextId).text(getContent($(this).attr("id")));
+        $("#"+tooltipId).delay(750).fadeIn(300);
+        $('#'+tooltipTextId).html(getContent($(this).attr("id")));
       });
       $(this).parent().mouseleave( function(event) {
         if ($('#'+tooltipId).attr("persist") == "false") {
-          $('#' + tooltipId).hide();
+          $("#"+tooltipId).stop(true).fadeOut(200);
         }
       });
     }
@@ -649,7 +650,7 @@ function hcalOnLoad() {
     checkSpectator();
     makeIcons();
     $('#setRunkeyButton').hide();
-    makeTooltips('.parameterInputField');
+    makeTooltips('#infoSection .parameterInputField');
     makeTooltips('.bigInfo');
   }
   else {
