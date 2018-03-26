@@ -40,9 +40,12 @@
 <div id="spectatorInfo">You are in <strong>spectator mode</strong></div>
 <div id="statusSection">
   <div id="supervisorRow" style="display:none">
-    <!--Supervisor error box-->
+    <!--xdaq error message boxes-->
     <div id="supervisorCell" class="label_center_black" colspan="3">
       <div id="supervisorError" class="hcal_control_Supervisor"></div>
+    </div>
+    <div id="errMapCell" class="label_center_black" colspan="3">
+      <div id="errMapError"></div>
     </div>
   </div>
 </div>

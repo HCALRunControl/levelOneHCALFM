@@ -44,10 +44,9 @@ import rcms.utilities.runinfo.RunInfo;
 import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
 
-import java.text.DateFormat;
 import java.util.Date;
-import java.util.TimeZone;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URL;
@@ -104,8 +103,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public String FMuri = "empty";
   public String FMrole = "empty";
   public String FMpartition = "empty";
-  public Date FMtimeofstart;
-  public String utcFMtimeofstart = "empty";
+  public String FMtimeofstartString = "empty";
 
   // set from the controlled EventHandler 
   public String  RunType = "";
@@ -222,6 +220,11 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String alarmerPartition = "";
 
+  // the timestamp users see in the LogCollector logs has this format:
+  // "yyyy-MM-d HH:mm:ss"
+  // keep that format for grepping, but add timezone
+  private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-d HH:mm:ss z");
+
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
 
@@ -283,10 +286,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     FMurl = fmConf.getSourceURL().toString();
     FMuri = fmConf.getURI().toString();
     FMrole = fmConf.getRole();
-    FMtimeofstart = new Date();
-    DateFormat dateFormatter = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
-    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));;
-    utcFMtimeofstart = dateFormatter.format(FMtimeofstart);
+    FMtimeofstartString = getTimestampString();
 
     // set statelistener URL
     try {
@@ -316,7 +316,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     RunSetupDetails += "\nFM URL: " + FMurl;
     RunSetupDetails += "\nFM URI: " + FMuri;
     RunSetupDetails += "\nFM role: " + FMrole;
-    RunSetupDetails += "\nthis FM was started at: " + utcFMtimeofstart;
+    RunSetupDetails += "\nthis FM was started at: " + FMtimeofstartString;
 
     logger.info("[HCAL " + FMname + "] Run configuration details" + RunSetupDetails);
 
@@ -1091,6 +1091,14 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
     }
     throw new Exception("Property "+name+" not found");
+  }
+
+  /** This method can be used to replace all multiple-line uses of Time.now() or DateTime.now() etc.
+   * 
+   * @return a string of the timestamp in the same format as the LogCollector logs, but with the timezone added
+   */
+  protected String getTimestampString() {
+    return ZonedDateTime.now().format(formatter);
   }
 
 }

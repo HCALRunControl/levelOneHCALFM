@@ -25,7 +25,10 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-	private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT","DRIVER_IDENTIFIER"};
+	private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", 
+                                                          "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER",
+                                                          "STARTED_WITH_RUN_NUMBER", "PROGRESS","EXIT",
+                                                          "DRIVER_IDENTIFIER", "XDAQ_ERR_MSG", "LOCAL_RUNKEY_SELECTED"};
 
 	private HCALParameters() {
 		super();
@@ -113,6 +116,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("EMPTY_FMS"                ,  new VectorT<StringT>()    ) );  // LV2 FMs without XDAQs
+		this.put( new FunctionManagerParameter<VectorT<MapT<StringT>> > ("XDAQ_ERR_MSG"      ,  new VectorT<MapT<StringT>>()));  // Vector to contain XDAQ app err messages: < <App1:Err>,<App2:Err>,... >
 	}
 
 	public static HCALParameters getInstance() {
