@@ -44,10 +44,7 @@ import rcms.utilities.runinfo.RunInfo;
 import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
 
-import java.text.DateFormat;
 import java.util.Date;
-import java.util.TimeZone;
-import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -106,8 +103,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public String FMuri = "empty";
   public String FMrole = "empty";
   public String FMpartition = "empty";
-  public Date FMtimeofstart;
-  public String utcFMtimeofstart = "empty";
+  public String FMtimeofstartString = "empty";
 
   // set from the controlled EventHandler 
   public String  RunType = "";
@@ -290,10 +286,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     FMurl = fmConf.getSourceURL().toString();
     FMuri = fmConf.getURI().toString();
     FMrole = fmConf.getRole();
-    FMtimeofstart = new Date();
-    DateFormat dateFormatter = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
-    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));;
-    utcFMtimeofstart = dateFormatter.format(FMtimeofstart);
+    FMtimeofstartString = getTimestampString();
 
     // set statelistener URL
     try {
@@ -323,7 +316,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     RunSetupDetails += "\nFM URL: " + FMurl;
     RunSetupDetails += "\nFM URI: " + FMuri;
     RunSetupDetails += "\nFM role: " + FMrole;
-    RunSetupDetails += "\nthis FM was started at: " + utcFMtimeofstart;
+    RunSetupDetails += "\nthis FM was started at: " + FMtimeofstartString;
 
     logger.info("[HCAL " + FMname + "] Run configuration details" + RunSetupDetails);
 

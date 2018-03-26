@@ -1,10 +1,6 @@
 package rcms.fm.app.level1;
  
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.List;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
@@ -87,11 +83,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
-          DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
-          dateFormatter.setTimeZone(TimeZone.getDefault());
-          String TimeNow =  dateFormatter.format(new Date());
           // This always contains long error message, single string
-          errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
+          errMsg = "["+fm.getTimestampString()+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
 
           // Try to get ErrMsgVector from LV2 FM
           List<QualifiedResource> fmChildrenList    = fm.containerFMChildren.getActiveQRList();
@@ -111,7 +104,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             logger.error("[HCAL " + fm.FMname+"] : fail to get XDAQ_ERR_MSG from LV2, exception= :"+e.getMessage());
           }
           if(!LV1_xDAQ_err_msg.isEmpty()){
-            localGUIerrMsg = "["+TimeNow+"] LV1 FM: supervisor reports the following  errors: ";
+            localGUIerrMsg = "["+fm.getTimestampString()+"] LV1 FM: supervisor reports the following  errors: ";
           }
         }
         //Send LV0 a string errMessage.

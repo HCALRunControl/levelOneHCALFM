@@ -96,12 +96,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
     }
 
-    // Get the grandmaster in the userXML
+    // Get the path to the grandmaster snippet from the userXML
     {
       String theGrandmaster = "";
       try {
-        // TODO FIXME the line below should eventually be replaced by the one below it, once the configs' userXMLs get updated 
-        //theGrandmaster=xmlHandler.getHCALuserXMLelementContent("MasterSnippetList",false);
         theGrandmaster=xmlHandler.getHCALuserXMLelementContent("grandmaster",false);
       }
       catch (UserActionException e) {
@@ -479,7 +477,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("initAction executed ...")));
 
       // publish the initialization time for this FM to the paramterSet
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_TIME_OF_FM_START", new StringT(functionManager.utcFMtimeofstart)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_TIME_OF_FM_START", new StringT(functionManager.FMtimeofstartString)));
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction executed ...");
     }
