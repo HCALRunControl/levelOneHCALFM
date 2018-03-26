@@ -1,6 +1,7 @@
 package rcms.fm.app.level1;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
@@ -44,10 +45,23 @@ import org.xml.sax.SAXParseException;
 import rcms.fm.fw.user.UserActionException;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.parameter.type.ParameterType;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.ByteT;
+import rcms.fm.fw.parameter.type.DateT;
+import rcms.fm.fw.parameter.type.DoubleT;
+import rcms.fm.fw.parameter.type.FloatT;
+import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.LongT;
+import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.type.ShortT;
+import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.StructT;
+import rcms.fm.fw.parameter.type.UnsignedIntegerT;
+import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.ByteT;
 import rcms.fm.fw.parameter.type.DateT;
@@ -58,11 +72,17 @@ import rcms.fm.fw.parameter.type.ShortT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.util.JsonUtil;
 import rcms.fm.resource.QualifiedResource;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
 
+//import com.google.gson.Gson;
+//import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Field;
 /**
  *  @author John Hakala
  *
@@ -476,123 +496,273 @@ public class HCALxmlHandler {
 
   // Fill parameters from MasterSnippet
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath,String PartitionName) throws UserActionException{
-    try{
-        logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet. Mastersnippet file=" + selectedRun + "; PartitionName= "+PartitionName);
-        // Get ControlSequences from mastersnippet
-        docBuilder = docBuilderFactory.newDocumentBuilder();
-        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
-        
-        masterSnippet.getDocumentElement().normalize();
-        Element masterSnippetElement = masterSnippet.getDocumentElement();
+    logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet(" + selectedRun + ", " + CfgCVSBasePath + "  )");
+    try {
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setXIncludeAware(true); // This is needed for xi:include to work
+      factory.setNamespaceAware(true);
+      DocumentBuilder docBuilder = factory.newDocumentBuilder();
+      String masterUriActual = CfgCVSBasePath + selectedRun + "/pro";
+      String masterUriSystem = CfgCVSBasePath + "/master.xml"; // This is needed for relative resolution of includes to be based on CfgCVSBasePath, rather than the working directory
+      InputSource masterInputSource = new InputSource(new FileInputStream(masterUriActual));
+      Document masterSnippet = docBuilder.parse(masterInputSource.getByteStream(), masterUriSystem);
+      masterSnippet.getDocumentElement().normalize();
 
-        NodeList listOfTags = masterSnippetElement.getChildNodes();
-        String commonMasterSnippetFile = "";
+      Element masterSnippetElement = masterSnippet.getDocumentElement();
+      NodeList elements = masterSnippetElement.getChildNodes();
+      NodeList listOfTags = masterSnippetElement.getChildNodes();
+
+
+      // Look for common master snippet and, if present, parse first
+      String commonMasterSnippetFile = "";
+      for (int iNode = 0; iNode < elements.getLength(); iNode++) {
+        if (elements.item(iNode).getNodeType() == Node.ELEMENT_NODE) {
+          if (elements.item(iNode).getNodeName() == "CommonMasterSnippet") {
+            // Check that it has not already been set
+            if (commonMasterSnippetFile != "") {
+              String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Found multiple instances of CommonMasterSnippet. Only one is allowed.";
+              throw new UserActionException(errMessage);
+            }
+            commonMasterSnippetFile = ((Element)elements.item(iNode)).getAttributes().getNamedItem("file").getNodeValue();
+          }
+        }
+      }
+
+      if (commonMasterSnippetFile != "") {
+        if(PartitionName==""){
+          logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
+        }else{
+          logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + " for Partition="+PartitionName+" .");
+        }
+        this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,PartitionName);
+        logger.info("[HCAL " + functionManager.FMname + "]: Done parsing the common mastersnippet. Continue to parse the main one.");
+      }
+
+      //Validate partition attribute input if LV1 is parsing the mastersnippet
+      if (!functionManager.containerFMChildren.isEmpty()){
+        //Masked FM children should be valid input. Use containerAllFMChildren instead of containerFMChildren
+        List<QualifiedResource> allFMlists = functionManager.containerAllFMChildren.getQualifiedResourceList();
+        ArrayList<String> ValidPartitionNames  = new ArrayList<String>();
+        for (QualifiedResource FMqr: allFMlists){
+          // FM name = HCAL_PartitionName
+          ValidPartitionNames.add(FMqr.getName().substring(5));
+          ValidPartitionNames.add(FMqr.getName());
+        }
+
         for(int i =0;i< listOfTags.getLength();i++){
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
-            if (listOfTags.item(i).getNodeName() == "CommonMasterSnippet") {
-              if (commonMasterSnippetFile != "") {
-                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Found multiple instances of CommonMasterSnippet. Only one is allowed.";
+            Element iElement = (Element) listOfTags.item(i);
+            if(iElement.hasAttribute("Partition")){
+              String ElementName      = iElement.getNodeName();
+              String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+              String[] ElementPartitionArray = ElementPartition.split(";");
+              for(String partitionName:ElementPartitionArray){
+                if(! ValidPartitionNames.contains(partitionName)){
+                  String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid Partition="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
+                  functionManager.goToError(errMessage);
+                }
+              }
+              if(ElementName.equals("CfgScript")){
+                  String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found Partition attribute in CfgScript. This is not allowed. Please try to set the same partition-specific setting via snippet." ;
+                  functionManager.goToError(errMessage);
+              }
+            }
+          }
+        }
+      }
+      for(int i =0;i< listOfTags.getLength();i++){
+        if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+          Element iElement = (Element) listOfTags.item(i);
+          //Remove the partition attributed elements if we are parsing for all partition
+          if(PartitionName=="" && iElement.hasAttribute("Partition")){
+            iElement.getParentNode().removeChild(iElement);
+            logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is partition specific.");
+          }
+          if(PartitionName!=""){
+             //Remove the non-partition elements if we are parsing for some partition
+             if(!iElement.hasAttribute("Partition")){
+                iElement.getParentNode().removeChild(iElement);
+                logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is not partition specific.");
+             }
+             //Remove the partition elements that are for other partitions
+             if(iElement.hasAttribute("Partition")){
+                String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
+                if(!ElementPartition.contains(PartitionName)){
+                  iElement.getParentNode().removeChild(iElement);
+                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+ElementPartition+" do not contain "+PartitionName);
+                }
+             }
+          }
+        }
+      }
+      masterSnippet.getDocumentElement().normalize();
+
+
+      // Parse parameters from main file
+      for (int iNode = 0; iNode < elements.getLength(); iNode++) {
+        if (elements.item(iNode).getNodeType() == Node.ELEMENT_NODE) {
+          Element parameterElement = (Element)elements.item(iNode);
+
+          String parameterName = parameterElement.getNodeName();
+          if (parameterName == "CommonMasterSnippet" || parameterName == "mastersnippet" ) {
+            continue;
+          }
+          logger.info("HCAL " + functionManager.FMname + "]: Found parameter " + parameterName);
+
+          // Require that the parameter is declared in HCALParameters.java
+          if (!functionManager.getHCALparameterSet().contains(parameterName)) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippetTest: Invalid parameter found in master snippet! No such Parameter name = " + parameterName + ".";
+            throw new UserActionException(errMessage);
+          }
+
+          // Parameter::getType() returns, e.g., rcms.fm.fw.parameter.type.StringT
+          String[] parameterTypeLong = functionManager.getHCALparameterSet().get(parameterName).getType().getName().split("\\.");
+          String parameterType = parameterTypeLong[parameterTypeLong.length - 1];
+          String parameterValue = parameterElement.getTextContent();
+        
+          // Truncate parameter value
+          if (parameterValue.length()>=1000){
+            parameterValue = parameterValue.substring(0, Math.min(parameterValue.length(), 1000));
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value(truncated)=" + parameterValue);
+          }else{
+            logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
+          }
+
+          switch (parameterType) {
+            case "BooleanT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(parameterName, new BooleanT(parameterValue)));
+              break;
+            }
+            case "ByteT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ByteT>(parameterName, new ByteT(parameterValue)));
+              break;
+            }
+            case "DateT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DateT>(parameterName, new DateT(parameterValue)));
+              break;
+            }
+            case "DoubleT ":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(parameterName, new DoubleT(parameterValue)));
+              break;
+            }
+            case "FloatT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<FloatT>(parameterName, new FloatT(parameterValue)));
+              break;
+            }
+            case "IntegerT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(parameterName, new IntegerT(parameterValue)));
+              break;
+            }
+            case "LongT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<LongT>(parameterName, new LongT(parameterValue)));
+              break;
+            }
+            case "ShortT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ShortT>(parameterName, new ShortT(parameterValue)));
+              break;
+            }
+            case "StringT":
+            {
+              if (parameterName.equals("HCAL_CFGSCRIPT")) {
+                String oldString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
+                if (oldString.equals("not set")) {
+                  oldString = "";
+                }
+                String newString = oldString + parameterValue;
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(newString)));
+              } else {
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
+              }
+              break;
+            }
+            case "UnsignedIntegerT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedIntegerT>(parameterName, new UnsignedIntegerT(parameterValue)));
+              break;
+            }
+            case "UnsignedShortT":
+            {
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedShortT>(parameterName, new UnsignedShortT(parameterValue)));
+              break;
+            }
+            // VectorT and MapT parsing use JsonUtil from the rcms framework, as suggested by Hannes. 
+            // The type is inferred from the content: Double, Integer, String, Boolean. 
+            case "VectorT":
+            {
+              Object parsedVector = JsonUtil.decode(parameterValue);
+              //logger.info("[HCAL " + functionManager.FMname + "]: Result of parsing vector is " + parsedVector);
+              if (parsedVector instanceof ArrayList<?>) {
+                //Only allow vector of double,integer,string,boolean for now.
+                for (Object entry : (ArrayList)parsedVector) {
+                  if (entry instanceof Double) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new DoubleT((Double)entry));
+                  } else if (entry instanceof Integer) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new IntegerT((Integer)entry));
+                  } else if (entry instanceof Boolean) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new BooleanT((Boolean)entry));
+                  } else if (entry instanceof String) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new StringT((String)entry));
+                  } else {
+                    String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Parameter " + parameterName + " was not parsed into a vector of Double, Integer, String, or Boolean.";
+                    throw new UserActionException(errMessage);
+                  }
+                }
+                // The following code unfortunately doesn't work: HCALParameters::run() starts throwing a `failed to update` error, somewhere in HCALParameters::getClonedParameterSet(). We suspect it's due to the wildcard ?, but don't understand why.
+                //VectorT tmpVectorT = new VectorT((ArrayList)parsedVector);
+                //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<? extends ParameterType>>(parameterName, tmpVectorT));
+              } else {
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: parsed vector failed instanceof ArrayList<?>. Parsed result = " + parsedVector;
                 throw new UserActionException(errMessage);
               }
-              commonMasterSnippetFile = ((Element)listOfTags.item(i)).getAttributes().getNamedItem("file").getNodeValue();
+              break;
             }
-          }
-        }
-        if (commonMasterSnippetFile != "") {
-          if(PartitionName==""){
-            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
-          }else{
-            logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + " for Partition="+PartitionName+" .");
-          }
-          this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,PartitionName);
-          logger.info("[HCAL " + functionManager.FMname + "]: Done parsing the common mastersnippet. Continue to parse the main one.");
-        }
-
-        //Validate partition attribute input if LV1 is parsing the mastersnippet
-        if (!functionManager.containerFMChildren.isEmpty()){
-          //Masked FM children should be valid input. Use containerAllFMChildren instead of containerFMChildren
-          List<QualifiedResource> allFMlists = functionManager.containerAllFMChildren.getQualifiedResourceList();
-          ArrayList<String> ValidPartitionNames  = new ArrayList<String>();
-          for (QualifiedResource FMqr: allFMlists){
-            // FM name = HCAL_PartitionName
-            ValidPartitionNames.add(FMqr.getName().substring(5));
-            ValidPartitionNames.add(FMqr.getName());
-          }
-
-          for(int i =0;i< listOfTags.getLength();i++){
-            if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
-              Element iElement = (Element) listOfTags.item(i);
-              if(iElement.hasAttribute("Partition")){
-                String ElementName      = iElement.getNodeName();
-                String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
-                String[] ElementPartitionArray = ElementPartition.split(";");
-                for(String partitionName:ElementPartitionArray){
-                  if(! ValidPartitionNames.contains(partitionName)){
-                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found invalid Partition="+partitionName+" in this tag "+ElementName+".\n Valid partition names are:"+ ValidPartitionNames.toString();
-                    functionManager.goToError(errMessage);
-                  }
-                }
-                if(ElementName.equals("CfgScript")){
-                    String errMessage = "[HCAL"+functionManager.FMname+"] parseMasterSnippet: Found Partition attribute in CfgScript. This is not allowed. Please try to set the same partition-specific setting via snippet." ;
-                    functionManager.goToError(errMessage);
-                }
-              }
-            }
-          }
-        }
-        for(int i =0;i< listOfTags.getLength();i++){
-          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
-            Element iElement = (Element) listOfTags.item(i);
-            //Remove the partition attributed elements if we are parsing for all partition
-            if(PartitionName=="" && iElement.hasAttribute("Partition")){
-              iElement.getParentNode().removeChild(iElement);
-              logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is partition specific.");
-            }
-            if(PartitionName!=""){
-               //Remove the non-partition elements if we are parsing for some partition
-               if(!iElement.hasAttribute("Partition")){
-                  iElement.getParentNode().removeChild(iElement);
-                  logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because it is not partition specific.");
-               }
-               //Remove the partition elements that are for other partitions
-               if(iElement.hasAttribute("Partition")){
-                  String ElementPartition = iElement.getAttributes().getNamedItem("Partition").getNodeValue();
-                  if(!ElementPartition.contains(PartitionName)){
-                    iElement.getParentNode().removeChild(iElement);
-                    logger.info("[HCAL "+functionManager.FMname+" ] removing this node:"+ iElement.getNodeName()+" because "+ElementPartition+" do not contain "+PartitionName);
-                  }
-               }
-            }
-          }
-        }
-        masterSnippet.getDocumentElement().normalize();
-
-        for(int i =0;i< listOfTags.getLength();i++){
-          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
-            Element iElement = (Element) listOfTags.item(i);
-            String  iTagName = iElement.getNodeName();
-            Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
-            
-            if(isValidTag){
-              if (iTagName == "FMParameter") {
-                SetHCALFMParameter(iElement);
+            case "MapT":
+            {
+              Object parsedMap = JsonUtil.decode(parameterValue);
+              //logger.info("[HCAL " + functionManager.FMname + "]: Result of parsing map is " + parsedMap);
+              if (parsedMap instanceof HashMap<?,?>) {
+                MapT tmpMapT = MapT.createFromMap((HashMap)parsedMap);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<?>>(parameterName, tmpMapT));
               } else {
-                //Parse all parameters if no PartitionName is specified
-                if(!iElement.hasAttribute("Partition") ){
-                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with no partition attribute");
-                }
-                else{
-                  logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: parsing TagName = "+ iTagName +" with partition= "+PartitionName);
-                }
-                  NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-                  SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: parsed map failed instanceof HashMap<?,?>. Parsed result = " + parsedMap;
+                throw new UserActionException(errMessage);
               }
+              break;
+            }
+
+            default:
+            {
+              String errMessage="[David log HCAL " + functionManager.FMname + "] Error in master snippet parsing: for parameter " + parameterName + ", parameter type " + parameterType + " is not supported.";
+              throw new UserActionException(errMessage);
             }
           }
         }
-    }
-    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: ";
+      }
+
+      // Print test parameters
+      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_INTEGERT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_INTEGERT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_MAPT_STRINGT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_MAPT_STRINGT: " + //functionManager.getHCALparameterSet().get("TEST_MAPT_STRINGT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_MAPT_INTEGERT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_MAPT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_MAPT_INTEGERT").getValue());
+      //}
+      
+    } catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
+        String errMessage="[HCAL " + functionManager.FMname + "]: Got an error when parsing masterSnippet" ;
         functionManager.goToError(errMessage,e);
         throw new UserActionException(e.getMessage());
     }
@@ -752,12 +922,6 @@ public class HCALxmlHandler {
           String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
       }
-      if(TagName.equals("AlarmerURL")){
-          functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
-      }
-      if(TagName.equals("AlarmerStatus")) {
-          functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
-      }
       if(TagName.equals("FMSettings")){
           // Place holder to trying to set NumberOfEvents from Mastersnippet
           String  StringNumberOfEvents      = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
@@ -797,16 +961,11 @@ public class HCALxmlHandler {
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
         }
       }
-      if(TagName.equals("DQM_TASK")){
-          String dqmtask = getTagTextContent( NodeListOfTagName, TagName);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("DQM_TASK",new StringT(dqmtask)));
-      }
     } catch (UserActionException e) {
       // Warn when found more than one tag name in mastersnippet
       functionManager.goToError(e.getMessage());
     }
   }
-
   public boolean hasDefaultValue(String pam, String def_value){
         String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
         //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);

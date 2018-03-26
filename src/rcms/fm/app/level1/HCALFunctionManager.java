@@ -218,9 +218,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String rcmsStateListenerURL = "";
 
-  public String alarmerURL = "";
-
-  public String alarmerPartition = "";
 
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.

@@ -73,7 +73,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_RUN_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Global configuration key at last configure
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_TPG_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Trigger key at last configure
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_FED_ENABLE_MASK"  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  FED enable mask at last configure
-		this.put( new FunctionManagerParameter<StringT>  ("DQM_TASK"                         ,  new StringT("pedestal"), FunctionManagerParameter.Exported.READONLY) );  // Used for Local Run to specify which DQM task to be run on this run 
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_ALARMER_URL"                 ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  FED enable mask at last configure
+		this.put( new FunctionManagerParameter<StringT>  ("DQM_TASK"                         ,  new StringT("pedestal") , FunctionManagerParameter.Exported.READONLY) );  // Used for Local Run to specify which DQM task to be run on this run 
 
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_PRIMARY_TCDS"                 ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for using the secondary TCDS system
 		this.put( new FunctionManagerParameter<BooleanT> ("HCAL_RUNINFOPUBLISH"              ,  new BooleanT(true)     ,  FunctionManagerParameter.Exported.READONLY) );  // Switch for publishing RunInfo 
@@ -113,6 +114,11 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("EMPTY_FMS"                ,  new VectorT<StringT>()    ) );  // LV2 FMs without XDAQs
+
+		//this.put( new FunctionManagerParameter<VectorT<StringT>> ("TEST_VECTORT_STRINGT", new VectorT<StringT>()));
+		//this.put( new FunctionManagerParameter<VectorT<IntegerT>> ("TEST_VECTORT_INTEGERT", new VectorT<IntegerT>()));
+		//this.put( new FunctionManagerParameter<MapT<StringT>> ("TEST_MAPT_STRINGT", new MapT<StringT>()));
+		//this.put( new FunctionManagerParameter<MapT<IntegerT>> ("TEST_MAPT_INTEGERT", new MapT<IntegerT>()));
 	}
 
 	public static HCALParameters getInstance() {

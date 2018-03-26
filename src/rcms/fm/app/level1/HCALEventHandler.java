@@ -2227,7 +2227,8 @@ public class HCALEventHandler extends UserEventHandler {
       List<String>  watchedPartitions = new ArrayList<String>();  //All watchedPartitions (LV2 names)
       List<String>  AlarmerPamNames   = new ArrayList<String>();  //All alarmer pam Names
       String        FMstate           =  functionManager.getState().getStateString();
-      XDAQParameter NameQuery         = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+      String        alarmerURL_str    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString();
+      XDAQParameter NameQuery         = new XDAQParameter(alarmerURL_str,"hcalAlarmer",0);
       HashMap<String,String> partitionStatusMap  = new HashMap<String,String>(); // e.g. <HO,HO_Status>,<Laser,LASER_Status>
       HashMap<String,String> partitionMessageMap = new HashMap<String,String>(); // e.g. <HO,HO_Message>,<Laser,LASER_Message>
 
@@ -2310,11 +2311,11 @@ public class HCALEventHandler extends UserEventHandler {
       stopAlarmerWatchThread = false;
       try {
         @SuppressWarnings("unused")
-        URL alarmerURL = new URL(functionManager.alarmerURL);
+        URL alarmerURL = new URL(((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString());
       } catch (MalformedURLException e) {
         // in case the URL is bogus, just don't run the thread
         stopAlarmerWatchThread = true;
-        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + functionManager.alarmerURL + "; not checking alarmer status");
+        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + ((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString() + "; not checking alarmer status");
       }
 
       // poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
@@ -2359,7 +2360,7 @@ public class HCALEventHandler extends UserEventHandler {
 
             // ask for the status of the HCAL alarmer
             // ("http://hcalmon.cms:9945","hcalAlarmer",0);
-            XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+            XDAQParameter pam = new XDAQParameter(((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString(), "hcalAlarmer", 0);
             // this does a lazy get. do we need to force the update before getting it?
 
             // Get the status for each watched alarm

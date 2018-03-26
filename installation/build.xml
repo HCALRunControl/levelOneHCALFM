@@ -33,6 +33,14 @@
 		<pathelement location="${rcms.classes}"/>
 	</path>
 
+	<!--
+	<path id="ext.classpath">
+		<fileset dir="../ext/">
+			<include name="gson-2.8.0.jar"/>
+		</fileset>
+	</path>
+	-->
+
 	<!-- Compiles this StateMachine -->
 	<target name="compile" depends="clean">
 		<echo message="Compile this FunctionManager code" />
@@ -44,8 +52,11 @@
 			srcdir="${fm.src}"
 			destdir="${fm.classes}"
 			failonerror="true"
-      nowarn="true">
-			<classpath refid="rcms.classpath"/>
+      		nowarn="true">
+			<classpath>
+				<!--<path refid="ext.classpath"/>-->
+				<path refid="rcms.classpath"/>
+			</classpath>
 			<compilerarg value="-Xlint"/>
 	    </javac>
 	</target>

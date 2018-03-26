@@ -1,0 +1,71 @@
+<mastersnippet>
+<CommonMasterSnippet file="Master/common_led.xml"/>
+<HCAL_RUNINFOPUBLISH>true</HCAL_RUNINFOPUBLISH>
+<OFFICIAL_RUN_NUMBERS>true</OFFICIAL_RUN_NUMBERS>
+<HCAL_CFGSCRIPT>
+  include(/Common/Global.cfg:pro)
+  include(/Common/Connectivity.cfg:pro)
+
+  include(/DCC/Settings-GlobalRun.cfg:pro)
+  include(/DCC/Firmware.cfg:pro)
+
+  include(/HTR/Settings-GlobalRun.cfg:pro)
+  include(/HTR/Firmware.cfg:pro)
+
+  include(/TTCfanout/HcalSlave.cfg:pro)
+  include(/TTCfanout/HcalMaster.cfg:pro)
+  include(/TTCfanout/RCTMaster.cfg:pro)
+
+  include(/HLX/Settings.cfg:pro)
+  include(/SLB/Settings.cfg:pro)
+
+  include(/Trigger/Pedestal.cfg:pro)
+  include(/Trigger/Laser-OrbitGap.cfg:pro)
+  
+  include(/Laser/uMNioQIE.cfg:pro)
+  include(/Laser/uMNioOrbitGap.cfg:pro)
+  include(/Laser/uMNioQIE-GlobalRun.cfg:pro)
+  
+  include(/RBX/Settings-GlobalRun.cfg:pro)
+  include(/RBX/RBXlists.cfg:pro) 
+  include(/RBX/Tags_oracle.cfg:pro)
+  include(/RBX/RBXstatus.cfg:pro)   
+
+  include(/TechTrigProc/Firmware.cfg:pro)
+  include(/TechTrigProc/Settings-HO.cfg:pro)
+  include(/TechTrigProc/Settings-HF.cfg:pro)
+  include(/TechTrigProc/Settings-HBHE.cfg:pro)
+
+  include(/Other/TSManager.cfg:pro)
+  include(/Other/HcalWriter.cfg:pro)
+
+  include(/HTR/LUTs.cfg:pro)
+  include(/HTR/ZeroSuppression.cfg:pro)  
+  #include(/HTR/SpecialZeroSuppression.cfg:pro)
+ 
+  include(/Lumi/Settings.cfg:pro)
+  include(/Lumi/Settings-GlobalRun.cfg:pro)
+
+  include(/TechTrigProc/Settings-HO-coinc-timeDiff.cfg:pro)
+
+  include(/uTCA/Global.cfg:pro)
+  include(/uTCA/uHTR.cfg:pro)
+  include(/uTCA/uHTR-GlobalRun.cfg:pro)
+  include(/uTCA/DTC.cfg:pro)
+  include(/uTCA/DTC-CDAQ.cfg:pro)
+
+</HCAL_CFGSCRIPT>
+
+<HCAL_PICONTROL></HCAL_PICONTROL>
+<HCAL_TCDSCONTROL>
+<xi:include parse="text" href=TCDS/BGo_global.cfg/pro/>
+<xi:include parse="text" href=TCDS/global.cfg/pro/>
+<xi:include parse="text" href=TCDS/BGo_CalibSequence.cfg/pro/>
+</HCAL_TCDSCONTROL>
+
+<FED_ENABLE_MASK>700&amp;3%701&amp;3%702&amp;3%703&amp;3%704&amp;3%705&amp;3%706&amp;3%707&amp;3%708&amp;3%709&amp;3%710&amp;3%711&amp;3%712&amp;3%713&amp;3%714&amp;3%715&amp;3%716&amp;3%1100&amp;3%1102&amp;3%1104&amp;3%1106&amp;3%1108&amp;3%1110&amp;3%1112&amp;3%1114&amp;3%1116&amp;3%717&amp;3%720&amp;3%721&amp;3%1118&amp;3%1120&amp;3%1122&amp;3%724&amp;3%725&amp;3%726&amp;3%727&amp;3%728&amp;3%729&amp;3%730&amp;3%731&amp;3%</FED_ENABLE_MASK>
+
+
+<HCAL_ALARMER_URL>http://hcalmon.cms:9945</HCAL_ALARMER_URL>
+
+</mastersnippet>
