@@ -49,17 +49,19 @@ function showsupervisorerror() {
 //
 function showErrorTable() {
     var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
-    errTableHTML = "<table id='errTable'> <tr class='errHeaderRow'>";
-    //errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
-    errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
-    for(var i=0; i<errVector.length; i++) {
-      errTableHTML += "<tr class='errRow'>";
-      //errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
-      errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
-      errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
+    if (errVector.length != 0) {
+      errTableHTML = "<table id='errTable'> <tr class='errHeaderRow'>";
+      //errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      for(var i=0; i<errVector.length; i++) {
+        errTableHTML += "<tr class='errRow'>";
+        //errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
+        errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
+        errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
+      }
+      errTableHTML += "</table>";
+      $("#errMapError").html(errTableHTML);
     }
-    errTableHTML += "</table>";
-    $("#errMapError").html(errTableHTML);
 }
 function setStateColors() {
   $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
@@ -568,7 +570,6 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
-    showErrorTable();
     makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
