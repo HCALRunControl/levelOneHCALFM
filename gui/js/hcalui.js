@@ -543,17 +543,17 @@ function persistTooltip(tooltipId) {
 }
 
 function getContent(id) {
-  console.log("getting content for element with id " + id);
-  console.log("this element has tagName" + $("#" + id).prop("tagName"));
+  //console.log("getting content for element with id " + id);
+  //console.log("this element has tagName" + $("#" + id).prop("tagName"));
   if ($("#" + id).prop("tagName").includes("INPUT")) {
-    console.log("identified this as a 'input' tag");
+    //console.log("identified this as a 'input' tag");
     content=$('#'+id).attr("value");
   }
   else { 
-    console.log("identified this as not an 'input' tag");
+    //console.log("identified this as not an 'input' tag");
     content = $('#'+id).text();
   }
-  console.log("content was:");
+  //console.log("content was:");
   return content;
 }
 
