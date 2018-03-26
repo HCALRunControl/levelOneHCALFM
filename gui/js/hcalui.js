@@ -527,7 +527,7 @@ function copyQuickInfo() {
   var $quickInfo = $("<input>");
   $("body").append($quickInfo);
   var maskSummary = $("#maskSummary").val();
-  $quickInfo.val("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary).select();
+  $quickInfo.val("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary).select();
   document.execCommand("copy");
   $quickInfo.remove();
 }
