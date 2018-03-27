@@ -43,22 +43,30 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
 		String supervisorError = "";
     String[] errAppNameString ;
     String[] errAppMsgString  ;
+    String[] AllHandledAppNameString  ;
+    String[] AllHandledAppURIString  ;
     String partition="";
 		for (QualifiedResource qr : containerhcalSupervisor.getApplications() ){
 			try {
 				pam =((XdaqApplication)qr).getXDAQParameter();
-				pam.select(new String[] {"Partition", "overallErrorMessage","StateTransitionMessage","ProblemApplicationNameInstanceVector","ProblemApplicationMessageVector"});
+				pam.select(new String[] {"Partition", "overallErrorMessage","StateTransitionMessage","ProblemApplicationNameInstanceVector","ProblemApplicationMessageVector","HandledApplicationNameInstanceVector","HandledApplicationURIVector"});
 				pam.get();
 				supervisorError = "(" + pam.getValue("Partition") + ") " + pam.getValue("overallErrorMessage");
 				//supervisorError = "(" + pam.getValue("Partition") + ") " ;
         partition        = pam.getValue("Partition");
         errAppNameString = pam.getVector("ProblemApplicationNameInstanceVector");
         errAppMsgString  = pam.getVector("ProblemApplicationMessageVector");
+        AllHandledAppNameString = pam.getVector("HandledApplicationNameInstanceVector");
+        AllHandledAppURIString  = pam.getVector("HandledApplicationURIVector");
         VectorT<StringT> errAppNameVector = new VectorT<StringT>();
         VectorT<StringT> errAppMsgVector  = new VectorT<StringT>();
+        VectorT<StringT> AllHandledAppNameVector = new VectorT<StringT>();
+        VectorT<StringT> AllHandledAppURIVector  = new VectorT<StringT>();
         VectorT<MapT<StringT>> xDAQ_err_msg  = new VectorT<MapT<StringT>>();
         for (String s : errAppNameString){          errAppNameVector.add(new StringT(s));        }
         for (String s : errAppMsgString ){          errAppMsgVector.add(new StringT(s));        }
+        for (String s : AllHandledAppNameString){          AllHandledAppNameVector.add(new StringT(s));       }
+        for (String s : AllHandledAppURIString ){          AllHandledAppURIVector.add(new StringT(s));        }
         logger.error("errAppNameString = " + errAppNameVector.toString());
         logger.error("errAppMsgString = " + errAppMsgVector.toString());
 
@@ -68,11 +76,15 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
             if(!errAppName.equals("none")){
               MapT<StringT> errMap = new MapT<StringT>();
               // Associate name of app to err_message of app by vector position
-              //Name_err_map.put( "("+partition+") "+ errAppName, errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
               errMap.put( "timestamp", new StringT(getTimestampString()));
               errMap.put( "app", new StringT("("+partition+") "+ errAppName));
               errMap.put("message", errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
-              
+              // Look for the URI of the app name in allHandled app name vector 
+              for (StringT HandledAppName : AllHandledAppNameVector){
+                if (HandledAppName.equals(errAppName)){
+                  errMap.put("URI", AllHandledAppURIVector.get(  AllHandledAppNameVector.indexOf( HandledAppName ))) ;
+                }
+              }
               xDAQ_err_msg.add(errMap);
             }
           }
