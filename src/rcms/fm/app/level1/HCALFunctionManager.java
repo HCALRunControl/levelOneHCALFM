@@ -406,38 +406,6 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopTTCciWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
-    // xdaq::reset all supervisors before destroy to release the TCDS leases 
-    //VectorT<StringT> EmptyFMs  = (VectorT<StringT>)getParameterSet().get("EMPTY_FMS").getValue();
-    //if (!containerhcalSupervisor.isEmpty() && !EmptyFMs.contains(new StringT(FMname))) {
-    //  logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Sending halt to supervisor");
-    //  
-    //  try{
-    //    containerhcalSupervisor.execute(HCALInputs.RESET);
-    //    XDAQParameter pam = null;
-    //    String stateName = "undefined";
-    //    int iCount       = 0;
-    //    try{
-    //      while (!stateName.equals("Uninitialized") &&  iCount <=5){
-    //        for (QualifiedResource qr : containerhcalSupervisor.getApplications() ){
-    //          pam =((XdaqApplication)qr).getXDAQParameter();
-    //          pam.select(new String[] {"stateName"});
-    //          stateName = pam.getValue("stateName");
-    //          logger.info("[HCAL LVL2 " + FMname + "]DestroyAction: Waiting for supervisor to be halted. StateName is "+stateName+" after "+iCount+" second");
-    //        }
-    //        try { Thread.sleep(1000); } 
-    //        catch (Exception ignored) { return; }
-    //        iCount++;
-    //      }
-    //    }catch (XDAQException e){
-    //      String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot poll supervisor state, XdaqException:"+e.getMessage();
-    //      logger.error(errMessage);
-    //    }
-    //  }catch (QualifiedResourceContainerException e) {
-    //    String errMessage = "[HCAL LVL2 " + FMname + "] Error! DestroyAction: Cannot reset supervisor, exception(s): "+e.getCommandExceptionMap().toString();
-    //    logger.error(errMessage);
-    //  }
-    //}
-
     try{
       destroyXDAQ();
     }
