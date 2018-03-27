@@ -416,7 +416,11 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
     
     
-    haltTCDSControllers(false);
+    try{
+      haltTCDSControllers(false);
+    }catch(UserActionException e){
+      logger.warn(e.getMessage());
+    }
 
     destroyed = true;
 
