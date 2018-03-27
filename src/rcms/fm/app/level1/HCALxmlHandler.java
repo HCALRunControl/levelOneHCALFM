@@ -2,6 +2,7 @@ package rcms.fm.app.level1;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Arrays;
@@ -895,18 +896,30 @@ public class HCALxmlHandler {
           tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
         }
       }
-      catch (IOException e){
-        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an IOException when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage();
+      catch (UserActionException e){
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an exception when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage();
         functionManager.goToError(errMessage);
       }
     }
     return tmpCtrlSequence;
   }
 
-  public static String readFile(String path, Charset encoding) throws IOException {
-      byte[] encoded = Files.readAllBytes(Paths.get(path));
-      return new String(encoded, encoding);
-   }  
+  public static String readFile(String path, Charset encoding) throws UserActionException {
+    byte[] encoded = null;
+    try {
+      encoded = Files.readAllBytes(Paths.get(path));
+    }
+    catch (IOException e) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+
+      logger.error(sw.toString());
+      String exMessage = "Caught IOException in HCALxmlHandler.readFile with this file: "+e.getMessage();
+      throw new UserActionException(exMessage);
+    }
+    return new String(encoded, encoding);
+ }  
 
   private static String domSourceToString(DOMSource domSource) throws UserActionException {
         StringWriter writer = new StringWriter();
