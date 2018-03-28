@@ -55,9 +55,10 @@ function showErrorTable() {
       errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
       for(var i=0; i<errVector.length; i++) {
         errTableHTML += "<tr class='errRow'>";
-        //errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
-        errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
-        errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
+        //errTableHTML += "<td class='errTimestamp'>" +      errVector[i]["timestamp"] + "</td>";
+        errTableHTML += "<td class='errAppname'><a href='" + errVector[i]["URI"] + "'>";
+        errTableHTML +=                                      errVector[i]["app"]       + "</a></td>";
+        errTableHTML += "<td class='errMessage'>"   +        errVector[i]["message"]   + "</td></tr>";
       }
       errTableHTML += "</table>";
       $("#errMapError").html(errTableHTML);
