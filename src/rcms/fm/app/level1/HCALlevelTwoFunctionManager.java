@@ -99,7 +99,11 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
               }
               // Replace instance number with crate number
               if (!errAppCrate.equals("")){
-                String nameOnly = errAppName.getString().split(":")[0];
+                String[] nameSplit= errAppName.getString().split(":");
+                String nameOnly   = "";
+                //Remove the last part of ":" split, which is the instance
+                for (int i=0;i<nameSplit.length-1;i++){ nameOnly += nameSplit[i];     }
+                
                 String nameAndCrate = nameOnly + " Crate" + errAppCrate;
                 errMap.put( "app", new StringT("("+partition+")"+nameAndCrate));
               }
