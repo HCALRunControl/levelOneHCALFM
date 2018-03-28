@@ -105,7 +105,7 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
                 for (int i=0;i<nameSplit.length-1;i++){ nameOnly += nameSplit[i];     }
                 
                 String nameAndCrate = nameOnly + " Crate" + errAppCrate;
-                errMap.put( "app", new StringT("("+partition+")"+nameAndCrate));
+                errMap.put( "app", new StringT("("+partition+") "+nameAndCrate));
               }
               else{
                 //explicitly state instance number for non-crate app
