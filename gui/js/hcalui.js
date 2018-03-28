@@ -641,6 +641,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
+    showErrorTable();
     makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
