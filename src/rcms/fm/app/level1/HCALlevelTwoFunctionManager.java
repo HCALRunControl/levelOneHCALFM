@@ -75,15 +75,36 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
             // none is a place holder on xDAQ side for RCMS to safely look at the infospace at anytime.
             if(!errAppName.equals("none")){
               MapT<StringT> errMap = new MapT<StringT>();
+              StringT errAppURI    = new StringT("");
+              StringT errAppCrate  = new StringT("");
               // Associate name of app to err_message of app by vector position
               errMap.put( "timestamp", new StringT(getTimestampString()));
-              errMap.put( "app", new StringT("("+partition+") "+ errAppName));
               errMap.put("message", errAppMsgVector.get(  errAppNameVector.indexOf( errAppName ))) ;
+
               // Look for the URI of the app name in allHandled app name vector 
               for (StringT HandledAppName : AllHandledAppNameVector){
                 if (HandledAppName.equals(errAppName)){
-                  errMap.put("URI", AllHandledAppURIVector.get(  AllHandledAppNameVector.indexOf( HandledAppName ))) ;
+                  errAppURI = AllHandledAppURIVector.get(  AllHandledAppNameVector.indexOf( HandledAppName ));
+                  errMap.put("URI", errAppURI) ;
                 }
+              }
+              // Extract crate number from URI
+              if (errAppURI.length()>0){
+                // e.g. URI = http://hcal904daq01.cms904:39100/urn:xdaq-application:lid=53
+                String errAppPortNumber  = errAppURI.getString().split("/")[2].split(":")[1];
+                // 3 digit in port number = isCrate boolean
+                if (String.valueOf(errAppPortNumber.charAt(2)).equals("1")){
+                  errAppCrate = new StringT(errAppPortNumber.substring(3));
+                }
+              }
+              // Replace instance number with crate number
+              if (!errAppCrate.equals("")){
+                String nameOnly = errAppName.getString().split(":")[0];
+                String nameAndCrate = nameOnly + " Crate" + errAppCrate;
+                errMap.put( "app", new StringT("("+partition+")"+nameAndCrate));
+              }
+              else{
+                errMap.put( "app", new StringT("("+partition+") "+ errAppName));
               }
               xDAQ_err_msg.add(errMap);
             }
