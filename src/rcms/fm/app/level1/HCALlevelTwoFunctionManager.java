@@ -106,7 +106,7 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
               else{
                 //explicitly state instance number for non-crate app
                 String nameOnly = errAppName.getString().split(":")[0];
-                String nameAndInstance = nameOnly + " instance " + errAppCratr;ppName.getString().split(":")[1];
+                String nameAndInstance = nameOnly + " instance " + errAppName.getString().split(":")[1];
                 errMap.put( "app", new StringT("("+partition+") "+ nameAndInstance));
               }
               xDAQ_err_msg.add(errMap);
