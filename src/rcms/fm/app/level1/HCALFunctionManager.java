@@ -864,7 +864,9 @@ public class HCALFunctionManager extends UserFunctionManager {
       //logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Halting with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
 
       List<XdaqApplicationContainer> tcdsContainerList = new ArrayList<XdaqApplicationContainer>();
-      tcdsContainerList.add( containerTCDSControllers);
+      if(containerTCDSControllers !=null){
+        tcdsContainerList.add( containerTCDSControllers);
+      }
       for (XdaqApplicationContainer tcdsContainer : tcdsContainerList){
         if (!tcdsContainer.isEmpty()) {
           if(isServiceApp){
