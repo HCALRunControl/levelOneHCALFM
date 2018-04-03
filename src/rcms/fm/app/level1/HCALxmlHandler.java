@@ -203,7 +203,7 @@ public class HCALxmlHandler {
       return parseGrandmaster(grandmasterString);
     }
     catch (UserActionException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster " + fileName +": " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster " + fileName + ": " + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
