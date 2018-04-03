@@ -55,13 +55,17 @@ function showErrorTable() {
       errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
       for(var i=0; i<errVector.length; i++) {
         errTableHTML += "<tr class='errRow'>";
-        //errTableHTML += "<td class='errTimestamp'>" + errVector[i]["timestamp"] + "</td>";
-        errTableHTML += "<td class='errAppname'>"   + errVector[i]["app"]       + "</td>";
-        errTableHTML += "<td class='errMessage'>"   + errVector[i]["message"]   + "</td></tr>";
+        //errTableHTML += "<td class='errTimestamp'>" +      errVector[i]["timestamp"] + "</td>";
+        errTableHTML += "<td class='errAppname'><a href='" + errVector[i]["URI"] + "'>";
+        errTableHTML +=                                      errVector[i]["app"]       + "</a></td>";
+        errTableHTML += "<td class='errMessage'>"   +        errVector[i]["message"]   + "</td></tr>";
       }
       errTableHTML += "</table>";
-      $("#errMapError").html(errTableHTML);
     }
+    else {
+      errTableHTML = "";
+    }
+    $("#errMapError").html(errTableHTML);
 }
 function setStateColors() {
   $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
@@ -425,10 +429,16 @@ function spectatorMode(onOff) {
     $('input').not("#FMPilotForm > input").attr("disabled", true);
     $('#dropdown').css("pointer-events: none;");
     $('#dropdown').attr("disabled", true);
-    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "runParametersCheckbox", "globalParametersCheckbox", "showFullMasks", "drive"];
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", 
+                            "refreshGlobalParametersButton", "runParametersCheckbox", 
+                            "globalParametersCheckbox", "showFullMasks", "drive", "quickInfoButton"];
     $.each(spectatorAllowed, function(index, id) {
       $('#' + id).css("pointer events: default;");
       $('#' + id).attr("disabled", false);
+    });
+    $(".persistButton").each(function(index, id) {
+      $(this).css("pointer events: default;");
+      $(this).attr("disabled", false);
     });
     $("#spectate").hide();
     $("#drive").show();
@@ -566,7 +576,7 @@ function makeTooltips(className) {
     if ($(this).attr('id') ) {
       var tooltipId = 'tooltip_' + simpleClassName + "_" + index;
       var tooltipTextId = 'tooltip_text_' + simpleClassName + "_" + index;
-      var tooltip = "<div class='tooltip' id='" + tooltipId + "' persist='false'><div id='persistButton'><input type='checkbox' onclick=persistTooltip('" + tooltipId + "');>persist</div><div><textarea id='" + tooltipTextId +"'> </textarea></div></div>";
+      var tooltip = "<div class='tooltip' id='" + tooltipId + "' persist='false'><div class='persistButton'><input type='checkbox' onclick=persistTooltip('" + tooltipId + "');>persist</div><div><textarea id='" + tooltipTextId +"'> </textarea></div></div>";
       $(tooltip).insertAfter($(this));
       $('#'+tooltipId).hide();
 
@@ -641,6 +651,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
+    showErrorTable();
     makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
