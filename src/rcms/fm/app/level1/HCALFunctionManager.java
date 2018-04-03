@@ -874,7 +874,7 @@ public class HCALFunctionManager extends UserFunctionManager {
           }
           else{
             for(XdaqApplication tcdsApp : tcdsContainer.getApplications()){
-              logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to "+tcdsApp.getName()+" with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+              logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to "+tcdsApp.getName()+" with SID="+sessionId+" , RCMSURL = "+rcmsStateListenerURL+ ", URI="+tcdsApp.getURI().toString());
               tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
             }
           }

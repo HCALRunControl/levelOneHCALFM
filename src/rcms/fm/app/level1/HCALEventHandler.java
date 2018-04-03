@@ -2707,13 +2707,18 @@ public class HCALEventHandler extends UserEventHandler {
           for (String s : AppURIString){           AppURIVector.add(new StringT(s));        }
 
           List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-          for (StringT appName : AppNameVector){
-            StringT appURI = AppURIVector.get( AppNameVector.indexOf(appName));
+          for (StringT appURI : AppURIVector){
             // Check URI to see if this is a TCDS app
             if (appURI.contains("tcds-control")){
               String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
-              String tcdsname = appName.getString();
+              String tcdsname = "";
               String tcdsURI  = appURI.getString();
+              if (tcdsURI.contains("lid=30")){ tcdsname = "tcds::ici::ICIController";}
+              else if (tcdsURI.contains("lid=50")){ tcdsname = "tcds::pi::PIController";}
+              else if (tcdsURI.contains("lid=20")){ tcdsname = "tcds::lpm::LPMController";}
+              else {
+                logger.error("[HCAL "+ functionManager.FMname+"] FillTCDScontainersWithURI(): found this TCDS app with a strange URI="+ tcdsURI);
+              }
               int sessionId = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
               XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(functionManager.getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
               XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
@@ -2721,8 +2726,12 @@ public class HCALEventHandler extends UserEventHandler {
             }
           }
           functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-          logger.info("FillTCDScontainersWithURI(): found following TCDS apps");
-          PrintQRnames(functionManager.containerTCDSControllers);
+          logger.info("[HCAL "+ functionManager.FMname+"] FillTCDScontainersWithURI(): found following TCDS apps");
+          String info=" \n ";
+          for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()){
+            info += app.getName()+ " URI = " + app.getURI().toString() +" \n";
+          }
+          logger.info(info);
       }
       catch (XDAQTimeoutException e) {
 				String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: FillTCDScontainersWIthURI(): couldn't get xdaq parameters";
