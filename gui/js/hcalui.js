@@ -370,16 +370,19 @@ function moveversionnumber() {
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
-
+  function buildMaskSummary() {
+    var maskSummary = $("#MASK_SUMMARY").text();
+    maskSummary = maskSummary.replace(/\"/g, "");
+    maskSummary = maskSummary.replace("\[","");
+    maskSummary = maskSummary.replace("\]","");
+    maskSummary = maskSummary.replace(/,/g, ", ");
+    if (maskSummary === "") {maskSummary = "none";}
+    return maskSummary
+  }
 //    function getfullpath(nEvents) {
     function getfullpath() {
-      var maskSummary = $("#MASK_SUMMARY").text();
-      maskSummary = maskSummary.replace(/\"/g, "");
-      maskSummary = maskSummary.replace("\[","");
-      maskSummary = maskSummary.replace("\]","");
-      maskSummary = maskSummary.replace(/,/g, ", ");
-      if (maskSummary === "") {maskSummary = "none";}
-      $("#maskSummary").val(maskSummary);
+      $("#elogInfo").text(buildQuickInfo());
+      $("#maskSummary").val(buildMaskSummary());
       $("#maskSummary").prop("disabled", true);
       $("#runNumber").text($("#RUN_NUMBER").val());
       $("#runKey").text($("#LOCAL_RUNKEY_SELECTED").val());
@@ -533,11 +536,15 @@ function giveEventCheckboxOnclick() {
   enableCheckbox.attr("onclick", enableCheckbox.attr("onclick")+";displaySetButtonForEvents('checkbox');");
 }
 
+function buildQuickInfo() {
+  var maskSummary = $("#maskSummary").val();
+  return "Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + buildMaskSummary();
+}
+
 function copyQuickInfo() {
   var $quickInfo = $("<input>");
   $("body").append($quickInfo);
-  var maskSummary = $("#maskSummary").val();
-  $quickInfo.val("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary).select();
+  $quickInfo.val(buildQuickInfo()).select();
   document.execCommand("copy");
   $quickInfo.remove();
 }
