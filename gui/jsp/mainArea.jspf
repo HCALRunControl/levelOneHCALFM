@@ -32,7 +32,6 @@
           <div id="statusButtons"> 
             <rcms.control:showTreeButtonRenderer onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/> 
             <rcms.control:showStatusTableButtonRenderer onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
-            <input id="quickInfoButton" type="button" onclick="copyQuickInfo();" value="Copy quick info">
           </div>
         </div>
     </div>
@@ -86,6 +85,13 @@
 </div>
 
 <div id="infoSection">
+  <div class="label_center_black" colspan="3">
+    <div id="quickInfo">
+      <strong>Quick Info: </strong>
+      <div id="elogInfo"></div>
+      <input id="quickInfoButton" type="button" onclick="copyQuickInfo();" value="Copy">
+    </div>
+  </div>
   <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> &nbsp; View Run Parameters
   <div id="maintable" class="tbl">
     <span id="mainTableTitle"> <strong>Parameters: </strong></span>

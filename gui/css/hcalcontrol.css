@@ -432,8 +432,9 @@ a {
   padding-bottom: 10px;
 }
 #quickInfo {
-    padding-top: 12px;
+    padding-top: 2px;
     padding-bottom: 12px;
+    margin-bottom: 12px;
     border-bottom: 1px solid lightgray;
 }
 #rsName {
