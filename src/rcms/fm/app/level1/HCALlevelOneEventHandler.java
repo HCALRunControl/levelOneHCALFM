@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
 
+import rcms.fm.app.level1.HCALqgMapper.level1qgMapper;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -57,6 +58,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
   public HCALMasker masker = null;
+  public HCALqgMapper.level1qgMapper mapper = null;
   private AlarmerWatchThread alarmerthread = null;
 
   private Double  progress           = 0.0;
@@ -72,6 +74,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
+    try {
+      mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource());
+    }
+    catch (UserActionException e1) {
+      // TODO Auto-generated catch block
+      logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
+    }
 
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
