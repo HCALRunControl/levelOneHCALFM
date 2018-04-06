@@ -451,19 +451,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        Iterator it = functionManager.containerFMChildren.getActiveQRList().iterator();
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            try {
-              logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-              fmChild.execute(initInput);
-            }
-            catch (CommandException e) {
-              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
-              functionManager.goToError(errMessage,e);
-            }
+          try {
+            logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            fmChild.execute(initInput);
+          }
+          catch (CommandException e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
+            functionManager.goToError(errMessage,e);
           }
         }
       }
@@ -1426,24 +1424,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
         // reset all FMs 
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        Iterator it = functionManager.containerFMChildren.getActiveQRList().iterator();
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.COLDRESET);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
-                functionManager.goToError(errMessage,e);
-              }
+          if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
+            try {
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+              fmChild.execute(HCALInputs.COLDRESET);
             }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            catch (CommandException e) {
+              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
+              functionManager.goToError(errMessage,e);
             }
+          }
+          else {
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
           }
         }
       }
