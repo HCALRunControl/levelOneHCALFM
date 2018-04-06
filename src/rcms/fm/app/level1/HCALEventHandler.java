@@ -636,6 +636,9 @@ public class HCALEventHandler extends UserEventHandler {
       e.printStackTrace( new PrintWriter(sw) );
       System.out.println(sw.toString());
       //String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
+      
+      //Reset runinfoserver pointer if initxdaq failed
+      functionManager.containerhcalRunInfoServer  = null;
       throw new UserActionException(e.getMessage());
     }
 
