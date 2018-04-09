@@ -116,7 +116,8 @@ public class HCALqgMapper {
       List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
       for (QualifiedResource qr: l2FMlist) {
         try {
-          level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), qr.getQualifiedGroup());
+          QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
+          level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), level2group);
           // TODO: fix this
           // level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), qr.getChildrenResources());
           MapT<MapT<VectorT<StringT>>> level2map = (MapT<MapT<VectorT<StringT>>>) level2mapper.getMap();
