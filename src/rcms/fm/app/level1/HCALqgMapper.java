@@ -12,10 +12,12 @@ import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
+import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.common.db.DBConnectorException;
 import rcms.util.logger.RCMSLogger;
 
 /**
@@ -56,42 +58,49 @@ public class HCALqgMapper {
   /**
    * class that does bookkeeping of the level2 FM qualified groups
    */
-  public class level2qgMapper extends abstractQGmapper {
+  public class level2qgMapper { //extends abstractQGmapper {
 
+    MapT<?> qgMap = null;
+    public MapT<?> getMap() {
+      return qgMap;
+    }
     /**
      * method that creates the map for a level2 fm
      * @param l2FMqr the qualified resource of a level2 fm
      * @throws UserActionException if there are problems mapping it out
      */
-    protected level2qgMapper(Resource l2FMqr, QualifiedGroup l2qg) throws UserActionException {
-      super(l2FMqr, l2qg);
+    protected level2qgMapper(Resource l2FMqr, List<Resource> xdaqExecList) throws UserActionException {
+      //super(l2FMqr, l2qg);
       //if (! l2FMqr.getClass().equals(new HCALlevelTwoFunctionManager().getClass())){
       //  throw new UserActionException("tried to construct a level2 qualified group for FM " + l2FMqr.getName() + "but it is not a level2 FM!");
       //}
-      List<QualifiedResource> xdaqExecList = l2qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+      //List<QualifiedResource> xdaqExecList = l2qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       logger.warn("QRs in l2qg:");
       //TODO: nothing is in here
-      for (QualifiedResource qr : xdaqExecList) {
+      for (Resource qr : xdaqExecList) {
         logger.warn(qr.getName());
       }
       MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
       MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
-      for( QualifiedResource qr : xdaqExecList) {
-        String crateNumber = "N/A";
-        VectorT appList = new VectorT();
-        XdaqExecutiveResource execResource = (XdaqExecutiveResource)(qr.getResource());
-        for( XdaqApplicationResource app : execResource.getApplications()){
-          appList.add(new StringT(app.getName()));
-          if (app.getName().contains("hcalCrate")) {
-            for (ConfigProperty crateAppProperty : app.getProperties()){
-              if (crateAppProperty.getName().equals("crateId")){
-                crateNumber = crateAppProperty.getValue();
+      for(Resource qr : xdaqExecList) {
+       if (qr.getQualifiedResourceType().contains("Executive")){
+          String crateNumber = "N/A";
+          VectorT appList = new VectorT();
+          logger.warn("qr " + qr.getName() + " has getQualifiedResourceType: " + qr.getQualifiedResourceType());
+          XdaqExecutiveResource execResource = (XdaqExecutiveResource)(qr);
+          for( XdaqApplicationResource app : execResource.getApplications()){
+            appList.add(new StringT(app.getName()));
+            if (app.getName().contains("hcalCrate")) {
+              for (ConfigProperty crateAppProperty : app.getProperties()){
+                if (crateAppProperty.getName().equals("crateId")){
+                  crateNumber = crateAppProperty.getValue();
+                }
               }
             }
           }
+          crateMap.put(crateNumber, appList); 
+          execMap.put(qr.getName(), crateMap);
         }
-        crateMap.put(crateNumber, appList); 
-        execMap.put(qr.getName(), crateMap);
       }
       qgMap = execMap;
     }
@@ -116,15 +125,17 @@ public class HCALqgMapper {
       List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
       for (QualifiedResource qr: l2FMlist) {
         try {
-          QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
-          level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), level2group);
+          Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
+          List<Resource> level2execs = l2group.getChildrenResources();
+          //logger.warn(level2.print());
+          level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), level2execs);
           // TODO: fix this
           // level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), qr.getChildrenResources());
           MapT<MapT<VectorT<StringT>>> level2map = (MapT<MapT<VectorT<StringT>>>) level2mapper.getMap();
           l2Map.put(qr.getName(), level2map);
         }
-        catch (UserActionException e) {
-          throw e;
+        catch (UserActionException | DBConnectorException e) {
+          throw new UserActionException(e.getMessage());
         }
       }
       qgMap = l2Map;
