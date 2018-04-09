@@ -87,8 +87,11 @@ public class HCALqgMapper {
           String crateNumber = "N/A";
           VectorT appList = new VectorT();
           logger.warn("qr " + qr.getName() + " has getQualifiedResourceType: " + qr.getQualifiedResourceType());
-          XdaqExecutiveResource execResource = (XdaqExecutiveResource)(qr);
+          XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
+          logger.warn("executive " + qr.getName() + " has number of applications " + execResource.getNumApplications());
+
           for( XdaqApplicationResource app : execResource.getApplications()){
+            logger.warn("exec" + execResource.getName() + "has app with name " + app.getName());
             appList.add(new StringT(app.getName()));
             if (app.getName().contains("hcalCrate")) {
               for (ConfigProperty crateAppProperty : app.getProperties()){
