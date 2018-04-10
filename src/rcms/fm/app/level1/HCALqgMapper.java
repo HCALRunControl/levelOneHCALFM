@@ -198,6 +198,41 @@ public class HCALqgMapper {
     }
 
     /**
+     * method for getting all the apps in an executive
+     * @param execName the name of the executive, e.g. Executive_5
+     * @return a VectorT of app names
+     * @throws UserActionException if it fails to find the executive
+     */
+    public VectorT<StringT> getAppsOfExec(String execName) throws UserActionException {
+      MapT<MapT<MapT<VectorT<StringT>>>> l1qgMap = (MapT<MapT<MapT<VectorT<StringT>>>>) qgMap.getMap();
+      for (StringT execKey : l1qgMap.getMap().keySet()) {
+        for (MapT<VectorT<StringT>> crateMap : l1qgMap.getMap().get(execKey).getMap().values()) {
+          for (VectorT<StringT> appList : crateMap.getMap().values()) {
+            if (execKey.getString().equals(execName)) {
+              return appList;
+            }
+          }
+        }
+      }
+      throw new UserActionException("Did not find executive with name " + execName + "in QG!");
+    }
+
+    /**
+     * method for getting all the apps corresponding to a crate
+     * @param crateNumber the crate number
+     * @return a VectorT of app names
+     * @throws UserActionException if the crate number is bad or if it can't find the executive of that crate
+     */
+    public VectorT<StringT> getAppsOfCrate(String crateNumber) throws UserActionException {
+      try {
+        return getAppsOfExec(getExecOfCrate(Integer.parseInt(crateNumber)));
+      }
+      catch (NumberFormatException | UserActionException e) {
+        throw new UserActionException("Problem getting apps corresponding to crate " + crateNumber + " : " + e.getMessage());
+      }
+    }
+
+    /**
      * sanity check that the l1qgMap is valid
      * the rules for validity are:
      * a) there is exactly one crate corresponding to one executive
@@ -205,12 +240,10 @@ public class HCALqgMapper {
      * @return a bool where 1 is valid and 0 is not valid
      */
     private boolean isQGmapValid () {
-      logger.warn(qgMap.toString());
       for (StringT level2key : qgMap.getMap().keySet()) {
         MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) qgMap.getMap().get(level2key);
         for (MapT<VectorT<StringT>> crateMap : execMap.getMap().values()) {
           if (crateMap.getMap().keySet().size() > 1) {
-            logger.warn("crateMap.getMap().keySet().size(): " + crateMap.getMap().keySet().size());
             return false;
           }
         }

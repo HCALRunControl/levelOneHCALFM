@@ -87,6 +87,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.warn("[JohnLogQG] crate of hcal::DTCManager_6: " + mapper.getCrateOfApp("hcal::DTCManager_6"));
         logger.warn("[JohnLogQG] crate of hcal::uHTRManager_3: " + mapper.getCrateOfApp("hcal::uHTRManager_3"));
         logger.warn("[JohnLogQG] crate of hcalHTRManager_0: " + mapper.getCrateOfApp("hcalHTRManager_0", new StringT("HCAL_HO904")));
+        logger.warn("[JohnLogQG] apps of exec Executive_9: " + mapper.getAppsOfExec("Executive_9"));
+        logger.warn("[JohnLogQG] apps of crate 62: " + mapper.getAppsOfCrate("62"));
       }
       catch (UserActionException e1) {
         // TODO Auto-generated catch block
