@@ -82,11 +82,11 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
         // testing
         logger.warn("[JohnLogQG] " + mapper.getMap().toString());
-        logger.warn("[JohnLogQG] executive of crate 52" + mapper.getExecOfCrate(52));
-        logger.warn("[JohnLogQG] executive of crate 60" + mapper.getExecOfCrate(60));
-        logger.warn("[JohnLogQG] crate of hcal::DTCManager_6" + mapper.getCrateOfApp("hcal::DTCManager_6"));
-        logger.warn("[JohnLogQG] crate of hcal::uHTRManager_3" + mapper.getCrateOfApp("hcal::uHTRManager_3"));
-        logger.warn("[JohnLogQG] crate of hcalHTRManager_0" + mapper.getCrateOfApp("hcalHTRManager_0", new StringT("HCAL_HO904")));
+        logger.warn("[JohnLogQG] executive of crate 52: " + mapper.getExecOfCrate(52));
+        logger.warn("[JohnLogQG] executive of crate 61: " + mapper.getExecOfCrate(61));
+        logger.warn("[JohnLogQG] crate of hcal::DTCManager_6: " + mapper.getCrateOfApp("hcal::DTCManager_6"));
+        logger.warn("[JohnLogQG] crate of hcal::uHTRManager_3: " + mapper.getCrateOfApp("hcal::uHTRManager_3"));
+        logger.warn("[JohnLogQG] crate of hcalHTRManager_0: " + mapper.getCrateOfApp("hcalHTRManager_0", new StringT("HCAL_HO904")));
       }
       catch (UserActionException e1) {
         // TODO Auto-generated catch block

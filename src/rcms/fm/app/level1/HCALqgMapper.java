@@ -154,9 +154,9 @@ public class HCALqgMapper {
     public String getExecOfCrate(Integer crateNumber) throws UserActionException{
       for (ParameterType<?> l2FMmap : qgMap.getMap().values()) {
         MapT<MapT<VectorT<StringT>>> l2Map = ((MapT<MapT<VectorT<StringT>>>) l2FMmap);
-        for (MapT<VectorT<StringT>> execMap : l2Map.getMap().values()) {
-          if (execMap.getMap().keySet().contains(new StringT(Integer.toString(crateNumber)))){
-            return execMap.getMap().keySet().toArray()[0].toString(); // execs should only be associated with one crate
+        for (StringT execKey : l2Map.getMap().keySet()) {
+          if (l2Map.getMap().get(execKey).getMap().keySet().contains(new StringT(Integer.toString(crateNumber)))){
+            return execKey.getString(); 
           }
         }
       }
@@ -172,12 +172,11 @@ public class HCALqgMapper {
     public String getCrateOfApp(String appName, StringT fmName) {
       String crate = "N/A";
       MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) qgMap.getMap().get(fmName);
-      for (StringT crateKey : execMap.getMap().keySet()) {
-        String thisCrate = crateKey.toString();
-        MapT<VectorT<StringT>> crateMap = execMap.get(crateKey);
-        for (VectorT<StringT> appList : crateMap.getMap().values()) {
+      for (MapT<VectorT<StringT>> crateMap : execMap.getMap().values()) {
+        for (StringT crateKey : crateMap.getMap().keySet()) {
+          VectorT<StringT>appList = crateMap.getMap().get(crateKey);
           if (appList.contains(new StringT(appName))) {
-            crate =thisCrate; 
+            crate = crateKey.getString(); 
           }
         }
       }
@@ -206,13 +205,12 @@ public class HCALqgMapper {
      * @return a bool where 1 is valid and 0 is not valid
      */
     private boolean isQGmapValid () {
+      logger.warn(qgMap.toString());
       for (StringT level2key : qgMap.getMap().keySet()) {
         MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) qgMap.getMap().get(level2key);
-        if (execMap.getMap().keySet().size() > 1) {
-          return false;
-        }
         for (MapT<VectorT<StringT>> crateMap : execMap.getMap().values()) {
           if (crateMap.getMap().keySet().size() > 1) {
+            logger.warn("crateMap.getMap().keySet().size(): " + crateMap.getMap().keySet().size());
             return false;
           }
         }
