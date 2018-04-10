@@ -204,11 +204,12 @@ public class HCALqgMapper {
      * @throws UserActionException if it fails to find the executive
      */
     public VectorT<StringT> getAppsOfExec(String execName) throws UserActionException {
-      MapT<MapT<MapT<VectorT<StringT>>>> l1qgMap = (MapT<MapT<MapT<VectorT<StringT>>>>) qgMap.getMap();
-      for (StringT execKey : l1qgMap.getMap().keySet()) {
-        for (MapT<VectorT<StringT>> crateMap : l1qgMap.getMap().get(execKey).getMap().values()) {
-          for (VectorT<StringT> appList : crateMap.getMap().values()) {
+      for (ParameterType<?> l2Map : qgMap.getMap().values()) {
+        MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) l2Map;
+        for (StringT execKey : execMap.getMap().keySet()) {
+          for (VectorT<StringT> appList : execMap.getMap().get(execKey).getMap().values()) {
             if (execKey.getString().equals(execName)) {
+              logger.warn("[JohnLogQG] execKey.getString(): " + execKey.getString());
               return appList;
             }
           }
