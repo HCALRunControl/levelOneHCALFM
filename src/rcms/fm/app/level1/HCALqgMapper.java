@@ -66,7 +66,6 @@ public class HCALqgMapper {
           appList = new VectorT();
 
           XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
-          logger.warn("executive " + qr.getName() + " has number of applications " + execResource.getNumApplications());
 
           for( XdaqApplicationResource app : execResource.getApplications()){
             appList.add(new StringT(app.getName()));
@@ -105,7 +104,6 @@ public class HCALqgMapper {
       MapT<MapT<MapT<VectorT<StringT>>>> l2Map = new MapT<MapT<MapT<VectorT<StringT>>>>();
       List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
       for (QualifiedResource qr: l2FMlist) {
-        logger.warn("l1 loop: qr: " + qr.getName());
         try {
           Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
           List<Resource> level2execs = l2group.getChildrenResources();
