@@ -55,23 +55,20 @@ public class HCALqgMapper {
       MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
       MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
       String crateNumber = "N/A"; // if it is not an executive corresponding to the crate
-      VectorT appList = new VectorT();
       String execName = "";
+      VectorT appList = new VectorT();
       for(Resource qr : level2childList) {
         // this list has apps and execs mixed together
-        logger.warn("l2 outer loop: qr: " + qr.getName());
+        crateNumber = "N/A"; // if it is not an executive corresponding to the crate
+        execName = "NoExecName";
         if (qr.getQualifiedResourceType().contains("Executive")){
           execName = qr.getName();
-          execMap = new MapT<MapT<VectorT<StringT>>>();
-          crateMap = new MapT<VectorT<StringT>>();
           appList = new VectorT();
-          logger.warn("qr " + qr.getName() + " has getQualifiedResourceType: " + qr.getQualifiedResourceType());
+
           XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
           logger.warn("executive " + qr.getName() + " has number of applications " + execResource.getNumApplications());
 
           for( XdaqApplicationResource app : execResource.getApplications()){
-            logger.warn("l2 inner loop: app: " + app.getName());
-            logger.warn("exec" + execResource.getName() + "has app with name " + app.getName());
             appList.add(new StringT(app.getName()));
             // get the crate number from the hcalCrate app property
             if (app.getName().contains("hcalCrate")) {
@@ -82,10 +79,11 @@ public class HCALqgMapper {
               }
             }
           }
+          crateMap.put(crateNumber, appList); 
+          execMap.put(execName, crateMap);
+          crateMap = new MapT<VectorT<StringT>>();
         }
       }
-      crateMap.put(crateNumber, appList); 
-      execMap.put(execName, crateMap);
       qgMap = execMap;
     }
   }
