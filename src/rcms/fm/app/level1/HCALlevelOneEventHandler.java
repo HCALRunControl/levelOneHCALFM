@@ -78,6 +78,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
 
+      try {
+        mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
+        logger.warn("[JohnLogQG] " + mapper.getMap().toString());
+      }
+      catch (UserActionException e1) {
+        // TODO Auto-generated catch block
+        logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
+      }
     // Get the CfgCVSBasePath in the userXML
     {
       String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
@@ -244,14 +252,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String MastersnippetSelected = "";
       String LocalRunkeySelected = "";
 
-      try {
-        mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
-        logger.warn("[JohnLogQG] " + mapper.getMap().toString());
-      }
-      catch (UserActionException e1) {
-        // TODO Auto-generated catch block
-        logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
-      }
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 

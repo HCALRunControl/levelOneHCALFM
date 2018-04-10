@@ -75,22 +75,24 @@ public class HCALqgMapper {
       //  throw new UserActionException("tried to construct a level2 qualified group for FM " + l2FMqr.getName() + "but it is not a level2 FM!");
       //}
       //List<QualifiedResource> xdaqExecList = l2qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-      logger.warn("QRs in l2qg:");
-      //TODO: nothing is in here
-      for (Resource qr : xdaqExecList) {
-        logger.warn(qr.getName());
-      }
       MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
       MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
+      String crateNumber = "N/A";
+      VectorT appList = new VectorT();
+      String qrName = "";
       for(Resource qr : xdaqExecList) {
-       if (qr.getQualifiedResourceType().contains("Executive")){
-          String crateNumber = "N/A";
-          VectorT appList = new VectorT();
+        qrName = qr.getName();
+        logger.warn("l2 outer loop: qr: " + qr.getName());
+        if (qr.getQualifiedResourceType().contains("Executive")){
+          execMap = new MapT<MapT<VectorT<StringT>>>();
+          crateMap = new MapT<VectorT<StringT>>();
+          appList = new VectorT();
           logger.warn("qr " + qr.getName() + " has getQualifiedResourceType: " + qr.getQualifiedResourceType());
           XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
           logger.warn("executive " + qr.getName() + " has number of applications " + execResource.getNumApplications());
 
           for( XdaqApplicationResource app : execResource.getApplications()){
+            logger.warn("l2 inner loop: app: " + app.getName());
             logger.warn("exec" + execResource.getName() + "has app with name " + app.getName());
             appList.add(new StringT(app.getName()));
             if (app.getName().contains("hcalCrate")) {
@@ -101,10 +103,10 @@ public class HCALqgMapper {
               }
             }
           }
-          crateMap.put(crateNumber, appList); 
-          execMap.put(qr.getName(), crateMap);
         }
       }
+      crateMap.put(crateNumber, appList); 
+      execMap.put(qrName, crateMap);
       qgMap = execMap;
     }
   }
@@ -127,6 +129,7 @@ public class HCALqgMapper {
       MapT<MapT<MapT<VectorT<StringT>>>> l2Map = new MapT<MapT<MapT<VectorT<StringT>>>>();
       List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
       for (QualifiedResource qr: l2FMlist) {
+        logger.warn("l1 loop: qr: " + qr.getName());
         try {
           Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
           List<Resource> level2execs = l2group.getChildrenResources();
