@@ -69,7 +69,7 @@ public class HCALqgMapper {
      * @param l2FMqr the qualified resource of a level2 fm
      * @throws UserActionException if there are problems mapping it out
      */
-    protected level2qgMapper(Resource l2FMqr, List<Resource> xdaqExecList) throws UserActionException {
+    protected level2qgMapper(List<Resource> xdaqExecList) throws UserActionException {
       //super(l2FMqr, l2qg);
       //if (! l2FMqr.getClass().equals(new HCALlevelTwoFunctionManager().getClass())){
       //  throw new UserActionException("tried to construct a level2 qualified group for FM " + l2FMqr.getName() + "but it is not a level2 FM!");
@@ -80,10 +80,12 @@ public class HCALqgMapper {
       String crateNumber = "N/A";
       VectorT appList = new VectorT();
       String qrName = "";
+      String execName = "";
       for(Resource qr : xdaqExecList) {
         qrName = qr.getName();
         logger.warn("l2 outer loop: qr: " + qr.getName());
         if (qr.getQualifiedResourceType().contains("Executive")){
+          execName = qr.getName();
           execMap = new MapT<MapT<VectorT<StringT>>>();
           crateMap = new MapT<VectorT<StringT>>();
           appList = new VectorT();
@@ -106,7 +108,7 @@ public class HCALqgMapper {
         }
       }
       crateMap.put(crateNumber, appList); 
-      execMap.put(qrName, crateMap);
+      execMap.put(execName, crateMap);
       qgMap = execMap;
     }
   }
@@ -134,7 +136,7 @@ public class HCALqgMapper {
           Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
           List<Resource> level2execs = l2group.getChildrenResources();
           //logger.warn(level2.print());
-          level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), level2execs);
+          level2qgMapper level2mapper = new level2qgMapper(level2execs);
           // TODO: fix this
           // level2qgMapper level2mapper = new level2qgMapper(qr.getResource(), qr.getChildrenResources());
           MapT<MapT<VectorT<StringT>>> level2map = (MapT<MapT<VectorT<StringT>>>) level2mapper.getMap();
