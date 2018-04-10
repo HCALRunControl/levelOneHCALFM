@@ -30,11 +30,11 @@ import rcms.util.logger.RCMSLogger;
  * Example (this is made up, for clarity):
  * {
  *   HCAL_HBHE: {
- *                 Executive_0: {N/A:[hcalSupervisor_0, hcalPartitionViewer_0]},
+ *                 Executive_0: {non-crate:[hcalSupervisor_0, hcalPartitionViewer_0]},
  *                 Executive_1: {41 :[hcal::DTCManager_0, hcalCrate_0]},
  *              },
  *   HCAL_HF  : {
- *                  Executive_2: {N/A: [hcalPartitionViewer_1, hcalSupervisor_1]}
+ *                  Executive_2: {non-crate: [hcalPartitionViewer_1, hcalSupervisor_1]}
  *                  Executive_3: {42 : [hcalTrivialFU_0, hcalEventBuilder_0, hcal::DTCReadout_0, DummyTriggerAdapter_0, hcal::uHTRManager_1, hcal::DTCManager_2, hcalCrate_1]},
  *              }
  *  }
@@ -43,7 +43,7 @@ import rcms.util.logger.RCMSLogger;
  *  an individual key-value pair in the l1qgMap is called the "l2map"
  *  the value in that key-value pair is called the "execMap"
  *  the execMap should have only one key-value pair
- *  the key of the exec map is the crate number it corresponds to, or "N/A" if not applicable
+ *  the key of the exec map is the crate number it corresponds to, or "non-crate" if not applicable
  *  the key-value pair of the execMap is called the "crateMap"
  *  the value of the crateMap is a list of applications and is called the "appList"
  */
@@ -77,12 +77,12 @@ public class HCALqgMapper {
     protected level2qgMapper(List<Resource> level2childList) throws UserActionException {
       MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
       MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
-      String crateNumber = "N/A"; // if it is not an executive corresponding to the crate
+      String crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
       String execName = "";
       VectorT appList = new VectorT();
       for(Resource qr : level2childList) {
         // this list has apps and execs mixed together
-        crateNumber = "N/A"; // if it is not an executive corresponding to the crate
+        crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
         execName = "NoExecName";
         if (qr.getQualifiedResourceType().contains("Executive")){
           execName = qr.getName();
@@ -170,7 +170,7 @@ public class HCALqgMapper {
      * @return a string of the crate number
      */
     public String getCrateOfApp(String appName, StringT fmName) {
-      String crate = "N/A";
+      String crate = "non-crate";
       MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) qgMap.getMap().get(fmName);
       for (MapT<VectorT<StringT>> crateMap : execMap.getMap().values()) {
         for (StringT crateKey : crateMap.getMap().keySet()) {
@@ -189,10 +189,10 @@ public class HCALqgMapper {
      * @return a string of the crate number
      */
     public String getCrateOfApp(String appName) {
-      String crate = "N/A";
+      String crate = "non-crate";
       for (StringT fmName : qgMap.getMap().keySet()) {
          crate = getCrateOfApp(appName, fmName);
-         if (!crate.equals("N/A")) break;
+         if (!crate.equals("non-crate")) break;
       }
       return crate;
     }
