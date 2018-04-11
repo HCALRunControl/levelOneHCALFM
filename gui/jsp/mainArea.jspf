@@ -40,9 +40,12 @@
 <div id="spectatorInfo">You are in <strong>spectator mode</strong></div>
 <div id="statusSection">
   <div id="supervisorRow" style="display:none">
-    <!--Supervisor error box-->
+    <!--xdaq error message boxes-->
     <div id="supervisorCell" class="label_center_black" colspan="3">
       <div id="supervisorError" class="hcal_control_Supervisor"></div>
+    </div>
+    <div id="errMapCell" class="label_center_black" colspan="3">
+      <div id="errMapError"></div>
     </div>
   </div>
 </div>
@@ -57,6 +60,8 @@
     </li>
     <li><div class="parameterName">Action Message</div>
         <div id ="newACTION_MSG" class="hcalfmParameter"></div>       </li>
+    <li><div class="parameterName">Masked FMs</div>
+        <div id ="maskSummaryArea" class="hcalfmParameter"><input id="maskSummary"></div>       </li>
   </ul>
 </div>
 
@@ -80,14 +85,13 @@
 </div>
 
 <div id="infoSection">
-  <!--eLog info for quick copy/pasting-->
   <div class="label_center_black" colspan="3">
     <div id="quickInfo">
       <strong>Quick Info: </strong>
       <div id="elogInfo"></div>
+      <input id="quickInfoButton" type="button" onclick="copyQuickInfo();" value="Copy">
     </div>
   </div>
-  <br>
   <input id="runParametersCheckbox" type="checkbox" onclick="toggle_visibility('maintable');"> &nbsp; View Run Parameters
   <div id="maintable" class="tbl">
     <span id="mainTableTitle"> <strong>Parameters: </strong></span>
@@ -108,21 +112,21 @@
               </td>
             </tr>
             <tr>
-              <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black">
+              <td id="newLOCAL_RUNKEY_SELECTEDcheckbox" class="label_center_black">
               </td>
               <td class="label_left_black">
                 <strong>Local Run Key</strong>
               </td>
-              <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black">
+              <td id ="newLOCAL_RUNKEY_SELECTED" class="label_center_black">
               </td>
             </tr>
             <tr>
-              <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black">
+              <td id="newMASTERSNIPPET_SELECTEDcheckbox" class="label_center_black">
               </td>
               <td class="label_left_black">
                 <strong>Mastersnippet</strong>
               </td>
-              <td id ="newRUN_CONFIG_SELECTED" class="label_center_black">
+              <td id ="newMASTERSNIPPET_SELECTED" class="label_center_black">
               </td>
             </tr>
             <tr>

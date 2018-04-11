@@ -53,7 +53,7 @@ public class HCALSetParameterHandler extends UserEventHandler {
 	 * call back executed when a parameterSet event is processed.
 	 */
         public void onParameterSet(ParameterSet parameters) throws UserActionException {
-		logger.warn("[HCALSetParameterHandler] onParameterSet called: functionManager = " + functionManager );
+		logger.info("[HCALSetParameterHandler] onParameterSet called: functionManager = " + functionManager );
 
 
 	}

@@ -1,18 +1,20 @@
 package rcms.fm.app.level1;
  
-import java.util.Date;
-import java.util.TimeZone;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.List;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.stateFormat.StateNotification;
 import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.TaskSequence;
+import rcms.fm.resource.QualifiedResource;
+import rcms.fm.resource.qualifiedresource.FunctionManager;
  
  
 /**
@@ -55,10 +57,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       //    "from this FM/app "+  notification.getIdentifier() +
       //    "from this state: " + notification.getFromState()  +
       //    " to this state: " + notification.getToState());
-      
-      String actualState = fm.getState().getStateString();
-      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
+      //String actualState = fm.getState().getStateString();
+      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      
       if ( fm.getState().equals(HCALStates.ERROR) ) {
         return;
       }
@@ -70,6 +72,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         } catch(Exception e){}
         String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
         String errMsg =  actionMsg;
+        String localGUIerrMsg = "";
+        VectorT<MapT<StringT>> LV1_xDAQ_err_msg  = new VectorT<MapT<StringT>>();
         if (!fm.containerhcalSupervisor.isEmpty()) {
           ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
           errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
@@ -79,14 +83,36 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
-          DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-d HH:mm:ss");
-          dateFormatter.setTimeZone(TimeZone.getDefault());
-          String TimeNow =  dateFormatter.format(new Date());
-          errMsg = "["+TimeNow+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
-          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
-        }
+          // This always contains long error message, single string
+          errMsg = "["+fm.getTimestampString()+"] LV1 FM: Received error from LV2 FM: " + notification.getReason();
 
+          // Try to get ErrMsgVector from LV2 FM
+          List<QualifiedResource> fmChildrenList    = fm.containerFMChildren.getActiveQRList();
+          try{
+            for(QualifiedResource qr : fmChildrenList){
+                FunctionManager LV2fm  = (FunctionManager)qr;
+                String LV2fmState = LV2fm.getState().getStateString();
+                if (LV2fmState.equals(HCALStates.ERROR.toString()) ) {
+                  VectorT<MapT<StringT>> xDAQ_err_msg  = (VectorT<MapT<StringT>>)LV2fm.getParameter().get("XDAQ_ERR_MSG").getValue();
+                  logger.error("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
+                  LV1_xDAQ_err_msg.getVector().addAll(xDAQ_err_msg.getVector());
+                }
+            }
+            fm.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<MapT<StringT>>>("XDAQ_ERR_MSG", LV1_xDAQ_err_msg));
+          }
+          catch (ParameterServiceException e){
+            logger.error("[HCAL " + fm.FMname+"] : fail to get XDAQ_ERR_MSG from LV2, exception= :"+e.getMessage());
+          }
+          if(!LV1_xDAQ_err_msg.isEmpty()){
+            localGUIerrMsg = "["+fm.getTimestampString()+"] LV1 FM: supervisor reports the following  errors: ";
+          }
+        }
+        //Send LV0 a string errMessage.
         handleError(errMsg,actionMsg);
+        // LV1 puts a supervisor header message if possible
+        if (!fm.containerFMChildren.isEmpty() && !LV1_xDAQ_err_msg.isEmpty()) {
+          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(localGUIerrMsg)));
+        }
         //logger.warn("["+fm.FMname+"]: Going to error, reset taskSequence to null. ");
         taskSequence = null;  //Reset taskSequence if we are in error
         return;
@@ -215,10 +241,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
       if(taskSequence == null) {
 
-        setTimeoutThread(false);
         String infomsg = "Received a State Notification while taskSequence is null \n";
 
-        logger.debug("FM is in local mode");
+        setTimeoutThread(false);
+        logger.debug(infomsg);
         fm.theEventHandler.computeNewState(notification);
         return;
     }
@@ -285,9 +311,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
      *
      */
     protected void completeTransition() throws UserActionException, Exception {
- 
-        State FMState = fm.getState();
- 
         fm.setAction("Transition Completed");
  
         if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {
