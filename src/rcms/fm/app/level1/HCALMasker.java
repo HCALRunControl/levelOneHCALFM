@@ -183,6 +183,12 @@ public class HCALMasker {
     functionManager.theEventHandler.PrintQRnames(level2EvmTrigCandidateList);
 
     //Consider only LV2 FMs with last priority to be EvmTrig (FM with no ConfigPriority will be grouped into this)
+    try {
+      setMaskedCrates();
+    }
+    catch (UserActionException e) {
+      logger.error(e.getMessage());
+    }
     for (QualifiedResource level2 : level2EvmTrigCandidateList) {
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
@@ -390,21 +396,28 @@ public class HCALMasker {
   }
 
   public void setMaskedCrates() throws UserActionException {
-        VectorT<StringT> allMaskedResources =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
-        for (StringT maskedResource : allMaskedResources) {
-          if (maskedResource.getString().contains("physicalCrate")) {
-            try {
-              allMaskedResources.add(new StringT(mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1]))));
-            }
-            catch (NumberFormatException e) {
-              throw new UserActionException("Could not extract a valid crate number from requested maskedcrate" + e.getMessage());
-            }
-            catch (UserActionException e) {
-              throw new UserActionException("Problem setting the masked crates" + e.getMessage());
-            }
-            
+    VectorT<StringT> allMaskedResources =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+
+    StringT[] maskedResourcesArray = allMaskedResources.toArray(new StringT[allMaskedResources.size()]);
+    for (StringT maskedResource : maskedResourcesArray) {
+      logger.warn("[JohnLogCrateMask] working on masked resource: " + maskedResource);
+      if (maskedResource.getString().contains("physicalCrate")) {
+        logger.warn("[JohnLogCrateMask] found physicalCrate: " + maskedResource);
+        try {
+          if (!Arrays.asList(maskedResourcesArray).contains(maskedResource.getString())) {
+            allMaskedResources.add(new StringT(mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1]))));
           }
+          logger.warn("[JohnLogCrateMask] added " + mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1])) + " to MASKED_RESOURCES");
         }
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
+        catch (NumberFormatException e) {
+          throw new UserActionException("Could not extract a valid crate number from requested maskedcrate" + e.getMessage());
+        }
+        catch (UserActionException e) {
+          throw new UserActionException("Problem setting the masked crates" + e.getMessage());
+        }
+        
+      }
+    }
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
   }
 }

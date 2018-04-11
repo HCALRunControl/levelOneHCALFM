@@ -363,7 +363,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       
       //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
       FillMaskedResources();
-      masker.setMaskedCrates();
+      //masker.setMaskedCrates();
       masker.pickEvmTrig();
       masker.setMaskedFMs();
 
