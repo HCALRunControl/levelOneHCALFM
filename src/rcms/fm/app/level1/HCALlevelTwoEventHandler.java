@@ -301,7 +301,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("initAction executed ...")));
 
       // publish the initialization time for this FM to the paramterSet
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_TIME_OF_FM_START", new StringT(functionManager.utcFMtimeofstart)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_TIME_OF_FM_START", new StringT(functionManager.FMtimeofstartString)));
 
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction executed ...");
     }
@@ -1402,14 +1402,35 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
+            for (QualifiedResource qr : functionManager.containerTriggerAdapter.getApplications() ){
+              try {
+                XDAQParameter pam = null;
+                pam =((XdaqApplication)qr).getXDAQParameter();
 
-            try {
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: send HCALDISABLE to TriggerAdapter");
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
-              functionManager.goToError(errMessage,e);
+                pam.select(new String[] {"stateName"});
+                pam.get();
+                String status = pam.getValue("stateName");
+
+                if( status.equals("Ready")){
+                  logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is already in READY, not sending disable.");
+                }
+                else{
+                  logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is in the state="+status+", send HCALASYNCDISABLE to TriggerAdapter");
+                  functionManager.containerTriggerAdapter.execute(HCALInputs.HCALASYNCDISABLE);
+                }
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
+                functionManager.goToError(errMessage,e);
+              }
+              catch (XDAQTimeoutException e) {
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: Asking TA status during stopping action";
+                  functionManager.goToError(errMessage,e);
+              }
+              catch (XDAQException e) {
+                String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException:Asking TA status during stopping action";
+                functionManager.goToError(errMessage,e);
+              }
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s

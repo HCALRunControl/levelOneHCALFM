@@ -134,7 +134,9 @@ public class HCALParameterSender implements Runnable {
 			 	if (HCALParameters.isForGUI(param.getName())) {
 			 		empty = false;
 			 		if (param.getValue() instanceof CollectionT) {
-			 			npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
+            // Change this so we can realtime update XDAQ_ERR_MSG
+			 			//npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
+			 			npc.addParameter(param.getName(), ParameterUtil.toJSON(param.getValue()));
 			 		} else {
 			 			npc.addParameter(param.getName(), param.getValue().toString());
 			 		}

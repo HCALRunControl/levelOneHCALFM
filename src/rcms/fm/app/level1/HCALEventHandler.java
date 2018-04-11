@@ -48,6 +48,7 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
+import rcms.fm.resource.CommandException;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
@@ -59,6 +60,7 @@ import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.ResourceException;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
@@ -482,7 +484,7 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the TriggerAdapter stateName after requesting: " + TriggersToTake + " events (with " + TimeOut + "sec time out enabled) ...");
                 }
 
-                elapsedseconds +=5;
+                elapsedseconds +=1;
                 try { Thread.sleep(1000); }
                 catch (Exception ignored) {}
 
@@ -506,19 +508,11 @@ public class HCALEventHandler extends UserEventHandler {
               }
               catch (XDAQTimeoutException e) {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
               catch (XDAQException e) {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforTriggerAdapter()";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
             }
 
@@ -532,7 +526,7 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the TriggerAdapter stateName after requesting: " + TriggersToTake + " events ...");
                 }
 
-                counter +=5;
+                counter +=1;
                 try { Thread.sleep(1000); }
                 catch (Exception ignored) {}
 
@@ -555,19 +549,11 @@ public class HCALEventHandler extends UserEventHandler {
               }
               catch (XDAQTimeoutException e) {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
               catch (XDAQException e) {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforTriggerAdapter()";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
             }
           }
@@ -575,28 +561,16 @@ public class HCALEventHandler extends UserEventHandler {
 
         if (status.equals("Failed")) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E1)";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
         if (elapsedseconds>TimeOut) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter timed out (> " + TimeOut + "sec). Please check log messages which were sent earlier than this one for more details ... (E2)";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
       }
       else {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: waitforTriggerAdapter()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
     }
   }
@@ -634,6 +608,9 @@ public class HCALEventHandler extends UserEventHandler {
       e.printStackTrace( new PrintWriter(sw) );
       System.out.println(sw.toString());
       //String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
+      
+      //Reset runinfoserver pointer if initxdaq failed
+      functionManager.containerhcalRunInfoServer  = null;
       throw new UserActionException(e.getMessage());
     }
 
@@ -718,11 +695,15 @@ public class HCALEventHandler extends UserEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
     }
 
+    
+
     // find out if HCAL supervisor is ready for async SOAP communication
     if (!functionManager.containerhcalSupervisor.isEmpty()) {
       // Set FM_PARTITION and put that into a parameter
       functionManager.FMpartition = functionManager.FMname.substring(5);  // FMname = HCAL_X;
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FM_PARTITION",new StringT(functionManager.FMpartition)));
+
+      FillTCDScontainersWithURI();
 
       XDAQParameter pam = null;
 
@@ -2681,5 +2662,64 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
     throw new Exception("Property "+name+" not found");
+  }
+
+  // Fill TCDS containers with URI 
+  public void FillTCDScontainersWithURI() {
+		for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+      try {
+          String[] AppNameString ;
+          String[] AppURIString  ;
+
+		  		XDAQParameter pam =((XdaqApplication)qr).getXDAQParameter();
+		  		pam.select(new String[] {"HandledApplicationNameInstanceVector","HandledApplicationURIVector"});
+		  		pam.get();
+          AppNameString = pam.getVector("HandledApplicationNameInstanceVector");
+          AppURIString  = pam.getVector("HandledApplicationURIVector");
+          VectorT<StringT> AppNameVector = new VectorT<StringT>();
+          VectorT<StringT> AppURIVector  = new VectorT<StringT>();
+          for (String s : AppNameString){          AppNameVector.add(new StringT(s));        }
+          for (String s : AppURIString){           AppURIVector.add(new StringT(s));        }
+
+          List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+          for (StringT appURI : AppURIVector){
+            // Check URI to see if this is a TCDS app
+            if (appURI.contains("tcds-control")){
+              String QRtype = "rcms.fm.resource.qualifiedresource.XdaqApplication";
+              String tcdsname = "";
+              String tcdsURI  = appURI.getString();
+              if (tcdsURI.contains("lid=30")){ tcdsname = "tcds::ici::ICIController";}
+              else if (tcdsURI.contains("lid=50")){ tcdsname = "tcds::pi::PIController";}
+              else if (tcdsURI.contains("lid=20")){ tcdsname = "tcds::lpm::LPMController";}
+              else {
+                logger.error("[HCAL "+ functionManager.FMname+"] FillTCDScontainersWithURI(): found this TCDS app with a strange URI="+ tcdsURI);
+              }
+              int sessionId = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
+              XdaqApplicationResource tcdsAppRsc = new XdaqApplicationResource(functionManager.getGroup().getDirectory(), tcdsname, tcdsURI , QRtype, null, null);
+              XdaqApplication  tcdsApp = new XdaqApplication(tcdsAppRsc);
+              tcdsList.add(tcdsApp);
+            }
+          }
+          functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+          logger.info("[HCAL "+ functionManager.FMname+"] FillTCDScontainersWithURI(): found following TCDS apps");
+          String info=" \n ";
+          for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()){
+            info += app.getName()+ " URI = " + app.getURI().toString() +" \n";
+          }
+          logger.info(info);
+      }
+      catch (XDAQTimeoutException e) {
+				String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: FillTCDScontainersWIthURI(): couldn't get xdaq parameters";
+				functionManager.goToError(errMessage,e);
+			}
+      catch (XDAQException e) {
+				String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: FillTCDScontainersWIthURI(): couldn't get xdaq parameters";
+				functionManager.goToError(errMessage,e);
+			}
+      catch (ResourceException e){
+        String errMessage = "[HCAL " + functionManager.FMname + "] failed HALT of TCDS applications with reason: "+ e.getMessage();
+        logger.warn(errMessage);
+      }
+    }
   }
 }
