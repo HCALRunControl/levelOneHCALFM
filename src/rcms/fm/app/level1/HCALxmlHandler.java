@@ -2,6 +2,7 @@ package rcms.fm.app.level1;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Arrays;
@@ -25,6 +26,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -98,28 +100,21 @@ public class HCALxmlHandler {
   
   public Element parseHCALuserXML(String userXMLstring) throws UserActionException, SAXException {
     try {
-      // TODO: maybe invent a better way to get the xsd so that userXML can be validated
-      //       however for now don't bother using a validator on the userXML
-      /*
       Schema schema;
       try {
-        // TODO make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        //String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        //schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/userXML.xsd/pro"));
-        schema = schemaFactory.newSchema(new File("/nfshome0/hcalcfg/cvs/RevHistory/Master/userXML.xsd/pro"));
-
+        //Note "/userXML.xsd" refers to the path in the jar
+        schema = schemaFactory.newSchema( new StreamSource(HCALxmlHandler.class.getResourceAsStream("/userXML.xsd")));
       }
       catch (SAXException e) {
         throw e;
       }
-      */
-      //Validator validator = schema.newValidator();
-      //docBuilderFactory.setSchema(schema);
-      //validator.setErrorHandler(new HCALxmlErrorHandler());
+      Validator validator = schema.newValidator();
+      docBuilderFactory.setSchema(schema);
+      validator.setErrorHandler(new HCALxmlErrorHandler());
       docBuilder = docBuilderFactory.newDocumentBuilder();
       InputSource inputSource = new InputSource();
-      //inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
-      //validator.validate(new SAXSource(inputSource));
+      inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
+      validator.validate(new SAXSource(inputSource));
       inputSource.setCharacterStream(new StringReader("<userXML>" + userXMLstring + "</userXML>"));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
@@ -140,9 +135,8 @@ public class HCALxmlHandler {
     try {
       Schema schema;
       try {
-        //TODO: make this better, unhardcode "Master" subdir of CfgCVSBasePath
-        String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-        schema = schemaFactory.newSchema(new File(CfgCVSBasePath + "Master/grandmaster.xsd/pro"));
+        //Note /grandmaster.xsd refers to the path in the jar
+        schema = schemaFactory.newSchema( new StreamSource(HCALxmlHandler.class.getResourceAsStream("/grandmaster.xsd")));
       }
       catch (SAXException e) {
         String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when parsing the XSD for the grandmaster: " + e.getMessage();
@@ -209,7 +203,7 @@ public class HCALxmlHandler {
       return parseGrandmaster(grandmasterString);
     }
     catch (UserActionException e) {
-      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster: " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the grandmaster " + fileName + ": " + e.getMessage();
       functionManager.goToError(errMessage);
       throw new UserActionException(errMessage);
     }
@@ -902,17 +896,30 @@ public class HCALxmlHandler {
           tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
         }
       }
-      catch (IOException e){
-        logger.error("[HCAL " + functionManager.FMname + "]: Got an IOExecption when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage());        
+      catch (UserActionException e){
+        String errMessage = "[HCAL " + functionManager.FMname + "]: Got an exception when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage();
+        functionManager.goToError(errMessage);
       }
     }
     return tmpCtrlSequence;
   }
 
-  public static String readFile(String path, Charset encoding) throws IOException {
-      byte[] encoded = Files.readAllBytes(Paths.get(path));
-      return new String(encoded, encoding);
-   }  
+  public static String readFile(String path, Charset encoding) throws UserActionException {
+    byte[] encoded = null;
+    try {
+      encoded = Files.readAllBytes(Paths.get(path));
+    }
+    catch (IOException e) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+
+      logger.error(sw.toString());
+      String exMessage = "Caught IOException in HCALxmlHandler.readFile with this file: "+e.getMessage();
+      throw new UserActionException(exMessage);
+    }
+    return new String(encoded, encoding);
+ }  
 
   private static String domSourceToString(DOMSource domSource) throws UserActionException {
         StringWriter writer = new StringWriter();

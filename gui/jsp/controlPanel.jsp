@@ -113,7 +113,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     <!-- Custom dynamic content begin -->
     <div id="center">
       <div id="importantInfo">
-        <div id="configNameArea" > Config:  <div class="bigInfo" id="configName"><rcms.control:configurationPathRenderer titleClass="control_label1" label="" contentClass="bigInfo" indentation="10"/> </div> </div>
+        <div id="configNameArea" > Config:  <div class="bigInfo" id="configName"><rcms.control:configurationPathRenderer titleClass="control_label1" label="" contentClass="bigInfo" indentation="0"/> </div> </div>
         <div id="runKeyArea"     > Run Key: <div class="bigInfo" id="runKey">     </div> </div>
         <div id="runNumArea"     > Run #:   <div class="bigInfo" id="runNumber">  </div> </div>
       </div>
@@ -122,7 +122,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
         <rcms.control:actionHiddenInputRenderer  />
         <rcms.control:commandHiddenInputRenderer />
         <rcms.notification:hiddenInputRenderer   />
-        <rcms.control:configurationKeyRenderer titleClass="control_label1" label="Configuration Keys:&nbsp;" contentClass="control_label2" indentation="10"/>
+        <rcms.control:configurationKeyRenderer titleClass="control_label1" label="Configuration Keys:&nbsp;" contentClass="control_label2" indentation="0"/>
         <input type="hidden" id="globalParameterName1"  name="globalParameterName1"  value="" />
         <input type="hidden" id="globalParameterValue1" name="globalParameterValue1" value="" />
         <input type="hidden" id="globalParameterType1"  name="globalParameterType1"  value="" />

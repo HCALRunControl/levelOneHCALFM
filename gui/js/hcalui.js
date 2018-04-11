@@ -46,6 +46,27 @@ function showsupervisorerror() {
 
 // The scripts below use jQuery.
 //
+//
+function showErrorTable() {
+    var errVector = JSON.parse($("#XDAQ_ERR_MSG").val());
+    if (errVector.length != 0) {
+      errTableHTML = "<table id='errTable'> <tr class='errHeaderRow'>";
+      //errTableHTML += "<td class='errTimestampHeader'>Time</td><td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      errTableHTML += "<td class='errAppnameHeader'>App Name</td><td class='errMessageHeader'>Message</td></tr>";
+      for(var i=0; i<errVector.length; i++) {
+        errTableHTML += "<tr class='errRow'>";
+        //errTableHTML += "<td class='errTimestamp'>" +      errVector[i]["timestamp"] + "</td>";
+        errTableHTML += "<td class='errAppname'><a href='" + errVector[i]["URI"] + "'>";
+        errTableHTML +=                                      errVector[i]["app"]       + "</a></td>";
+        errTableHTML += "<td class='errMessage'>"   +        errVector[i]["message"]   + "</td></tr>";
+      }
+      errTableHTML += "</table>";
+    }
+    else {
+      errTableHTML = "";
+    }
+    $("#errMapError").html(errTableHTML);
+}
 function setStateColors() {
   $('#currentState').attr("class", "hcal_control_" + $('#currentState').text());
 }
@@ -56,6 +77,7 @@ function updatePage() {
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
+    var cachedErrMap = $('#XDAQ_ERR_MSG').val();
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
@@ -124,11 +146,13 @@ function updatePage() {
         setSpectatorDisplay();
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+      if ($('#XDAQ_ERR_MSG').val() !=  cachedErrMap) { showErrorTable(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
       if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
       cachedRunNo = $('#RUN_NUMBER').val();
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
+      cachedErrMap = $('#XDAQ_ERR_MSG').val();
       cachedState = currentState;
       if ($('#EXIT').val() == "true" && currentState=="Halted" && driving()) { $('#Destroy').click(); }
       if ($('#AUTOCONFIGURE').val() == "true" && currentState=="Initial" && driving()) { onClickCommandButton('Initialize'); }
@@ -248,7 +272,7 @@ function makeAutoconfigureButton() {
     var buttonOnClicks = "setAutoconfigure(); onClickSetGlobalParameters();";
     var autoconfigureButton = '<input id="autoconfigureButton" class="button1" onclick="' + buttonOnClicks + '" value="Autoconfigure" type="button">';
     if (! $('#autoconfigureButton').length) {
-      $(autoconfigureButton).insertAfter("#setRunkeyButton");
+      $(autoconfigureButton).insertBefore("#setRunkeyButton");
     }
 }
 
@@ -346,16 +370,20 @@ function moveversionnumber() {
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
-
+  function buildMaskSummary() {
+    var maskSummary = $("#MASK_SUMMARY").text();
+    maskSummary = maskSummary.replace(/\"/g, "");
+    maskSummary = maskSummary.replace("\[","");
+    maskSummary = maskSummary.replace("\]","");
+    maskSummary = maskSummary.replace(/,/g, ", ");
+    if (maskSummary === "") {maskSummary = "none";}
+    return maskSummary
+  }
 //    function getfullpath(nEvents) {
     function getfullpath() {
-      var maskSummary = $("#MASK_SUMMARY").text();
-      maskSummary = maskSummary.replace(/\"/g, "");
-      maskSummary = maskSummary.replace("\[","");
-      maskSummary = maskSummary.replace("\]","");
-      maskSummary = maskSummary.replace(/,/g, ", ");
-      if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+      $("#elogInfo").text(buildQuickInfo());
+      $("#maskSummary").val(buildMaskSummary());
+      $("#maskSummary").prop("disabled", true);
       $("#runNumber").text($("#RUN_NUMBER").val());
       $("#runKey").text($("#LOCAL_RUNKEY_SELECTED").val());
     }
@@ -404,10 +432,16 @@ function spectatorMode(onOff) {
     $('input').not("#FMPilotForm > input").attr("disabled", true);
     $('#dropdown').css("pointer-events: none;");
     $('#dropdown').attr("disabled", true);
-    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "runParametersCheckbox", "globalParametersCheckbox", "showFullMasks", "drive"];
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", 
+                            "refreshGlobalParametersButton", "runParametersCheckbox", 
+                            "globalParametersCheckbox", "showFullMasks", "drive", "quickInfoButton"];
     $.each(spectatorAllowed, function(index, id) {
       $('#' + id).css("pointer events: default;");
       $('#' + id).attr("disabled", false);
+    });
+    $(".persistButton").each(function(index, id) {
+      $(this).css("pointer events: default;");
+      $(this).attr("disabled", false);
     });
     $("#spectate").hide();
     $("#drive").show();
@@ -502,6 +536,80 @@ function giveEventCheckboxOnclick() {
   enableCheckbox.attr("onclick", enableCheckbox.attr("onclick")+";displaySetButtonForEvents('checkbox');");
 }
 
+function buildQuickInfo() {
+  var maskSummary = $("#maskSummary").val();
+  return "Run # " + $("#RUN_NUMBER").val()  + " - " + $("#configName .bigInfo").text() + " - Local run key: "+ $("#LOCAL_RUNKEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + buildMaskSummary();
+}
+
+function copyQuickInfo() {
+  var $quickInfo = $("<input>");
+  $("body").append($quickInfo);
+  $quickInfo.val(buildQuickInfo()).select();
+  document.execCommand("copy");
+  $quickInfo.remove();
+}
+
+function persistTooltip(tooltipId) {
+  var tooltip = $('#' + tooltipId);
+  if (tooltip.attr('persist') == "true") {
+    tooltip.attr('persist', "false");
+  }
+  else {
+    tooltip.attr('persist', "true");
+  }
+}
+
+function getContent(id) {
+  //console.log("getting content for element with id " + id);
+  //console.log("this element has tagName" + $("#" + id).prop("tagName"));
+  if ($("#" + id).prop("tagName").includes("INPUT")) {
+    //console.log("identified this as a 'input' tag");
+    content=$('#'+id).attr("value");
+  }
+  else { 
+    //console.log("identified this as not an 'input' tag");
+    content = $('#'+id).text();
+  }
+  //console.log("content was:");
+  return content;
+}
+
+function makeTooltips(className) {
+  var simpleClassName = className.split(' ');
+  simpleClassName = simpleClassName[simpleClassName.length - 1];
+  simpleClassName = simpleClassName.replace("." , "");
+  simpleClassName = simpleClassName.replace("#", "");
+  $(className).each( function(index) {
+    if ($(this).attr('id') ) {
+      var tooltipId = 'tooltip_' + simpleClassName + "_" + index;
+      var tooltipTextId = 'tooltip_text_' + simpleClassName + "_" + index;
+      var tooltip = "<div class='tooltip' id='" + tooltipId + "' persist='false'><div class='persistButton'><input type='checkbox' onclick=persistTooltip('" + tooltipId + "');>persist</div><div><textarea id='" + tooltipTextId +"'> </textarea></div></div>";
+      $(tooltip).insertAfter($(this));
+      $('#'+tooltipId).hide();
+
+
+      $(this).mouseenter( function(event) {
+        $("#"+tooltipId).css({
+            position: "absolute",
+            float: "left",
+            top: $(this).position().top + $(this).height() + "px",
+            left: $(this).position().left + "px",
+        });
+        $("#"+tooltipId).delay(750).fadeIn(300);
+        $('#'+tooltipTextId).html(getContent($(this).attr("id")));
+      });
+      $(this).parent().mouseleave( function(event) {
+        if ($('#'+tooltipId).attr("persist") == "false") {
+          $("#"+tooltipId).stop(true).fadeOut(200);
+        }
+      });
+    }
+    else {
+      console.log("tooltip will be skipped for an element that has id: " + $(this).attr("id"));
+    }
+  });
+}
+
 function hcalOnLoad() {
   moveversionnumber();
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
@@ -550,6 +658,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
+    showErrorTable();
     makedropdown($('#LOCAL_RUNKEY_MAP').text(), $('#AVAILABLE_LOCAL_RUNKEYS').text());
     giveEventCheckboxOnclick();
     onClickCommandParameterCheckBox();
@@ -559,6 +668,8 @@ function hcalOnLoad() {
     checkSpectator();
     makeIcons();
     $('#setRunkeyButton').hide();
+    makeTooltips('#infoSection .parameterInputField');
+    makeTooltips('.bigInfo');
   }
   else {
     $('#FMPilotForm > div').hide();
