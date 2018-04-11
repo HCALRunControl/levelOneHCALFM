@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.ArrayList;
 
 import rcms.util.logger.RCMSLogger;
@@ -20,6 +21,7 @@ import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.app.level1.HCALqgMapper.level1qgMapper;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.user.UserActionException;
 
@@ -33,12 +35,14 @@ public class HCALMasker {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public HCALxmlHandler xmlHandler = null;
+  private level1qgMapper mapper;
 
-  public HCALMasker(HCALFunctionManager parentFunctionManager) {
+  public HCALMasker(HCALFunctionManager parentFunctionManager, level1qgMapper mapper) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
     logger.warn("Constructing masker.");
     this.functionManager = parentFunctionManager;
     xmlHandler = new HCALxmlHandler(parentFunctionManager);
+    this.mapper = mapper;
     logger.warn("Done constructing masker.");
   }
 
@@ -105,20 +109,22 @@ public class HCALMasker {
   }
 
   //Add all apps in a masked executives to maskapps list
-  protected void ignoreMaskedExecutiveApps(List<Resource> level2Children){ 
+  protected void ignoreMaskedExecutiveApps(List<Resource> level2Children) throws UserActionException{ 
       VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
-      StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
       if (!maskedRss.isEmpty()){
+        StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
         for(StringT MaskedApp : maskedRssArray){
           for(Resource level2resource: level2Children){
             if( level2resource.getName().equals(MaskedApp.getString()) && level2resource.getQualifiedResourceType().contains("XdaqExecutive") ){
-              XdaqExecutiveResource maskedExec = ((XdaqExecutiveResource)level2resource );
-              logger.info("[HCAL "+ functionManager.FMname+"]: Masking Executive "+MaskedApp.getString()+" and all its apps: "+maskedExec.getApplications().toString());
-              for( XdaqApplicationResource app : maskedExec.getApplications()){
-                if (!maskedRss.contains(new StringT(app.getName()) ) ){
-                  maskedRss.add(new StringT(app.getName()));
+              logger.warn("[JohnLogExecMask] attempting to mask: " + level2resource.getName());
+              for (StringT execApp : mapper.getAppsOfExec(level2resource.getName()).getVector())
+                if (! maskedRss.contains(execApp)){
+                  logger.warn("[JohnLogExecMask] adding app: " + execApp.getString());
+                  maskedRss.add(execApp);
                 }
-              }
+                else {
+                  logger.warn("[JohnLogExecMask] app " + execApp.getString() + " was already found in MASKED_RESOURCES, not double-writing.");
+                }
             }
           }
         }
@@ -186,7 +192,12 @@ public class HCALMasker {
           List<Resource> level2Children = fullConfig.getChildrenResources();
           
           //Add all masked Executive's app into MASKED_RESOURCES, so that they will not be considered as candidate
-          ignoreMaskedExecutiveApps(level2Children);
+          try {
+            ignoreMaskedExecutiveApps(level2Children);
+          }
+          catch (UserActionException ex) {
+            logger.error("[HCAL " + functionManager.FMname + "]: Got a UserActionException when trying to mask an executive: " + ex.getMessage());
+          }
           Boolean isAcandidate      = isEvmTrigCandidate(level2Children).get("isAcandidate");
           Boolean isAdummyCandidate = isEvmTrigCandidate(level2Children).get("isAdummyCandidate");
           logger.debug("["+functionManager.FMname + "] For this LV2 "+ level2.getName() + "  isAcandidate= " + isAcandidate.toString() + " isAdummyCandidate = "+ isAdummyCandidate.toString() );

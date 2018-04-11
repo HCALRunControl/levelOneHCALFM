@@ -73,10 +73,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     xmlHandler = new HCALxmlHandler(this.functionManager);
-    masker = new HCALMasker(this.functionManager);
 
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
-
 
       try {
         mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
@@ -94,6 +92,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // TODO Auto-generated catch block
         logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
       }
+    masker = new HCALMasker(this.functionManager, this.mapper);
+
     // Get the CfgCVSBasePath in the userXML
     {
       String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
