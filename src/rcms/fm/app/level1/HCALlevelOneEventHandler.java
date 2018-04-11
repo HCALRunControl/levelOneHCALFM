@@ -217,6 +217,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
             RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
           }
+          if ( ((Element)nodes.item(i)).hasAttribute("maskedcrates")){
+            RunKeySetting.put(new StringT("maskedcrates")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedcrates"  ).getNodeValue()));
+          }
           if ( ((Element)nodes.item(i)).hasAttribute("singlePartitionFM")){
             RunKeySetting.put(new StringT("singlePartitionFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("singlePartitionFM").getNodeValue()));
           }
@@ -1675,6 +1678,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           for (String app:maskedapps){
             MaskedResources.add(new StringT(app));
           }
+          // XXX JCH what about maskedcrates? should that be used in global?
         }
         logger.info("[HCAL "+functionManager.FMname+" FillMaskedResources: Filled MASKED_RESOURCES from runkey:" + MaskedResources.toString());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
@@ -1683,6 +1687,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
 
   public void checkMaskedappsFormat() throws UserActionException{
+    // TODO JCH should something similar be done with maskedcrates?
     StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
     MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
 
