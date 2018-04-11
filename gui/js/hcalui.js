@@ -241,7 +241,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
         eventsToTake = "default";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
-          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ "' ";
+          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps + "' maskedcrates='" + runConfigMap[localRunKeysArray[i]].maskedcrates +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ "' ";
 
         if (localRunKeysArray[i] != $("#LOCAL_RUNKEY_SELECTED").val()) {
           dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
@@ -286,6 +286,10 @@ function fillMask() {
     var userXMLmaskedApps = $('#dropdown option:selected').attr("maskedresources").split("|");
     for (var i = 0; i < userXMLmaskedApps.length; i++) {
       if (userXMLmaskedApps[i] != "") finalMasks.push(userXMLmaskedApps[i]);
+    }
+    var userXMLmaskedCrates = $('#dropdown option:selected').attr("maskedcrates").split("|");
+    for (var i = 0; i < userXMLmaskedCrates.length; i++) {
+      if (userXMLmaskedCrates[i] != "") finalMasks.push("physicalCrate_" + userXMLmaskedCrates[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
     var masksToShow = "[";

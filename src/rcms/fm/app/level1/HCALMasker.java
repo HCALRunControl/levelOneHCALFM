@@ -388,4 +388,23 @@ public class HCALMasker {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASK_SUMMARY", maskedFMsVector));
     }
   }
+
+  public void setMaskedCrates() throws UserActionException {
+        VectorT<StringT> allMaskedResources =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+        for (StringT maskedResource : allMaskedResources) {
+          if (maskedResource.getString().contains("physicalCrate")) {
+            try {
+              allMaskedResources.add(new StringT(mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1]))));
+            }
+            catch (NumberFormatException e) {
+              throw new UserActionException("Could not extract a valid crate number from requested maskedcrate" + e.getMessage());
+            }
+            catch (UserActionException e) {
+              throw new UserActionException("Problem setting the masked crates" + e.getMessage());
+            }
+            
+          }
+        }
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
+  }
 }
