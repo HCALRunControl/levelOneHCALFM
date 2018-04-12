@@ -184,7 +184,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<BooleanT> configureUSE_RESET_FOR_RECOVER    =  new CommandParameter<BooleanT> ("USE_RESET_FOR_RECOVER"   ,  new BooleanT(true)  );
     CommandParameter<VectorT<StringT>>  configureMASKED_RESOURCES         =  new CommandParameter<VectorT<StringT>>  ("MASKED_RESOURCES"        ,  new VectorT<StringT>()     );
     CommandParameter<VectorT<StringT>>  configureAVAILABLE_RESOURCES      =  new CommandParameter<VectorT<StringT>>  ("AVAILABLE_RESOURCES"     ,  new VectorT<StringT>()     );
-    CommandParameter<MapT<MapT<MapT<VectorT<StringT>>>>>  configureQG_MAP   =  new CommandParameter<MapT<MapT<MapT<VectorT<StringT>>>>>  ("QG_MAP"     ,  new MapT<MapT<MapT<VectorT<StringT>>>>()     );
 
     // define parameter set
     ParameterSet<CommandParameter> configureParameters = new ParameterSet<CommandParameter>();
@@ -215,7 +214,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureRU_INSTANCE);
       configureParameters.add(configureLPM_SUPERVISOR);
       configureParameters.add(configureEVM_TRIG_FM);
-      configureParameters.add(configureQG_MAP);
     } catch (ParameterException nothing) {
       // Throws an exception if a parameter is duplicate
       throw new StateMachineDefinitionException( "Could not add to configureParameters. Duplicate Parameter?", nothing );
