@@ -58,7 +58,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
   public HCALMasker masker = null;
-  public HCALqgMapper.level1qgMapper mapper = null;
   private AlarmerWatchThread alarmerthread = null;
 
   private Double  progress           = 0.0;
@@ -76,23 +75,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
-      try {
-        mapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
-        // testing
-        logger.warn("[JohnLogQG] " + mapper.getMap().toString());
-        logger.warn("[JohnLogQG] executive of crate 52: " + mapper.getExecOfCrate(52));
-        logger.warn("[JohnLogQG] executive of crate 61: " + mapper.getExecOfCrate(61));
-        logger.warn("[JohnLogQG] crate of hcal::DTCManager_6: " + mapper.getCrateOfApp("hcal::DTCManager_6"));
-        logger.warn("[JohnLogQG] crate of hcal::uHTRManager_3: " + mapper.getCrateOfApp("hcal::uHTRManager_3"));
-        logger.warn("[JohnLogQG] crate of hcalHTRManager_0: " + mapper.getCrateOfApp("hcalHTRManager_0", new StringT("HCAL_HO904")));
-        logger.warn("[JohnLogQG] apps of exec Executive_9: " + mapper.getAppsOfExec("Executive_9"));
-        logger.warn("[JohnLogQG] apps of crate 62: " + mapper.getAppsOfCrate("62"));
-      }
-      catch (UserActionException e1) {
-        // TODO Auto-generated catch block
-        logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
-      }
-    masker = new HCALMasker(this.functionManager, this.mapper);
+    try {
+      qgMapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
+    }
+    catch (UserActionException e1) {
+      // TODO Auto-generated catch block
+      logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
+    }
+    masker = new HCALMasker(this.functionManager, (level1qgMapper) this.qgMapper);
 
     // Get the CfgCVSBasePath in the userXML
     {
@@ -245,6 +235,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCAL_RUNKEYS",LocalRunKeys));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP" ,LocalRunKeyMap));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", (MapT<MapT<MapT<VectorT<StringT>>>>) qgMapper.getMap()));
       
     }
     catch (DOMException | UserActionException e) {
@@ -443,11 +434,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
-      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
+      //Pass selected runkey name, mastersnippet file name, runkey map, and QG map to LV2
       pSet.put(new CommandParameter<StringT>("MASTERSNIPPET_SELECTED", new StringT(MastersnippetSelected)));
       pSet.put(new CommandParameter<StringT>("LOCAL_RUNKEY_SELECTED", new StringT(LocalRunkeySelected)));
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
       pSet.put(new CommandParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", LocalRunKeyMap));
+      MapT<MapT<MapT<VectorT<StringT>>>> qgMap = (MapT<MapT<MapT<VectorT<StringT>>>>)functionManager.getHCALparameterSet().get("QG_MAP").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", qgMap));
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));

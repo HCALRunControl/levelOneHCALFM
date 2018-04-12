@@ -117,6 +117,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("EMPTY_FMS"                ,  new VectorT<StringT>()    ) );  // LV2 FMs without XDAQs
 		this.put( new FunctionManagerParameter<VectorT<MapT<StringT>> > ("XDAQ_ERR_MSG"      ,  new VectorT<MapT<StringT>>()));  // Vector to contain XDAQ app err messages: < <App1:Err>,<App2:Err>,... >
+		this.put( new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>> > ("QG_MAP"      ,  new MapT<MapT<MapT<VectorT<StringT>>>>()));  // map of config's QG, see comments in HCALqgMapper
 	}
 
 	public static HCALParameters getInstance() {

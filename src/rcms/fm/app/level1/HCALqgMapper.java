@@ -50,6 +50,7 @@ import rcms.util.logger.RCMSLogger;
 public class HCALqgMapper {
 
   static RCMSLogger logger = new RCMSLogger(HCALqgMapper.class);
+
   /**
    * abstract class for various kinds of maps of qualified groups
    */
@@ -65,85 +66,9 @@ public class HCALqgMapper {
   }
 
   /**
-   * class that does bookkeeping of the level2 FM qualified groups
+   * abstract class for things which parse the QG map 
    */
-  private class level2qgMapper extends abstractQGmapper {
-
-    /**
-     * method that creates the map for a level2 fm
-     * @param l2childList a list of the level2's children [in this case the execs and apps are mixed together]
-     * @throws UserActionException if there are problems mapping it out
-     */
-    protected level2qgMapper(List<Resource> level2childList) throws UserActionException {
-      MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
-      MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
-      String crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
-      String execName = "";
-      VectorT appList = new VectorT();
-      for(Resource qr : level2childList) {
-        // this list has apps and execs mixed together
-        crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
-        execName = "NoExecName";
-        if (qr.getQualifiedResourceType().contains("Executive")){
-          execName = qr.getName();
-          appList = new VectorT();
-
-          XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
-
-          for( XdaqApplicationResource app : execResource.getApplications()){
-            appList.add(new StringT(app.getName()));
-            // get the crate number from the hcalCrate app property
-            if (app.getName().contains("hcalCrate")) {
-              for (ConfigProperty crateAppProperty : app.getProperties()){
-                if (crateAppProperty.getName().equals("crateId")){
-                  crateNumber = crateAppProperty.getValue();
-                }
-              }
-            }
-          }
-          crateMap.put(crateNumber, appList); 
-          execMap.put(execName, crateMap);
-          crateMap = new MapT<VectorT<StringT>>();
-        }
-      }
-      qgMap = execMap;
-    }
-  }
-
-  /**
-   * class for mapping out a level1 FM's QG 
-   * it makes the l1QGmap
-   */
-  public class level1qgMapper extends abstractQGmapper {
-    protected Resource functionManagerResource = null;
-    protected QualifiedGroup qg = null;
-
-    /**
-     * method that creates a map of a level1 FM's qualified group
-     * @param l1FMqr the level1 FM qualified resource
-     * @throws UserActionException if it has issues
-     */
-    public level1qgMapper(Resource l1FMqr, QualifiedGroup qg) throws UserActionException {
-      this.qg = qg;
-      MapT<MapT<MapT<VectorT<StringT>>>> l1QGmap = new MapT<MapT<MapT<VectorT<StringT>>>>();
-      List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
-      for (QualifiedResource qr: l2FMlist) {
-        try {
-          Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
-          List<Resource> level2execs = l2group.getChildrenResources();
-          level2qgMapper level2mapper = new level2qgMapper(level2execs);
-          MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) level2mapper.getMap();
-          l1QGmap.put(qr.getName(), execMap);
-        }
-        catch (UserActionException | DBConnectorException e) {
-          throw new UserActionException(e.getMessage());
-        }
-      }
-      qgMap = l1QGmap;
-      if (!isQGmapValid()) {
-        throw new UserActionException("Error creating the QG map!");
-      }
-    }
+  abstract public class abstractQGmapReader extends abstractQGmapper {
     
     /**
      * get the executive corresponding to a given crate
@@ -240,7 +165,7 @@ public class HCALqgMapper {
      * b) there is exactly one appList per executive
      * @return a bool where 1 is valid and 0 is not valid
      */
-    private boolean isQGmapValid () {
+    protected boolean isQGmapValid () {
       for (StringT level2key : qgMap.getMap().keySet()) {
         MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) qgMap.getMap().get(level2key);
         for (MapT<VectorT<StringT>> crateMap : execMap.getMap().values()) {
@@ -250,6 +175,107 @@ public class HCALqgMapper {
         }
       }
       return true;
+    }
+  }
+
+
+  /**
+   * class that does bookkeeping of the level2 FM qualified groups
+   */
+  private class level2qgMapper extends abstractQGmapper {
+
+    /**
+     * method that creates the map for a level2 fm
+     * @param l2childList a list of the level2's children [in this case the execs and apps are mixed together]
+     * @throws UserActionException if there are problems mapping it out
+     */
+    protected level2qgMapper(List<Resource> level2childList) throws UserActionException {
+      MapT<MapT<VectorT<StringT>>> execMap = new MapT<MapT<VectorT<StringT>>>();
+      MapT<VectorT<StringT>> crateMap = new MapT<VectorT<StringT>>();
+      String crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
+      String execName = "";
+      VectorT appList = new VectorT();
+      for(Resource qr : level2childList) {
+        // this list has apps and execs mixed together
+        crateNumber = "non-crate"; // if it is not an executive corresponding to the crate
+        execName = "NoExecName";
+        if (qr.getQualifiedResourceType().contains("Executive")){
+          execName = qr.getName();
+          appList = new VectorT();
+
+          XdaqExecutiveResource execResource = ((XdaqExecutiveResource)qr);
+
+          for( XdaqApplicationResource app : execResource.getApplications()){
+            appList.add(new StringT(app.getName()));
+            // get the crate number from the hcalCrate app property
+            if (app.getName().contains("hcalCrate")) {
+              for (ConfigProperty crateAppProperty : app.getProperties()){
+                if (crateAppProperty.getName().equals("crateId")){
+                  crateNumber = crateAppProperty.getValue();
+                }
+              }
+            }
+          }
+          crateMap.put(crateNumber, appList); 
+          execMap.put(execName, crateMap);
+          crateMap = new MapT<VectorT<StringT>>();
+        }
+      }
+      qgMap = execMap;
+    }
+  }
+
+  /**
+   * class for mapping out a level1 FM's QG 
+   * it makes the l1QGmap
+   */
+  public class level1qgMapper extends abstractQGmapReader {
+    protected Resource functionManagerResource = null;
+    protected QualifiedGroup qg = null;
+
+    /**
+     * method that creates a map of a level1 FM's qualified group
+     * @param l1FMqr the level1 FM qualified resource
+     * @throws UserActionException if it has issues
+     */
+    public level1qgMapper(Resource l1FMqr, QualifiedGroup qg) throws UserActionException {
+      this.qg = qg;
+      MapT<MapT<MapT<VectorT<StringT>>>> l1QGmap = new MapT<MapT<MapT<VectorT<StringT>>>>();
+      List<QualifiedResource> l2FMlist = qg.seekQualifiedResourcesOfType(new FunctionManager());
+      for (QualifiedResource qr: l2FMlist) {
+        try {
+          Group l2group = qg.rs.retrieveLightGroup(qr.getResource());
+          List<Resource> level2execs = l2group.getChildrenResources();
+          level2qgMapper level2mapper = new level2qgMapper(level2execs);
+          MapT<MapT<VectorT<StringT>>> execMap = (MapT<MapT<VectorT<StringT>>>) level2mapper.getMap();
+          l1QGmap.put(qr.getName(), execMap);
+        }
+        catch (UserActionException | DBConnectorException e) {
+          throw new UserActionException(e.getMessage());
+        }
+      }
+      qgMap = l1QGmap;
+      if (!isQGmapValid()) {
+        throw new UserActionException("Error creating the QG map!");
+      }
+    }
+    
+  }
+
+  /**
+   * class so that the level2 FMs can receive the qgMap from the level1 and have the utilities defined by abstractQGmapReader 
+   */
+  public class level2qgMapParser extends abstractQGmapReader {
+    public level2qgMapParser() {
+      qgMap = null;
+    }
+    public void setMap(MapT<?> externalMap) throws UserActionException {
+      if (!isQGmapValid()) {
+        qgMap = externalMap;
+      }
+      else {
+        throw new UserActionException("the level2qgMapParser received an invalid qgMap from the level1");
+      }
     }
   }
 }
