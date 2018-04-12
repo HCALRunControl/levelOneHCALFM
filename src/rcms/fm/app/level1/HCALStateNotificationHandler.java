@@ -94,7 +94,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                 String LV2fmState = LV2fm.getState().getStateString();
                 if (LV2fmState.equals(HCALStates.ERROR.toString()) ) {
                   VectorT<MapT<StringT>> xDAQ_err_msg  = (VectorT<MapT<StringT>>)LV2fm.getParameter().get("XDAQ_ERR_MSG").getValue();
-                  logger.error("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
+                  logger.info("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
                   LV1_xDAQ_err_msg.getVector().addAll(xDAQ_err_msg.getVector());
                 }
             }
