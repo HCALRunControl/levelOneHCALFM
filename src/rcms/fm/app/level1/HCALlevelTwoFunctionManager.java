@@ -67,8 +67,8 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
         for (String s : errAppMsgString ){          errAppMsgVector.add(new StringT(s));        }
         for (String s : AllHandledAppNameString){          AllHandledAppNameVector.add(new StringT(s));       }
         for (String s : AllHandledAppURIString ){          AllHandledAppURIVector.add(new StringT(s));        }
-        logger.error("errAppNameString = " + errAppNameVector.toString());
-        logger.error("errAppMsgString = " + errAppMsgVector.toString());
+        //logger.error("errAppNameString = " + errAppNameVector.toString());
+        //logger.error("errAppMsgString = " + errAppMsgVector.toString());
 
         if(errAppNameVector.size()==(errAppMsgVector.size())){
           for (StringT errAppName : errAppNameVector){
