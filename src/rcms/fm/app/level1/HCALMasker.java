@@ -39,11 +39,11 @@ public class HCALMasker {
 
   public HCALMasker(HCALFunctionManager parentFunctionManager, level1qgMapper mapper) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
-    logger.warn("Constructing masker.");
+    logger.info("Constructing masker.");
     this.functionManager = parentFunctionManager;
     xmlHandler = new HCALxmlHandler(parentFunctionManager);
     this.mapper = mapper;
-    logger.warn("Done constructing masker.");
+    logger.info("Done constructing masker.");
   }
 
   protected Map<String, Boolean> isEvmTrigCandidate(List<Resource> level2Children) {
@@ -52,7 +52,6 @@ public class HCALMasker {
     boolean hasAnEventBuilder = false;
     boolean hasAnFU = false;
     VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
-    logger.warn(maskedRss.toString());
     StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
 
     for (Resource level2resource : level2Children) {
