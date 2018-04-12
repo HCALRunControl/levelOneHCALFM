@@ -134,7 +134,6 @@ public class HCALqgMapper {
         for (StringT execKey : execMap.getMap().keySet()) {
           for (VectorT<StringT> appList : execMap.getMap().get(execKey).getMap().values()) {
             if (execKey.getString().equals(execName)) {
-              logger.warn("[JohnLogQG] execKey.getString(): " + execKey.getString());
               return appList;
             }
           }

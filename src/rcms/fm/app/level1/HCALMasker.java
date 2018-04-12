@@ -116,15 +116,11 @@ public class HCALMasker {
         for(StringT MaskedApp : maskedRssArray){
           for(Resource level2resource: level2Children){
             if( level2resource.getName().equals(MaskedApp.getString()) && level2resource.getQualifiedResourceType().contains("XdaqExecutive") ){
-              logger.warn("[JohnLogExecMask] attempting to mask: " + level2resource.getName());
-              for (StringT execApp : mapper.getAppsOfExec(level2resource.getName()).getVector())
+              for (StringT execApp : mapper.getAppsOfExec(level2resource.getName()).getVector()) {
                 if (! maskedRss.contains(execApp)){
-                  logger.warn("[JohnLogExecMask] adding app: " + execApp.getString());
                   maskedRss.add(execApp);
                 }
-                else {
-                  logger.warn("[JohnLogExecMask] app " + execApp.getString() + " was already found in MASKED_RESOURCES, not double-writing.");
-                }
+              }
             }
           }
         }
@@ -400,14 +396,12 @@ public class HCALMasker {
 
     StringT[] maskedResourcesArray = allMaskedResources.toArray(new StringT[allMaskedResources.size()]);
     for (StringT maskedResource : maskedResourcesArray) {
-      logger.warn("[JohnLogCrateMask] working on masked resource: " + maskedResource);
       if (maskedResource.getString().contains("physicalCrate")) {
-        logger.warn("[JohnLogCrateMask] found physicalCrate: " + maskedResource);
         try {
           if (!Arrays.asList(maskedResourcesArray).contains(maskedResource.getString())) {
             allMaskedResources.add(new StringT(mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1]))));
+            logger.warn("[HCAL " + functionManager.FMname + "]: Found " + maskedResource + " in masking list, therefore added " + mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1])) + " to MASKED_RESOURCES");
           }
-          logger.warn("[JohnLogCrateMask] added " + mapper.getExecOfCrate(Integer.parseInt(maskedResource.getString().split("_")[1])) + " to MASKED_RESOURCES");
         }
         catch (NumberFormatException e) {
           throw new UserActionException("Could not extract a valid crate number from requested maskedcrate" + e.getMessage());
