@@ -266,16 +266,8 @@ public class HCALqgMapper {
    * class so that the level2 FMs can receive the qgMap from the level1 and have the utilities defined by abstractQGmapReader 
    */
   public class level2qgMapParser extends abstractQGmapReader {
-    public level2qgMapParser() {
-      qgMap = null;
-    }
-    public void setMap(MapT<?> externalMap) throws UserActionException {
-      if (!isQGmapValid()) {
-        qgMap = externalMap;
-      }
-      else {
-        throw new UserActionException("the level2qgMapParser received an invalid qgMap from the level1");
-      }
+    public level2qgMapParser(MapT<?> externalMap) {
+      qgMap = externalMap;
     }
   }
 }

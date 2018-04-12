@@ -97,7 +97,7 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
               //    errAppCrate = new StringT(errAppPortNumber.substring(3));
               //  }
               //}
-              errAppCrate = new StringT(theEventHandler.qgMapper.getCrateOfApp(errAppName.getString().replace(":", "_")));
+              errAppCrate = new StringT(theEventHandler.qgMapper.getCrateOfApp(errAppName.getString().replaceAll("(?<!:):(?!:)", "_")));
               // Replace instance number with crate number
               if (!errAppCrate.equals("non-crate")){
                 String[] nameSplit= errAppName.getString().split(":");

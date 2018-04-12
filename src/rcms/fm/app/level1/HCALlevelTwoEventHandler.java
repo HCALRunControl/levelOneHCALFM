@@ -54,9 +54,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     xmlHandler = new HCALxmlHandler(this.functionManager);
     super.init();
 
-    qgMapper = new HCALqgMapper().new level2qgMapParser();
-      
-
     logger.debug("[HCAL LVL2] init() called: functionManager = " + functionManager );
   }
 
@@ -284,7 +281,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         MapT<MapT<MapT<VectorT<StringT>>>> qgMap = ((MapT<MapT<MapT<VectorT<StringT>>>>)parameterSet.get("QG_MAP").getValue());
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received QG map: "+qgMap.toString());
         functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", qgMap));
-        ((level2qgMapParser) qgMapper).setMap(qgMap); 
+        qgMapper = new HCALqgMapper().new level2qgMapParser(qgMap); 
       }
       else{
         logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive QG_MAP during initAction");
