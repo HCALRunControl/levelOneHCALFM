@@ -205,6 +205,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           setTimeoutThread(true,COLDINITTIMEOUT);
           return;
         } else if ( notification.getToState().equals(HCALStates.INIT.toString()) ) {
+          // Only re-set the timeout thread when notification come from cold-init
           if(notification.getFromState().equals(HCALStates.COLDINIT.toString())){
             fm.setAction("HCAL finished cold-init and got back to Init");
             logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification from Cold-Init to init; setting timeout thread to normal value");
