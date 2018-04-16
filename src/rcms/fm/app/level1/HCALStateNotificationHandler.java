@@ -36,6 +36,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     Thread timeoutThread = null;
  
     static final int COLDINITTIMEOUT = 1000*1200; // 20 minutes in ms
+    static final int INITTIMEOUT     = 1000*240;  // 6 minutes in ms
+
 //    public Boolean interruptedTransition = false;
     //this is active only in global mode..
  
@@ -205,13 +207,11 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           setTimeoutThread(true,COLDINITTIMEOUT);
           return;
         } else if ( notification.getToState().equals(HCALStates.INIT.toString()) ) {
-          // Only re-set the timeout thread when notification come from cold-init
-          if(notification.getFromState().equals(HCALStates.COLDINIT.toString())){
-            fm.setAction("HCAL finished cold-init and got back to Init");
-            logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification from Cold-Init to init; setting timeout thread to normal value");
-            setTimeoutThread(true);
-            return;
-          }
+          // WARNING: xdaq notifications has null as  notification.getFromState()
+          fm.setAction("HCAL supervisor going to Init");
+          logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification to init; setting timeout thread to "+INITTIMEOUT/1000.0+" second" );
+          setTimeoutThread(true);
+          return;
         }
 
       }
@@ -339,7 +339,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
      * Start or stop the timeout thread for transitions; default timeout is 4 minutes
      */
     public void setTimeoutThread(Boolean action) {
-        setTimeoutThread(action,240000);
+        setTimeoutThread(action,INITTIMEOUT);
     }
     public void setTimeoutThread(Boolean action, int msTimeout) {
  
