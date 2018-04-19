@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
+import rcms.fm.app.level1.HCALqgMapper.abstractQGmapReader;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -88,6 +89,7 @@ public class HCALEventHandler extends UserEventHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = new RCMSLogger(HCALEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
+  public abstractQGmapReader qgMapper = null;
   public LogSessionConnector logSessionConnector;  // Connector for logsession DB
 
   // Essential xdaq stuff

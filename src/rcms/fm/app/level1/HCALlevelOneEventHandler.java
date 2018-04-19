@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
 
+import rcms.fm.app.level1.HCALqgMapper.level1qgMapper;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -71,9 +72,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     xmlHandler = new HCALxmlHandler(this.functionManager);
-    masker = new HCALMasker(this.functionManager);
 
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
+
+    try {
+      qgMapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
+    }
+    catch (UserActionException e1) {
+      // TODO Auto-generated catch block
+      logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
+    }
+    masker = new HCALMasker(this.functionManager, (level1qgMapper) this.qgMapper);
 
     // Get the CfgCVSBasePath in the userXML
     {
@@ -198,6 +207,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
             RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
           }
+          if ( ((Element)nodes.item(i)).hasAttribute("maskedcrates")){
+            RunKeySetting.put(new StringT("maskedcrates")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedcrates"  ).getNodeValue()));
+          }
           if ( ((Element)nodes.item(i)).hasAttribute("singlePartitionFM")){
             RunKeySetting.put(new StringT("singlePartitionFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("singlePartitionFM").getNodeValue()));
           }
@@ -223,6 +235,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCAL_RUNKEYS",LocalRunKeys));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP" ,LocalRunKeyMap));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", (MapT<MapT<MapT<VectorT<StringT>>>>) qgMapper.getMap()));
       
     }
     catch (DOMException | UserActionException e) {
@@ -240,6 +253,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateEnteredEvent) {
       String MastersnippetSelected = "";
       String LocalRunkeySelected = "";
+
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
@@ -340,6 +354,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       
       //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
       FillMaskedResources();
+      //masker.setMaskedCrates();
       masker.pickEvmTrig();
       masker.setMaskedFMs();
 
@@ -419,11 +434,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
-      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
+      //Pass selected runkey name, mastersnippet file name, runkey map, and QG map to LV2
       pSet.put(new CommandParameter<StringT>("MASTERSNIPPET_SELECTED", new StringT(MastersnippetSelected)));
       pSet.put(new CommandParameter<StringT>("LOCAL_RUNKEY_SELECTED", new StringT(LocalRunkeySelected)));
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
       pSet.put(new CommandParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", LocalRunKeyMap));
+      MapT<MapT<MapT<VectorT<StringT>>>> qgMap = (MapT<MapT<MapT<VectorT<StringT>>>>)functionManager.getHCALparameterSet().get("QG_MAP").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", qgMap));
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
@@ -1655,6 +1672,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           for (String app:maskedapps){
             MaskedResources.add(new StringT(app));
           }
+          // XXX JCH what about maskedcrates? should that be used in global?
         }
         logger.info("[HCAL "+functionManager.FMname+" FillMaskedResources: Filled MASKED_RESOURCES from runkey:" + MaskedResources.toString());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
@@ -1663,6 +1681,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
 
   public void checkMaskedappsFormat() throws UserActionException{
+    // TODO JCH should something similar be done with maskedcrates?
     StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
     MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
 

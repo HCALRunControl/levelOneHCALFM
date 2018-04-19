@@ -88,17 +88,18 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
                   errMap.put("URI", errAppURI) ;
                 }
               }
-              // Extract crate number from URI
-              if (errAppURI.length()>0){
-                // e.g. URI = http://hcal904daq01.cms904:39100/urn:xdaq-application:lid=53
-                String errAppPortNumber  = errAppURI.getString().split("/")[2].split(":")[1];
-                // 3 digit in port number = isCrate boolean
-                if (String.valueOf(errAppPortNumber.charAt(2)).equals("1")){
-                  errAppCrate = new StringT(errAppPortNumber.substring(3));
-                }
-              }
+              //// Extract crate number from URI
+              //if (errAppURI.length()>0){
+              //  // e.g. URI = http://hcal904daq01.cms904:39100/urn:xdaq-application:lid=53
+              //  String errAppPortNumber  = errAppURI.getString().split("/")[2].split(":")[1];
+              //  // 3 digit in port number = isCrate boolean
+              //  if (String.valueOf(errAppPortNumber.charAt(2)).equals("1")){
+              //    errAppCrate = new StringT(errAppPortNumber.substring(3));
+              //  }
+              //}
+              errAppCrate = new StringT(theEventHandler.qgMapper.getCrateOfApp(errAppName.getString().replaceAll("(?<!:):(?!:)", "_")));
               // Replace instance number with crate number
-              if (!errAppCrate.equals("")){
+              if (!errAppCrate.equals("non-crate")){
                 String[] nameSplit= errAppName.getString().split(":");
                 String nameOnly   = "";
                 //Remove the last part of ":" split, which is the instance

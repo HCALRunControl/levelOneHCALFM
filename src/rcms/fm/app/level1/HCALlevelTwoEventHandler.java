@@ -7,7 +7,7 @@ import java.util.List;
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQMessageException;
-
+import rcms.fm.app.level1.HCALqgMapper.level2qgMapParser;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -53,7 +53,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     super.init();
-      
 
     logger.debug("[HCAL LVL2] init() called: functionManager = " + functionManager );
   }
@@ -277,6 +276,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       else{
         logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive LOCAL_RUNKEY_MAP during initAction");
+      }
+      if( parameterSet.get("QG_MAP") != null){
+        MapT<MapT<MapT<VectorT<StringT>>>> qgMap = ((MapT<MapT<MapT<VectorT<StringT>>>>)parameterSet.get("QG_MAP").getValue());
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received QG map: "+qgMap.toString());
+        functionManager.getParameterSet().put(new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", qgMap));
+        qgMapper = new HCALqgMapper().new level2qgMapParser(qgMap); 
+      }
+      else{
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] initAction: Did not receive QG_MAP during initAction");
       }
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
