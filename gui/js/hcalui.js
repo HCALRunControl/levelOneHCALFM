@@ -251,10 +251,10 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
                                                 "' eventsToTake='"        + eventsToTake                               + "' ";
 
         if (localRunKeysArray[i] != $("#LOCAL_RUNKEY_SELECTED").val()) {
-          dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
+          dropdownoption = dropdownoption + " >" + localRunKeysArray[i] + "</option>";
         }
         else {
-          dropdownoption = dropdownoption + "' selected='selected'>" + localRunKeysArray[i] + "</option>";
+          dropdownoption = dropdownoption + " selected='selected'>" + localRunKeysArray[i] + "</option>";
         }
     }
     dropdownoption = dropdownoption + "</select>";
