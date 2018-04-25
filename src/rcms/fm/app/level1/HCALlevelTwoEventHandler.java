@@ -651,6 +651,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               pam =((XdaqApplication)qr).getXDAQParameter();
 
               //Set the TpgKey get from LV1, which is passed down from LV0
+              //Remark: for local run, TpgKey (and TPG_KEY) will have "",  uHTRManager will use TPGTagname from snippet instead
               TpgKey            = ((StringT)functionManager.getHCALparameterSet().get("TPG_KEY").getValue()).getString();
               logger.info("[HCAL " + functionManager.FMname + "] Sending TriggerKey =  " +TpgKey +" to supervisor");
               pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
