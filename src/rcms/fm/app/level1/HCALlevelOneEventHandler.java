@@ -784,24 +784,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippet(s): ");
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
-      if (TpgKey!=null && TpgKey!="NULL") {
-
-        FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-        FullCfgScript += "# A HcalTriggerKey was retrieved by this FM and will be added by the LVL2 FMs.";
-        FullCfgScript += "\n### END TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] added the received TPG_KEY: " + TpgKey + " as HTR snippet to the full CfgScript ...");
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] FullCfgScript with added received TPG_KEY: " + TpgKey + " as HTR snippet.\nHere it is:\n" + FullCfgScript);
-
-      }
-      else {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Warning! Did not receive any TPG_KEY.\nPerhaps this is OK for local runs ... ");
-
-        if (!RunType.equals("local")) {
-          logger.error("[HCAL LVL1 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
-        }
-      }
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript is like this: \n" + FullCfgScript);
 
       //Get the results from parseMasterSnippet      
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();

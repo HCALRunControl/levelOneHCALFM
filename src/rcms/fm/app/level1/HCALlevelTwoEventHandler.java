@@ -466,6 +466,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetTargetParameter( parameterSet, "RUN_KEY" ,"CONFIGURED_WITH_RUN_KEY",true);
 
           // Check and receive TPG key
+          CheckAndSetParameter(       parameterSet, "TPG_KEY" , true);
           CheckAndSetTargetParameter( parameterSet, "TPG_KEY" ,"CONFIGURED_WITH_TPG_KEY",true);
 
           // get the info from the LVL1 if special actions due to a central CMS clock source change are indicated
@@ -570,31 +571,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
 
-      if (TpgKey!=null && TpgKey!="NULL") {
-
-        FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-        FullCfgScript += "HTR { ";
-        FullCfgScript += "  HcalTriggerKey = \"" + TpgKey + "\" ";
-        FullCfgScript += " } ";
-        FullCfgScript += "uHTR { ";
-        FullCfgScript += "  HcalTriggerKey = \"" + TpgKey + "\" ";
-        FullCfgScript += " } ";
-        FullCfgScript += "\n### END TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] added the received TPG_KEY: " + TpgKey + " as HTR snippet to the full CfgScript ...");
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] FullCfgScript with added received TPG_KEY: " + TpgKey + " as HTR snippet.\nHere it is:\n" + FullCfgScript);
-
-        // Update the parameterset if we have modification from TpgKey
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT", new StringT(FullCfgScript)));
-
-      }
-      else {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive any TPG_KEY.\nPerhaps this is OK for local runs ... ");
-
-        if (!RunType.equals("local")) {
-          logger.error("[HCAL LVL2 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
-        }
-      }
 
       // Instead of setting infospace, destoryXDAQ if this FM is mentioned in EmptyFM
       if (parameterSet.get("EMPTY_FMS")!=null ) {
@@ -674,6 +650,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               XDAQParameter pam = null;
               pam =((XdaqApplication)qr).getXDAQParameter();
 
+              //Set the TpgKey get from LV1, which is passed down from LV0
+              //Remark: for local run, TpgKey (and TPG_KEY) will have "",  uHTRManager will use TPGTagname from snippet instead
+              TpgKey            = ((StringT)functionManager.getHCALparameterSet().get("TPG_KEY").getValue()).getString();
+              logger.info("[HCAL " + functionManager.FMname + "] Sending TriggerKey =  " +TpgKey +" to supervisor");
               pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
               pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
               logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
