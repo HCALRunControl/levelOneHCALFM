@@ -969,15 +969,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // finally start the TriggerAdapters
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
-            try {
-              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
-              functionManager.goToError(errMessage,e);
-            }
+            //try {
+            //  //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+            //  logger.info("[HCAL LVL2 " + functionManager.FMname + "] NOT Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+            //  functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
+            //}
+            //catch (QualifiedResourceContainerException e) {
+            //  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
+            //  functionManager.goToError(errMessage,e);
+            //}
           }
         }
 
@@ -1457,17 +1457,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.debug(debugMessage);
         }
 
+        if (!functionManager.FMrole.equals("EvmTrig")) {
         try {
 
           // define stop time
           StopTime = new Date();
 
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]  Sending AsyncDisable to supervisor");
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]   Sending AsyncDisable to non-EvmTrig supervisor");
           functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCDISABLE);
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException:  step 2/2 (AsyncDisable to hcalSupervisor) failed ...";
           functionManager.goToError(errMessage,e);
+        }
         }
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {

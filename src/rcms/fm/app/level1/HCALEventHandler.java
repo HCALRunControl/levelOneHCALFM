@@ -766,9 +766,12 @@ public class HCALEventHandler extends UserEventHandler {
           try{
             if (functionManager.FMrole.equals("EvmTrig")){
               XDAQParameter pam = xdaqApp.getXDAQParameter();
-              pam.select(new String[] {"SessionID"});
+              pam.select(new String[] {"SessionID","IgnoreTriggerForEnable"});
               pam.setValue("SessionID"  ,sid.toString());
               logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+              // IgnoreTriggerForEnable = false 
+              pam.setValue("IgnoreTriggerForEnable"  ,"false");
+              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreTriggerForEnable=false to supervisor: " );
 
               pam.send();
             }
