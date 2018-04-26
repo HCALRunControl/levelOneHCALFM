@@ -634,6 +634,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // get the tpg key from the configure command
         if (parameterSet.get("TPG_KEY") != null) {
           TpgKey = ((StringT)parameterSet.get("TPG_KEY").getValue()).getString();
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("TPG_KEY",new StringT(TpgKey)));
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_TPG_KEY",new StringT(TpgKey)));
           String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Received a L1 TPG key: " + TpgKey;
           logger.info(warnMessage);
