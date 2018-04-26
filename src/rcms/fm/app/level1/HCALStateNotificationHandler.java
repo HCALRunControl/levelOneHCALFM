@@ -36,6 +36,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     Thread timeoutThread = null;
  
     static final int COLDINITTIMEOUT = 1000*1200; // 20 minutes in ms
+    static final int INITTIMEOUT     = 1000*240;  // 6 minutes in ms
+
 //    public Boolean interruptedTransition = false;
     //this is active only in global mode..
  
@@ -94,7 +96,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                 String LV2fmState = LV2fm.getState().getStateString();
                 if (LV2fmState.equals(HCALStates.ERROR.toString()) ) {
                   VectorT<MapT<StringT>> xDAQ_err_msg  = (VectorT<MapT<StringT>>)LV2fm.getParameter().get("XDAQ_ERR_MSG").getValue();
-                  logger.error("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
+                  logger.info("[HCAL " + fm.FMname+"] XDAQ_ERR_MSG from LV2="+LV2fm.getName()+" parameter value="+xDAQ_err_msg.toString());
                   LV1_xDAQ_err_msg.getVector().addAll(xDAQ_err_msg.getVector());
                 }
             }
@@ -204,7 +206,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification for Cold-Init; setting timeout thread to a longer value");
           setTimeoutThread(true,COLDINITTIMEOUT);
           return;
+        } else if ( notification.getToState().equals(HCALStates.INIT.toString()) ) {
+          // WARNING: xdaq notifications has null as  notification.getFromState()
+          fm.setAction("HCAL supervisor going to Init");
+          logger.info("[HCAL FM with name " + fm.getName().toString() + " got notification to init; setting timeout thread to "+INITTIMEOUT/1000.0+" second" );
+          setTimeoutThread(true);
+          return;
         }
+
       }
 
       // process the notification from the FM when starting
@@ -330,7 +339,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
      * Start or stop the timeout thread for transitions; default timeout is 4 minutes
      */
     public void setTimeoutThread(Boolean action) {
-        setTimeoutThread(action,240000);
+        setTimeoutThread(action,INITTIMEOUT);
     }
     public void setTimeoutThread(Boolean action, int msTimeout) {
  

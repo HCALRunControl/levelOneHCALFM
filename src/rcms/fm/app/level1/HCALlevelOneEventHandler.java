@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
 
+import rcms.fm.app.level1.HCALqgMapper.level1qgMapper;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -71,9 +72,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     xmlHandler = new HCALxmlHandler(this.functionManager);
-    masker = new HCALMasker(this.functionManager);
 
     super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
+
+    try {
+      qgMapper = new HCALqgMapper().new level1qgMapper(functionManager.getGroup().getThisResource(), functionManager.getQualifiedGroup());
+    }
+    catch (UserActionException e1) {
+      // TODO Auto-generated catch block
+      logger.error("[HCAL " + functionManager.FMname + "]: got an error when trying to map the QG: " + e1.getMessage());
+    }
+    masker = new HCALMasker(this.functionManager, (level1qgMapper) this.qgMapper);
 
     // Get the CfgCVSBasePath in the userXML
     {
@@ -198,6 +207,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
             RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
           }
+          if ( ((Element)nodes.item(i)).hasAttribute("maskedcrates")){
+            RunKeySetting.put(new StringT("maskedcrates")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedcrates"  ).getNodeValue()));
+          }
           if ( ((Element)nodes.item(i)).hasAttribute("singlePartitionFM")){
             RunKeySetting.put(new StringT("singlePartitionFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("singlePartitionFM").getNodeValue()));
           }
@@ -223,6 +235,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCAL_RUNKEYS",LocalRunKeys));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP" ,LocalRunKeyMap));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", (MapT<MapT<MapT<VectorT<StringT>>>>) qgMapper.getMap()));
       
     }
     catch (DOMException | UserActionException e) {
@@ -240,6 +253,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateEnteredEvent) {
       String MastersnippetSelected = "";
       String LocalRunkeySelected = "";
+
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
@@ -340,6 +354,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       
       //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
       FillMaskedResources();
+      //masker.setMaskedCrates();
       masker.pickEvmTrig();
       masker.setMaskedFMs();
 
@@ -419,11 +434,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
-      //Pass selected runkey name, mastersnippet file name, runkey map to LV2
+      //Pass selected runkey name, mastersnippet file name, runkey map, and QG map to LV2
       pSet.put(new CommandParameter<StringT>("MASTERSNIPPET_SELECTED", new StringT(MastersnippetSelected)));
       pSet.put(new CommandParameter<StringT>("LOCAL_RUNKEY_SELECTED", new StringT(LocalRunkeySelected)));
       MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
       pSet.put(new CommandParameter<MapT<MapT<StringT>>>("LOCAL_RUNKEY_MAP", LocalRunKeyMap));
+      MapT<MapT<MapT<VectorT<StringT>>>> qgMap = (MapT<MapT<MapT<VectorT<StringT>>>>)functionManager.getHCALparameterSet().get("QG_MAP").getValue();
+      pSet.put(new CommandParameter<MapT<MapT<MapT<VectorT<StringT>>>>>("QG_MAP", qgMap));
 
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
@@ -449,19 +466,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        Iterator it = functionManager.containerFMChildren.getActiveQRList().iterator();
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            try {
-              logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-              fmChild.execute(initInput);
-            }
-            catch (CommandException e) {
-              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
-              functionManager.goToError(errMessage,e);
-            }
+          try {
+            logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            fmChild.execute(initInput);
+          }
+          catch (CommandException e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
+            functionManager.goToError(errMessage,e);
           }
         }
       }
@@ -554,11 +569,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.RECOVER + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
@@ -623,6 +634,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // get the tpg key from the configure command
         if (parameterSet.get("TPG_KEY") != null) {
           TpgKey = ((StringT)parameterSet.get("TPG_KEY").getValue()).getString();
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("TPG_KEY",new StringT(TpgKey)));
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_TPG_KEY",new StringT(TpgKey)));
           String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Received a L1 TPG key: " + TpgKey;
           logger.info(warnMessage);
@@ -773,24 +785,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippet(s): ");
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
-      if (TpgKey!=null && TpgKey!="NULL") {
-
-        FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-        FullCfgScript += "# A HcalTriggerKey was retrieved by this FM and will be added by the LVL2 FMs.";
-        FullCfgScript += "\n### END TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
-
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] added the received TPG_KEY: " + TpgKey + " as HTR snippet to the full CfgScript ...");
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] FullCfgScript with added received TPG_KEY: " + TpgKey + " as HTR snippet.\nHere it is:\n" + FullCfgScript);
-
-      }
-      else {
-        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Warning! Did not receive any TPG_KEY.\nPerhaps this is OK for local runs ... ");
-
-        if (!RunType.equals("local")) {
-          logger.error("[HCAL LVL1 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
-        }
-      }
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript is like this: \n" + FullCfgScript);
 
       //Get the results from parseMasterSnippet      
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
@@ -1191,11 +1185,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.PAUSE + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
@@ -1234,11 +1224,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.RESUME + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
@@ -1377,24 +1363,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
         // reset all FMs 
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        Iterator it = functionManager.containerFMChildren.getActiveQRList().iterator();
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.COLDRESET);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
-                functionManager.goToError(errMessage,e);
-              }
+          if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
+            try {
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+              fmChild.execute(HCALInputs.COLDRESET);
             }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            catch (CommandException e) {
+              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
+              functionManager.goToError(errMessage,e);
             }
+          }
+          else {
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
           }
         }
       }
@@ -1503,11 +1487,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.TTSTEST_MODE + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
@@ -1549,10 +1529,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // check parameter set
       if (parameterSet.size()==0)  {
         String errMsg = "[HCAL LVL1 " + functionManager.FMname + "] Error! No parameters given with TestTTS command: testingTTSAction";
-        logger.error(errMsg);
-        functionManager.sendCMSError(errMsg);
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
+        functionManager.goToError(errMsg);
       }
       else {
 
@@ -1583,11 +1560,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + sTTSInput + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
@@ -1682,6 +1655,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           for (String app:maskedapps){
             MaskedResources.add(new StringT(app));
           }
+          // XXX JCH what about maskedcrates? should that be used in global?
         }
         logger.info("[HCAL "+functionManager.FMname+" FillMaskedResources: Filled MASKED_RESOURCES from runkey:" + MaskedResources.toString());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
@@ -1690,6 +1664,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
 
   public void checkMaskedappsFormat() throws UserActionException{
+    // TODO JCH should something similar be done with maskedcrates?
     StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_SELECTED").getValue();
     MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("LOCAL_RUNKEY_MAP").getValue();
 

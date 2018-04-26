@@ -40,6 +40,7 @@
                   <xs:attribute type="xs:string" name="maskedFM" use="optional"/>
                   <xs:attribute type="xs:string" name="singlePartitionFM" use="optional"/>
                   <xs:attribute type="xs:string" name="maskedapps" use="optional"/>
+                  <xs:attribute type="xs:string" name="maskedcrates" use="optional"/>
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
