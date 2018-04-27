@@ -1436,8 +1436,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for stopRunning found- good!";
           logger.debug(debugMessage);
         }
-
-        if (!functionManager.FMrole.equals("EvmTrig")) {
         try {
 
           // define stop time
@@ -1449,7 +1447,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException:  step 2/2 (AsyncDisable to hcalSupervisor) failed ...";
           functionManager.goToError(errMessage,e);
-        }
         }
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
