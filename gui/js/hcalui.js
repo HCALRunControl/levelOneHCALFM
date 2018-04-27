@@ -226,28 +226,35 @@ function preclickFMs() {
 function makedropdown(availableRunConfigs, availableLocalRunKeys) {
 
     if( $('#currentState').text() != "Initial" ) {return;}
-    //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-    //var array = availableRunConfigs.split(';');
     var localRunKeysArray = JSON.parse(availableLocalRunKeys);
     var runConfigMap = JSON.parse(availableRunConfigs);
     var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-    //for (var i = 0, l = array.length; i < l; i++) {
-        //var option = array[i].split(':');
     for (var i = 0; i<localRunKeysArray.length; i++) {
+        // handle the optional attributes of local runkeys
         maskedFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
         singlePartitionFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
+        maskedapps = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedapps')) { maskedapps=runConfigMap[localRunKeysArray[i]].maskedapps; }
+        maskedcrates = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedcrates')) { maskedcrates=runConfigMap[localRunKeysArray[i]].maskedcrates; }
         eventsToTake = "default";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('eventsToTake')) { eventsToTake=runConfigMap[localRunKeysArray[i]].eventsToTake; }
-          dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps + "' maskedcrates='" + runConfigMap[localRunKeysArray[i]].maskedcrates +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM+ "' eventsToTake='" + eventsToTake+ "' ";
+        // now build the options in the dropdown with all the stuff specified by the local runkeys
+        dropdownoption = dropdownoption + "<option value='"               + runConfigMap[localRunKeysArray[i]].snippet +  // this is the only mandatory runkey attribute
+                                                "' maskedresources='"     + maskedapps                                 + 
+                                                "' maskedcrates='"        + maskedcrates                               +
+                                                "' maskedFM='"            + maskedFM                                   + 
+                                                "' singlePartitionFM='"   + singlePartitionFM                          + 
+                                                "' eventsToTake='"        + eventsToTake                               + "' ";
 
         if (localRunKeysArray[i] != $("#LOCAL_RUNKEY_SELECTED").val()) {
-          dropdownoption = dropdownoption + "' >" + localRunKeysArray[i] + "</option>";
+          dropdownoption = dropdownoption + " >" + localRunKeysArray[i] + "</option>";
         }
         else {
-          dropdownoption = dropdownoption + "' selected='selected'>" + localRunKeysArray[i] + "</option>";
+          dropdownoption = dropdownoption + " selected='selected'>" + localRunKeysArray[i] + "</option>";
         }
     }
     dropdownoption = dropdownoption + "</select>";

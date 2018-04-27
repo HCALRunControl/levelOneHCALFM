@@ -55,6 +55,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("STATE"                            ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // State the Function Manager is currently in
 		this.put( new FunctionManagerParameter<StringT>  ("SEQ_NAME"                         ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Run sequence name currently
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_KEY"                          ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Global run key
+		this.put( new FunctionManagerParameter<StringT>  ("TPG_KEY"                          ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Global TPG KEY
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_MODE"                         ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Skeletor comment: "mode can be "Normal" or "Debug". Influences the behaviour of the top FM."
 		this.put( new FunctionManagerParameter<StringT>  ("ACTION_MSG"                       ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Action message (fishy zone), visible in level0 and local GUIs
 		this.put( new FunctionManagerParameter<StringT>  ("ERROR_MSG"                        ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // Error message visible in red in level0 gui
