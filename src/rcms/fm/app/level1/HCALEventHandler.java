@@ -935,6 +935,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
     emptyFMsForRunInfo   = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
+    Integer config_time  = ((IntegerT)functionManager.getParameterSet().get("CONFIG_TIME").getValue()).getInteger();
+
 
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
@@ -945,7 +947,7 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
     localParams.put(   "MASKED_RESOURCES"      ,  maskedAppsForRunInfo                        );
     localParams.put(   "EMPTY_FMS"             ,  emptyFMsForRunInfo                          );
-    localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
+    localParams.put(   "CONFIG_TIME"           ,  String.valueOf(config_time)                 );
 
     // TODO JHak put in run start time and stop times. This was always broken.
 
@@ -1811,6 +1813,7 @@ public class HCALEventHandler extends UserEventHandler {
             pollCompletion(); // get the latest update of the LVL2 config times
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(HCALStates.CONFIGURED.toString())));
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("... reached the \"" + HCALStates.CONFIGURED.toString() + "\" state in about " + elapsedseconds + " sec.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("CONFIG_TIME",new IntegerT(elapsedseconds)));
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ERROR_MSG",new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.PAUSED.toString()))) {
