@@ -489,6 +489,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           // get the FED list from the configure command in global run
           CheckAndSetParameter(       parameterSet, "FED_ENABLE_MASK");
           CheckAndSetTargetParameter( parameterSet, "FED_ENABLE_MASK" ,"CONFIGURED_WITH_FED_ENABLE_MASK",true);
+
+          //Get mastersnippet filename for global (this is a dummy for local runs)
+          CheckAndSetParameter(       parameterSet, "LOCAL_RUNKEY_SELECTED");
+          CheckAndSetParameter(       parameterSet, "MASTERSNIPPET_SELECTED");
         }
         catch (UserActionException e){
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
@@ -556,21 +560,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
-
-      if (parameterSet.get("RUN_KEY") != null) {
-        GlobalRunkey = ((StringT)parameterSet.get("RUN_KEY").getValue()).getString();
-        if (!GlobalRunkey.equals("")) {
-          // Send an error to the L0 if it gives us a nonsense global run key, but do not go to error state.
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Do not understand how to handle this RUN_KEY: " + GlobalRunkey + ". HCAL does not use a global RUN_KEY.";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return; }
-        }
-      }
-
-
 
       // Instead of setting infospace, destoryXDAQ if this FM is mentioned in EmptyFM
       if (parameterSet.get("EMPTY_FMS")!=null ) {
