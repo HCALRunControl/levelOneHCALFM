@@ -126,22 +126,6 @@ public class HCALMasker {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", maskedRss));
       }
   }
-  public boolean isCrossPartitionFM(Resource level2FM){
-    
-    List<ConfigProperty> propertiesList = level2FM.getProperties();
-    if(propertiesList.isEmpty()) {
-      return false;
-    }else{
-      for(ConfigProperty property : propertiesList){
-        if(property.getName().equals("isCrossPartitionFM")) {
-          logger.info("[HCAL "+level2FM.getName() +"] Found isCrossPartitionFM property with value="+property.getValue());
-          return Boolean.parseBoolean(property.getValue());
-        }
-      }
-    }
-    //return false if no property named "isCrossPartitionFM"
-    return false;
-  }
 
   protected Map<String, Resource> pickEvmTrig() {
     // Function to pick an FM that has the needed applications for triggering and eventbuilding, and put it in charge of those duties
@@ -214,22 +198,6 @@ public class HCALMasker {
               candidates.put("EvmTrigFM", level2.getResource());
               theresAcandidate = true;
               theresAdummyCandidate = true;
-            }
-            //Consider replacing the dummyCandidate if this level2 is a crossPartitionFM 
-            if(theresAdummyCandidate){
-              if(!theresCrossPartitionFM && isCrossPartitionFM(level2.getResource())){
-                //this crossPartitionFM is also a dummyCandidate, pick it. 
-                if( isAdummyCandidate ){
-                  logger.info("[HCAL "+level2.getName() +"] Setting this CrossPartitionFM as EvmTrigFM");
-                  candidates = getEvmTrigResources(level2Children);
-                  candidates.put("EvmTrigFM", level2.getResource());
-                  theresCrossPartitionFM = true;
-                }
-                else{
-                  //crossPartitionFM is not dummyCandidate, not expected. alert the user to check for human error
-                  logger.error("[HCAL "+functionManager.FMname +"] "+level2.getName()+" is a CrossPartitionFM but do not contain a DummyTriggerAdapter. Not picking it as EvmTrigFM, it will not be configured last.");
-                }
-              }
             }
           }
           catch (UserActionException ex) {

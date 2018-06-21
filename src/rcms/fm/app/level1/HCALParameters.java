@@ -50,6 +50,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<DoubleT>  ("COMPLETION"                       ,  new DoubleT(-1)        ,  FunctionManagerParameter.Exported.READONLY) );  // Completion meter
 		this.put( new FunctionManagerParameter<DoubleT>  ("PROGRESS"                         ,  new DoubleT(-1)        ,  FunctionManagerParameter.Exported.READONLY) );  // Completion meter
+		this.put( new FunctionManagerParameter<IntegerT>  ("CONFIG_TIME"                      ,  new IntegerT(-1)       ,  FunctionManagerParameter.Exported.READONLY) );  // Time taken to configure HCAL (in sec) 
 
 		this.put( new FunctionManagerParameter<StringT>  ("FED_ENABLE_MASK"                  ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // FED enable mask, typically handed to us by the level0
 		this.put( new FunctionManagerParameter<StringT>  ("STATE"                            ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // State the Function Manager is currently in
