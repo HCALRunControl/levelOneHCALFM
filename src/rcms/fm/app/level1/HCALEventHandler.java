@@ -1781,7 +1781,7 @@ public class HCALEventHandler extends UserEventHandler {
         catch (Exception ignore) { return; }
 
         // initialize the configuration timer
-        if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.HALTED.toString()) || functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+        if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.HALTED.toString()) )) {
           elapsedseconds = 0;
         }
 
