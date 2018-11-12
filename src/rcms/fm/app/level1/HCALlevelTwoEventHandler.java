@@ -1356,14 +1356,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                   logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is already in READY, not sending disable.");
                 }
                 else{
-                  logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is in the state="+status+", send HCALASYNCDISABLE to TriggerAdapter");
-                  functionManager.containerTriggerAdapter.execute(HCALInputs.HCALASYNCDISABLE);
+                  //logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is in the state="+status+", not sending HCALASYNCDISABLE to TriggerAdapter");
+                  //functionManager.containerTriggerAdapter.execute(HCALInputs.HCALASYNCDISABLE);
                 }
               }
-              catch (QualifiedResourceContainerException e) {
-                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
-                functionManager.goToError(errMessage,e);
-              }
+              //catch (QualifiedResourceContainerException e) {
+              //  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
+              //  functionManager.goToError(errMessage,e);
+              //}
               catch (XDAQTimeoutException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: Asking TA status during stopping action";
                   functionManager.goToError(errMessage,e);
@@ -1375,8 +1375,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
-            logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
-            waitforTriggerAdapter(10);
+            //logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
+            //waitforTriggerAdapter(10);
 
           }
           else {
