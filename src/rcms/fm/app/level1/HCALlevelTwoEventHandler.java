@@ -943,53 +943,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // reset the non-async error state handling
       functionManager.ErrorState = false;
       
-      // only in local runs when all triggers were sent the run is stopped with 60 sec timeout
-      if (functionManager.FMrole.equals("EvmTrig")) {
 
-        // finally start the TriggerAdapters
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
-            try {
-              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
-              functionManager.goToError(errMessage,e);
-            }
-          }
-        }
-
-        // set actions for local runs
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("waiting for run to finish ...")));
-
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] runningAction executed ...");
-
-      }
-      else {
-        // set actions for gloabl runs
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("running like hell ...")));
-      }
-      //XdaqApplicationContainer lpmContainer =  new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));      
-      //if (!lpmContainer.isEmpty()) {
-      //  logger.info("[JohnLog4] " + functionManager.FMname + ": Sending Enable to the LPMController.");
-      //  try {
-      //    lpmContainer.execute(HCALInputs.HCALSTART);
-      //  }
-      //  catch (QualifiedResourceContainerException e) {
-      //    String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (LPMController=Enable) failed ... Message: " + e.getMessage();
-      //    logger.error(errMessage,e);
-      //    functionManager.sendCMSError(errMessage);
-      //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-      //    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-      //  }
-      //}
-      // patch for pause-resume behavior
+      // set actions for gloabl runs
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("running like hell ...")));
       functionManager.FMWasInPausedState = false;
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] runningAction executed ...");
     }
   }
 
@@ -1397,14 +1356,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                   logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is already in READY, not sending disable.");
                 }
                 else{
-                  logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is in the state="+status+", send HCALASYNCDISABLE to TriggerAdapter");
-                  functionManager.containerTriggerAdapter.execute(HCALInputs.HCALASYNCDISABLE);
+                  //logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: TriggerAdapter is in the state="+status+", not sending HCALASYNCDISABLE to TriggerAdapter");
+                  //functionManager.containerTriggerAdapter.execute(HCALInputs.HCALASYNCDISABLE);
                 }
               }
-              catch (QualifiedResourceContainerException e) {
-                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
-                functionManager.goToError(errMessage,e);
-              }
+              //catch (QualifiedResourceContainerException e) {
+              //  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
+              //  functionManager.goToError(errMessage,e);
+              //}
               catch (XDAQTimeoutException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: Asking TA status during stopping action";
                   functionManager.goToError(errMessage,e);
@@ -1416,8 +1375,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
-            logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
-            waitforTriggerAdapter(10);
+            //logger.info("[HCAL LVL2 " + functionManager.FMname + "] EvmTrig FM: waitForTriggerAdapter to be in state \"Ready\" for up to 10s");
+            //waitforTriggerAdapter(10);
 
           }
           else {
@@ -1431,18 +1390,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // stop HCAL
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-        {
-          String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for stopRunning found- good!";
-          logger.debug(debugMessage);
-        }
-
         try {
-
           // define stop time
           StopTime = new Date();
 
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]  Sending AsyncDisable to supervisor");
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]   Sending AsyncDisable to supervisor");
           functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCDISABLE);
         }
         catch (QualifiedResourceContainerException e) {

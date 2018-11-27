@@ -766,9 +766,12 @@ public class HCALEventHandler extends UserEventHandler {
           try{
             if (functionManager.FMrole.equals("EvmTrig")){
               XDAQParameter pam = xdaqApp.getXDAQParameter();
-              pam.select(new String[] {"SessionID"});
+              pam.select(new String[] {"SessionID","IgnoreTriggerForEnable"});
               pam.setValue("SessionID"  ,sid.toString());
               logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+              // IgnoreTriggerForEnable = false 
+              pam.setValue("IgnoreTriggerForEnable"  ,"false");
+              logger.info("[HCAL " + functionManager.FMname + "] Sent IgnoreTriggerForEnable=false to supervisor: " );
 
               pam.send();
             }
@@ -2057,6 +2060,7 @@ public class HCALEventHandler extends UserEventHandler {
                 }
                 XDAQParameter pam = null;
                 String status = "undefined";
+                String TriggerTaskState = "undefined";
                 Double NextEventNumber = -1.0;
 
                 // ask for the status of the TriggerAdapter and wait until it is Ready, Failed
@@ -2064,9 +2068,10 @@ public class HCALEventHandler extends UserEventHandler {
                   try {
                     pam =((XdaqApplication)qr).getXDAQParameter();
 
-                    pam.select(new String[] {"stateName", "NextEventNumber"});
+                    pam.select(new String[] {"stateName", "NextEventNumber","TriggerTaskState"});
                     pam.get();
                     status = pam.getValue("stateName");
+                    TriggerTaskState = pam.getValue("TriggerTaskState");
                     if (status==null) {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
                       functionManager.goToError(errMessage);
@@ -2108,8 +2113,8 @@ public class HCALEventHandler extends UserEventHandler {
                   functionManager.goToError(errMessage);
                 }
 
-                if (status.equals("Ready")) {
-                  logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter reports: " + status + " , which means that all Triggers were sent ...");
+                if (status.equals("Ready") || TriggerTaskState.equals("IDLE")) {
+                  logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter has status= " + status + " and triggerTaskState= "+TriggerTaskState+", which means that all Triggers were sent ...");
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("")));
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Stopping the TA ...")));
 
